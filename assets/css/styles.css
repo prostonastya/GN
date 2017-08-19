@@ -1,3 +1,7 @@
+:root {
+  --if-color: rgba(0, 0, 0, 0.5);
+}
+
 html {
   height: 100%;
   font-family: sans-serif;
@@ -14,7 +18,7 @@ body {
   left: 0;
   width: 100%;
   z-index: 2;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--if-color);
 }
 
 .app-nav {
@@ -45,21 +49,62 @@ body {
   position: relative;
 }
 
+.curr-loc-highlight,
 .loc-highlight {
   width: 10%;
   height: 10%;
-  display: none;
   position: absolute;
+  display: none;
+}
+
+
+.loc-highlight {
   background-color: rgba(0, 0, 100, 0.5);
 }
 
-#output {
+.curr-loc-highlight {
+  background-color: rgba(100, 0, 0, 0.5);
+}
+
+.current-loc-info,
+.loc-info {
   position: fixed;
-  width: 150px;
+  width: 48.5%;
   line-height: 30px;
   padding-left: 20px;
-  bottom: 0;
-  left: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+  display: none;
+  bottom: 0.5%;;
+  left: 0.5%;;
+  margin: 0.5%;
+  background-color: var(--if-color);
   color: white;
+}
+
+.current-loc-info {
+  left: auto;
+  right: 0.5%;;
+}
+
+.info-heading {
+  margin: 5px 0;
+}
+
+.occupy-btn {
+  display: block;
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 10px 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  text-decoration: none;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.occupy-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
 }

@@ -28,8 +28,21 @@
   </header>
   <div class="world-map" id="world-map">
     <div class="loc-highlight" id="loc-highlight"></div>
+    <div class="curr-loc-highlight" id="curr-loc-highlight"></div>
   </div>
-  <div id="output"></div>
+  <div class="loc-info" id="output">
+    <h2 class="info-heading">Location info</h2>
+    Click coords: <span id="click-geocords"></span>
+    <br>
+    Location coords: <span id="click-location"></span>
+  </div>
+  <div class="current-loc-info" id="current-loc-info">
+    <h2 class="info-heading">Current location</h2>
+    User coords: <span id="users-geocords"></span>
+    <br>
+    Location coords: <span id="users-location"></span>
+    <button class="occupy-btn" id="occupy-btn">Occupy</button>
+  </div>
   <script src="assets/js/script.js"></script>
 </body>
 </html>
