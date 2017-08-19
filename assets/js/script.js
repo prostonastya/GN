@@ -129,26 +129,28 @@ window.onload = function () {
   function occupyLocation() {
     alert('Congrats!');
     currLocHightlight.style.backgroundColor = 'rgba(0, 100, 0, 0.5)';
-    // const promise = new Promise((resolve, reject) => {
-    //   const xhr = new XMLHttpRequest();
-    //   xhr.open('POST', '/api/locations/create', true);
-    //   xhr.onload = function () {
-    //     if (this.status === 200) {
-    //       resolve(this.response);
-    //     } else {
-    //       const error = new Error(this.statusText);
-    //       error.code = this.status;
-    //       reject(error);
-    //     }
-    //   };
-    // });
+    const promise = new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/locations/create', true);
+      console.log(JSON.stringify(currentLocCords));
+      xhr.send(JSON.stringify(currentLocCords));
+      xhr.onload = function () {
+        if (this.status === 200) {
+          resolve(this.response);
+        } else {
+          const error = new Error(this.statusText);
+          error.code = this.status;
+          reject(error);
+        }
+      };
+    });
 
-    // promise
-    //   .then((result) => {
-    //     alert('Congrats!');
-    //   })
-    //   .catch((err) => {
-    //     alert(err.message);
-    //   });
+    promise
+      .then(() => {
+        alert('Congrats!');
+      })
+      .catch((err) => {
+        alert(err.message);
+      });
   }
 };
