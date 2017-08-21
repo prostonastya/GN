@@ -1,5 +1,5 @@
 :root {
-  --if-color: rgba(0, 0, 0, 0.5);
+  --if-color: rgba(65, 65, 65, 1);
 }
 
 html {
@@ -113,7 +113,7 @@ html {
 
 
 #map {
-  height: 80%;
+  height: 100%;
 }
 
 #info-box {

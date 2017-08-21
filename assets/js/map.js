@@ -17,12 +17,7 @@ function initMap() {
 
 	occupyBtn.addEventListener('click', occupyLocation);
 
-	// var lat0 = map.getBounds().getNorthEast().lat();
-	// var lng0 = map.getBounds().getNorthEast().lng();
-	// var lat1 = map.getBounds().getSouthWest().lat();
-	// var lng1 = map.getBounds().getSouthWest().lng();
-
-	// console.log(lat0,lat1,lng0,lng1 );
+	
 
 
 
@@ -34,7 +29,33 @@ function initMap() {
 		center: {lat: 49.9891, lng: 36.2322}
 	});
 
-	map.data.loadGeoJson('locations.json');
+
+	let obj = {
+		"type": "FeatureCollection",
+		"features": [
+		  {
+			"type": "Feature",
+			"id": "1",
+			"properties": {
+				"color": "green",
+			  "info": {
+				"name": "location01"
+			  }
+			},
+			"geometry": {
+			  "type": "Polygon",
+			  "coordinates": [
+				[
+				   [36.24,49.99], [36.24,49.98], [36.23,49.98], [36.23,49.99], [36.24,49.99]
+				]
+			  ]
+			}
+		  }
+		]
+	  };
+	
+	map.data.addGeoJson(obj);
+
 
 	map.data.setStyle(function(feature) {
 		var color = 'gray';
@@ -48,12 +69,23 @@ function initMap() {
 		});
 	  });
 
+
+
+	
+
+		window.onload = function() {
+			var lat0 = map.getBounds().getNorthEast().lat();
+			var lng0 = map.getBounds().getNorthEast().lng();
+			var lat1 = map.getBounds().getSouthWest().lat();
+			var lng1 = map.getBounds().getSouthWest().lng();
+			console.log(lat0, lng0, lat1, lng1);
+
+		};
 	// Set mouseover event for each feature.
 	map.data.addListener('click', function(event) {
 		if(event.feature.getId() === 0) {
 			occupyLocation(event.feature);
 		}
-		console.log(event.feature.getId());
 		document.getElementById('info-box').textContent =
 			event.feature.getProperty('info').name;
 	});
@@ -83,7 +115,7 @@ function initMap() {
 			},
 			"geometry": new google.maps.Data.Polygon([location])
 		};
-		console.log(locationNew.id);
+		console.log(locationNew);
 		map.data.add(locationNew);
 		setTimeout(function(){
 			if (!confirm('Поставить поселение?')) {
@@ -110,7 +142,8 @@ function initMap() {
 
 			usersLocationInfo.textContent = `${latCurrent} 
 											${lngCurrent}`;
-
+			
+			
 			var location = [
 				{lat: latCurrent, lng: lngCurrent}, // north west
 				{lat: (latCurrent*100 + 1)/100, lng: lngCurrent}, // south west
@@ -141,21 +174,25 @@ function initMap() {
 		alert('Congrats!');
 		feature.setProperty("color", "blue");
 
-		// currLocHightlight.style.backgroundColor = 'rgba(0, 100, 0, 0.5)';
-		// const promise = new Promise((resolve, reject) => {
-		//   const xhr = new XMLHttpRequest();
-		//   xhr.open('POST', '/api/locations/create', true);
-		//   console.log(JSON.stringify(currentLocCords));
-		//   xhr.send(JSON.stringify(currentLocCords));
-		//   xhr.onload = function () {
-		// 	if (this.status === 200) {
-		// 	  resolve(this.response);
-		// 	} else {
-		// 	  const error = new Error(this.statusText);
-		// 	  error.code = this.status;
-		// 	  reject(error);
-		// 	}
+
+		let locationId = Math.floor(Math.random() * new Date() / 100000);
+		var locationNew = {
+			"type": "Feature",
+			"id": locationId,
+			"properties": {
+				"color": "blue",
+				"info": {
+					"name": "location " + locationId
+				}
+			},
+			"geometry": feature.getGeometry()
+		};
+
+		map.data.add(locationNew);
+
+		map.data.remove(feature);
 	   };
+
 
 
 	
