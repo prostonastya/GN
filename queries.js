@@ -41,9 +41,35 @@ function getSingleLocation(req, res, next) {
 		.catch((err) => next(err));
 }
 
+function createLocation(req, res, next) {
+	db.none('insert into locations(lat, lng, population, daily_msg, master)' +
+		'values(${coords.lat}, ${coords.lng}, ${population}, ${msg}, ${master})',
+		req.body)
+		.then(() => {
+			res.status(200)
+				.json({
+					message: 'added the location'
+				})
+		})
+		.catch((err) => next(err));
+}
+
+function deleteLocation(req, res, next) {
+	let locId = parseInt(req.params.id);
+	db.result('delete from locations where id = $1', locId)
+		.then((result) => {
+			res.status(200)
+				.json({
+					msg: 'location was successfully removed'
+				})
+		})
+		.catch((err) => next(err));
+}
 
 module.exports = {
 	getLocations: getLocations,
-	getSingleLocation: getSingleLocation
+	getSingleLocation: getSingleLocation,
+	createLocation: createLocation,
+	deleteLocation: deleteLocation
 };
 
