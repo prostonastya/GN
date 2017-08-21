@@ -24,15 +24,7 @@ const express = require('express'),
        user: process.env.SERVICE_EMAIL || 'gamekh009@gmail.com',
        pass: process.env.SERVICE_EMAIL_PASS || 'SoftServe'
      }
-   }),
-  mailOptions = {
-    from: '"Game team" <gamekh009@gmail.com>', // sender address
-    to: 'an.patralova@gmail.com', // list of receivers
-    subject: 'Hello? new user! ✔', // Subject line
-    text: 'Hello! We are glad that you joined our game ', // plain text body
-    html: '<b>Hello! We are glad that you joined our game ?</b>' // html body
-  }
-
+   });
 
 app.set('view engine', 'ejs');
 
@@ -66,12 +58,13 @@ app.post("/login", (req, res, next) => {
         expiresIn: 60*60*24        
       });
       // return the information including token as JSON
-        res.cookie('auth',token); 
-      res.json({
-        success: true,
-        message: "hello" + ' ' + data.name,
-        token:token
-      });
+      res.cookie('auth',token); 
+      res.redirect('/map');
+      // res.json({
+      //   success: true,
+      //   message: `hello ${data.name}`,
+      //   token:token
+      // });
     } else {
       res.status(401).json({message:"passwords did not match"});
     }  
@@ -93,12 +86,13 @@ app.post('/register', (req, res) => {
       `values('${email}', '${pass}', '${new Date().toISOString()}', 150, '${name}')`,
     req.body)
     .then(function () {
+      var letter = createLetter(email);
+       sendMail(letter);
       res.status(200)
         .json({
           status: 'success',
           message: 'Inserted one user'
-        });
-       sendMail(mailOptions);
+        });        
     })
     .catch(err => {     
       res.send('Something went wrong:' + err.message);
@@ -107,41 +101,45 @@ app.post('/register', (req, res) => {
 });
 
 app.use(function(req, res, next){
-    var token = req.body.token || req.query.token || req.headers['x-access-token'] || req.cookies;
-    console.log(token.auth);
+    var token = req.cookies || req.body.token || req.query.token || req.headers['x-access-token'];    
     if(token.auth){
-    jwt.verify(token.auth, 'secret', function(err, decoded){
-        
+    jwt.verify(token.auth, 'secret', function(err, decoded){        
        if(err){
-//       res.redirect('/login');  
-       res.json({"message": "Failed to authenticate user", 'er': err.message});
+       res.json({"message": "Failed to authenticate user", 'error': err.message});
        }
        else{
        req.decoded = decoded;
-//           res.redirect('https://www.npmjs.com/package/cookie-parser');
        next();
        }
        });
     }
     else{
-       res.redirect('/login'); 
+       res.redirect('/'); 
     }
     });
 app.get('/map', (req, res) => {
-  res.send('hello');    
+  res.send('hello, it\'s map page');    
 });
 
-function sendMail(mailOptions) {
-  transporter.sendMail(mailOptions, (error, info) => {
+function createLetter(userEmail){
+  return{
+    from: '"Game team" <gamekh009@gmail.com>', // sender address
+    to: userEmail, // receivers
+    subject: 'Hello! new user! ✔', // Subject line
+    text: 'Hello! We are glad that you joined our game', // plain text body
+    html: '<b>Hello! We are glad that you joined our game!</b>' // html body
+  }
+}
+
+function sendMail(letter) {
+  transporter.sendMail(letter, (error, info) => {
     if (error) {
-      console.log(error);
+      console.log(error.message);
     } else {
-      console.log('Email sent: ' + info.res);
+      console.log('Email sent: ' + info.response);
     }
   });
 }
-
-
 
 app.listen(port, () => {
   console.log('Listen on port: ' + port);
