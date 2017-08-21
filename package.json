@@ -12,6 +12,7 @@
     "body-parser": "^1.17.2",
     "ejs": "^2.5.7",
     "express": "^4.15.4",
+    "jsonwebtoken": "^7.4.3",
     "nodemailer": "^4.0.1",
     "pg-promise": "^6.3.8"
   },

@@ -6,12 +6,13 @@ const express = require('express'),
   pgp = require('pg-promise')(),      
   port = process.env.PORT || 3000,   
   jwt = require('jsonwebtoken'), 
+  cookieParser = require('cookie-parser'),
   db = pgp({
     host: 'ec2-23-21-85-76.compute-1.amazonaws.com',
     port: 5432,
     database: 'detamp7dm7n5kt',
-    user: process.env.SERVICE_DB_USER,
-    password: process.env.SERVICE_DB_PASS,    
+    user: process.env.SERVICE_DB_USER || 'smdtzebruscqxv',
+    password: process.env.SERVICE_DB_PASS || 'b988acabcae53edc03642deec8eabbbd891f2c549a02100e9f5b134c624ea4cd',    
     ssl: true,
     sslfactory: 'org.postgresql.ssl.NonValidatingFactory'
   }),
@@ -41,6 +42,7 @@ app.use(bodyParser.urlencoded({
    extended: true 
 }));
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 //ROUTES
 
@@ -62,10 +64,11 @@ app.post("/login", (req, res, next) => {
     if(data.password === password) {    
     // create a token
       var token = jwt.sign(data, 'secret', {
-        expiresIn: 28800 
+        expiresIn: 60*60*24        
       });
       console.log(token);
       // return the information including token as JSON
+        res.cookie('auth',token); 
       res.json({
         success: true,
         message: "hello" + ' ' + data.name,
