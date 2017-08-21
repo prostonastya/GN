@@ -18,16 +18,16 @@ const express = require('express'),
   }),
   // безопасность gmail  не дает мне отправлять письма :((
 
-  // transporter = nodemailer.createTransport({
-  //   service: 'gmail',
-  //   auth: {
-  //     user: process.env.SERVICE_EMAIL,
-  //     pass: process.env.SERVICE_EMAIL_PASS
-  //   }
-  // }),
+   transporter = nodemailer.createTransport({
+     service: 'gmail',
+     auth: {
+       user: process.env.SERVICE_EMAIL || 'gamekh009@gmail.com',
+       pass: process.env.SERVICE_EMAIL_PASS || 'SoftServe'
+     }
+   }),
   mailOptions = {
-    from: '"Game team" <an.patralova@gmail.com>', // sender address
-    to: 'user.email', // list of receivers
+    from: '"Game team" <gamekh009@gmail.com>', // sender address
+    to: 'an.patralova@gmail.com', // list of receivers
     subject: 'Hello? new user! ✔', // Subject line
     text: 'Hello! We are glad that you joined our game ', // plain text body
     html: '<b>Hello! We are glad that you joined our game ?</b>' // html body
@@ -47,7 +47,7 @@ app.use(cookieParser());
 //ROUTES
 
 app.get('/', (req, res) => {
-  res.render('login');
+  res.render('login');    
 });
 
 app.post("/login", (req, res, next) => { 
@@ -56,8 +56,7 @@ app.post("/login", (req, res, next) => {
 
   db.one(`SELECT * FROM users
     WHERE email = '${email}';`)
-  .then(data => {
-    // console.log(data);
+  .then(data => {   
     if (!data.password) {
     res.status(401).json({message:"no such user found"});
     }
@@ -66,7 +65,6 @@ app.post("/login", (req, res, next) => {
       var token = jwt.sign(data, 'secret', {
         expiresIn: 60*60*24        
       });
-      console.log(token);
       // return the information including token as JSON
         res.cookie('auth',token); 
       res.json({
@@ -100,7 +98,7 @@ app.post('/register', (req, res) => {
           status: 'success',
           message: 'Inserted one user'
         });
-      // sendMail(mailOptions);
+       sendMail(mailOptions);
     })
     .catch(err => {     
       res.send('Something went wrong:' + err.message);
@@ -108,12 +106,37 @@ app.post('/register', (req, res) => {
 
 });
 
+app.use(function(req, res, next){
+    var token = req.body.token || req.query.token || req.headers['x-access-token'] || req.cookies;
+    console.log(token.auth);
+    if(token.auth){
+    jwt.verify(token.auth, 'secret', function(err, decoded){
+        
+       if(err){
+//       res.redirect('/login');  
+       res.json({"message": "Failed to authenticate user", 'er': err.message});
+       }
+       else{
+       req.decoded = decoded;
+//           res.redirect('https://www.npmjs.com/package/cookie-parser');
+       next();
+       }
+       });
+    }
+    else{
+       res.redirect('/login'); 
+    }
+    });
+app.get('/map', (req, res) => {
+  res.send('hello');    
+});
+
 function sendMail(mailOptions) {
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.log(error);
     } else {
-      console.log('Email sent: ' + info.response);
+      console.log('Email sent: ' + info.res);
     }
   });
 }
