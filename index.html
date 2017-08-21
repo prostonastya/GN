@@ -25,11 +25,14 @@
         </li>
       </ul>
     </nav>
-  </header>
-  <div class="world-map" id="world-map">
+	</header>
+	
+	<div id="map"></div>
+  
     <div class="loc-highlight" id="loc-highlight"></div>
-    <div class="curr-loc-highlight" id="curr-loc-highlight"></div>
-  </div>
+		<div class="curr-loc-highlight" id="curr-loc-highlight"></div>
+		
+
   <div class="loc-info" id="output">
     <h2 class="info-heading">Location info</h2>
     Click coords: <span id="click-geocords"></span>
@@ -42,7 +45,14 @@
     <br>
     Location coords: <span id="users-location"></span>
     <button class="occupy-btn" id="occupy-btn">Occupy</button>
-  </div>
-  <script src="assets/js/script.js"></script>
+	</div>
+	
+	<div id="info-box"></div>
+  <script src="assets/js/map.js"></script>
+
+		<script async defer
+		src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDVvJYiAmFhsqumbf3mNFYaBvHJczJSrh0&callback=initMap">
+		</script>
+	
 </body>
 </html>

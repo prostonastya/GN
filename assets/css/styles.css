@@ -7,7 +7,8 @@ html {
   font-family: sans-serif;
 }
 
-body {
+body,
+html {
   height: 100%;
   margin: 0;
 }
@@ -107,4 +108,20 @@ body {
 
 .occupy-btn:hover {
   background-color: rgba(255, 255, 255, 0.3);
+}
+
+
+
+#map {
+  height: 80%;
+}
+
+#info-box {
+  background-color: white;
+  border: 1px solid black;
+  bottom: 30px;
+  height: 20px;
+  padding: 10px;
+  position: absolute;
+  left: 30px;
 }
