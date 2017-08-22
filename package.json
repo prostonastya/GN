@@ -10,14 +10,13 @@
     "body-parser": "~1.17.1",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.3",
+    "ejs": "^2.5.7",
     "express": "~4.15.2",
     "jade": "~1.11.0",
     "morgan": "~1.8.1",
     "pg-promise": "^5.9.7",
     "serve-favicon": "~2.4.2"
   },
- 
-  
   "devDependencies": {
     "eslint": "^4.5.0",
     "eslint-config-google": "^0.9.1",
