@@ -11,13 +11,14 @@ function initMap() {
   const usersLocationInfo = document.getElementById('users-location');
   const occupyBtn = document.getElementById('occupy-btn');
 
-  const currentLocationId = 0;
+  const currentLocationId = null;
 
   occupyBtn.addEventListener('click', occupyLocation);
 
   map = new google.maps.Map(document.getElementById('map'), {
     zoom: 12,
     center: { lat: 49.9891, lng: 36.2322 },
+    clickableIcons: false,
   });
 
   // getting locations for renderoing on map
@@ -30,7 +31,7 @@ function initMap() {
 
     const getLocationPromise = new Promise((res, rej) => {
       const xhr = new XMLHttpRequest();
-  
+
       xhr.open('GET', '/api/locations');
       xhr.send();
       xhr.addEventListener('load', (e) => {
@@ -42,15 +43,15 @@ function initMap() {
         }
       });
     });
-  
+
     getLocationPromise.then((locArray) => {
       const geoObj = {
         type: 'FeatureCollection',
         features: [],
       };
-  
+
       // creating geoJSON Object from recieved data
-  
+
       locArray.forEach((item) => {
         geoObj.features.push({
           type: 'Feature',
@@ -77,9 +78,8 @@ function initMap() {
           },
         });
       });
-  
+
       map.data.addGeoJson(geoObj);
-      
     })
       .catch((err) => {
         console.log(err);
@@ -98,14 +98,19 @@ function initMap() {
       strokeWeight: 2,
     });
   });
-  // Set mouseover event for each feature.
+
   map.data.addListener('click', (event) => {
     if (event.feature.getId() === 0) {
       occupyLocation(event.feature);
     }
+
+    // create custom popup+ get request for info
     document.getElementById('info-box').textContent =
    event.feature.getProperty('info').name;
   });
+
+
+  // remove this code to user position 
   map.addListener('click', (event) => {
     const lat01 = Math.floor(event.latLng.lat() * 100) / 100;
     const lng01 = Math.floor(event.latLng.lng() * 100) / 100;
@@ -139,6 +144,7 @@ function initMap() {
         map.data.remove(map.data.getFeatureById(locationNew.id));
         console.log(map.data.getFeatureById(locationNew.id));
       }
+      // here post request for create location
     }, 1000);
   });
 
@@ -159,6 +165,8 @@ function initMap() {
       usersLocationInfo.textContent = `${latCurrent} 
                                      ${lngCurrent}`;
 
+      // if location is already created - change bg color only
+      // if user go out from location - delete location
 
       const location = [
         { lat: latCurrent, lng: lngCurrent }, // north west
@@ -185,10 +193,6 @@ function initMap() {
 
 
   function occupyLocation(feature) {
-    //alert('Congrats!');
-    //feature.setProperty('color', 'blue');
-
-
     const locationId = Math.floor((Math.random() * new Date()) / 100000);
     const locationNew = {
       type: 'Feature',
@@ -201,9 +205,7 @@ function initMap() {
       },
       geometry: feature.getGeometry(),
     };
-
     map.data.add(locationNew);
-
     map.data.remove(feature);
   }
 }
