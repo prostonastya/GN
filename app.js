@@ -4,8 +4,9 @@ let path = require('path');
 let logger = require('morgan');
 let cookieParser = require('cookie-parser');
 let bodyParser = require('body-parser');
-let index = require('./routes/index');
+let locationRoutes = require('./routes/locations');
 let app = express();
+const port = process.env.PORT || 8080;
 
 //view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -17,9 +18,12 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('assets'));
 
-app.use('/', index);
+app.get('/', (req, res) => {
+	res.render('index');
+})
+app.use('/', locationRoutes);
 
 
 // catch 404 and forward to error handler
@@ -37,9 +41,11 @@ app.use((err, req, res, next) => {
 
 	// render the error page
 	res.status(err.status || 500);
-	res.send('<h1>error!</h1>');
+	res.send(err.message);
 	//res.render('error');
 });
 
-app.listen(8080);
+app.listen(port, () => {
+	console.log('listening on port ' + port);
+});
 
