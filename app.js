@@ -22,8 +22,8 @@ const db = pgp({
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.SERVICE_EMAIL,
-    pass: process.env.SERVICE_EMAIL_PASS,
+    user: process.env.SERVICE_EMAIL || 'gamekh009@gmail.com',
+    pass: process.env.SERVICE_EMAIL_PASS || 'SoftServe',
   },
 });
 
@@ -38,8 +38,7 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 
 // ROUTES
-
-app.get('/', (req, res) => {
+app.get('/login', (req, res) => {
   res.render('login');
 });
 
@@ -60,7 +59,7 @@ app.post('/login', (req, res) => {
         });
         // return the information including token as JSON
         res.cookie('auth', token);
-        res.redirect('/map');
+        res.redirect('/');
       } else {
         res.status(401).json({ message: 'passwords did not match' });
       }
@@ -84,15 +83,19 @@ app.post('/register', (req, res) => {
     .then(() => {
       const letter = createLetter(email);
       sendMail(letter);
-      res.status(200)
-        .json({
-          status: 'success',
-          message: 'Inserted one user',
-        });
-    })
-    .catch((err) => {
+      res.redirect('/');
+      // res.status(200)
+      //   .json({
+      //     status: 'success',
+      //     message: 'Inserted one user',
+      //   });
+    }).catch((err) => {
       res.send(`Something went wrong:${err.message}`);
     });
+});
+
+app.post('/logout', (req, res) => {
+  res.redirect('/login');
 });
 
 app.use((req, res, next) => {
@@ -107,12 +110,18 @@ app.use((req, res, next) => {
       }
     });
   } else {
-    res.redirect('/');
+    res.redirect('/login');
   }
 });
-app.get('/map', (req, res) => {
-  res.send('hello, it\'s map page');
+
+app.get('/', (req, res) => {
+  res.render('main');
 });
+
+// app.get('/map', (req, res) => {
+//   res.send('hello, it\'s map page');
+// });
+
 function createLetter(userEmail) {
   return {
     from: '"Game team" <gamekh009@gmail.com>', // sender address
