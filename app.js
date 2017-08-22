@@ -6,15 +6,14 @@ const bodyParser = require('body-parser');
 const pgp = require('pg-promise')();
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
-
 const app = express();
 const port = process.env.PORT || 3000;
 const db = pgp({
   host: 'ec2-23-21-85-76.compute-1.amazonaws.com',
   port: 5432,
   database: 'detamp7dm7n5kt',
-  user: process.env.SERVICE_DB_USER,
-  password: process.env.SERVICE_DB_PASS,
+  user: process.env.SERVICE_DB_USER || 'smdtzebruscqxv',
+  password: process.env.SERVICE_DB_PASS || 'b988acabcae53edc03642deec8eabbbd891f2c549a02100e9f5b134c624ea4cd',
   ssl: true,
   sslfactory: 'org.postgresql.ssl.NonValidatingFactory',
 });
@@ -38,11 +37,11 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 
 // ROUTES
-app.get('/login', (req, res) => {
+app.route('/login')
+  .get((req, res) => {
   res.render('login');
-});
-
-app.post('/login', (req, res) => {
+  })
+  .post((req, res) => {
   const email = req.body['log-email'];
   const password = req.body['log-pass'];
 
@@ -56,8 +55,7 @@ app.post('/login', (req, res) => {
         // create a token
         const token = jwt.sign(data, 'secret', {
           expiresIn: 60 * 60 * 24,
-        });
-        // return the information including token as JSON
+        });        
         res.cookie('auth', token);
         res.redirect('/');
       } else {
@@ -84,18 +82,9 @@ app.post('/register', (req, res) => {
       const letter = createLetter(email);
       sendMail(letter);
       res.redirect('/');
-      // res.status(200)
-      //   .json({
-      //     status: 'success',
-      //     message: 'Inserted one user',
-      //   });
     }).catch((err) => {
       res.send(`Something went wrong:${err.message}`);
     });
-});
-
-app.post('/logout', (req, res) => {
-  res.redirect('/login');
 });
 
 app.use((req, res, next) => {
@@ -118,9 +107,10 @@ app.get('/', (req, res) => {
   res.render('main');
 });
 
-// app.get('/map', (req, res) => {
-//   res.send('hello, it\'s map page');
-// });
+app.post('/logout', (req, res) => {
+  res.clearCookie('auth');
+  res.redirect('/login');
+});
 
 function createLetter(userEmail) {
   return {
