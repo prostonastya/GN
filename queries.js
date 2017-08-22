@@ -54,22 +54,10 @@ function createLocation(req, res, next) {
 		.catch((err) => next(err));
 }
 
-function deleteLocation(req, res, next) {
-	let locId = parseInt(req.params.id);
-	db.result('delete from locations where id = $1', locId)
-		.then((result) => {
-			res.status(200)
-				.json({
-					msg: 'location was successfully removed'
-				})
-		})
-		.catch((err) => next(err));
-}
 
 module.exports = {
 	getLocations: getLocations,
 	getSingleLocation: getSingleLocation,
-	createLocation: createLocation,
-	deleteLocation: deleteLocation
+	createLocation: createLocation
 };
 

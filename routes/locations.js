@@ -9,6 +9,6 @@ let db = require('../queries');
 router.get('/api/locations', db.getLocations);
 router.get('/api/locations/:id', db.getSingleLocation);
 router.post('/api/locations', db.createLocation);
-router.delete('/api/locations/:id', db.deleteLocation);
+
 
 module.exports = router;
