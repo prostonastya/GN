@@ -4,7 +4,6 @@ let map;
 
 function initMap() {
   const usersGeocordsInfo = document.getElementById('users-geocords');
-
   const clickedInfo = document.getElementById('output');
   const clickedCordsInfo = document.getElementById('click-geocords');
   const clickedLocationInfo = document.getElementById('click-location');
@@ -22,110 +21,83 @@ function initMap() {
   });
 
   // getting locations for renderoing on map
-
-  const getLocPromise = new Promise((res, rej) => {
-    const xhr = new XMLHttpRequest();
-
-    xhr.open('GET', '/api/locations');
-    xhr.send();
-    xhr.addEventListener('load', (e) => {
-      const srcXHR = e.target;
-      if (srcXHR.status === 200) {
-        res(JSON.parse(srcXHR.response).data);
-      } else {
-        rej(srcXHR.response);
-      }
-    });
-  });
-
-  getLocPromise.then((locArray) => {
-    const geoObj = {
-      type: 'FeatureCollection',
-      features: [],
-    };
-
-    // creating geoJSON Object from recieved data
-
-    locArray.forEach((item) => {
-      geoObj.features.push({
-        type: 'Feature',
-        id: item.loc_id,
-        properties: {
-          color: 'green',
-          info: {
-            master: item.master,
-          },
-        },
-        geometry: {
-          type: 'Polygon',
-          coordinates: [[[
-            +item.lng, +item.lat,
-          ], [
-            +item.lng, ((item.lat * 100) - 1) / 100,
-          ], [
-            ((item.lng * 100) - 1) / 100, ((item.lat * 100) - 1) / 100,
-          ], [
-            ((item.lng * 100) - 1) / 100, +item.lat,
-          ], [
-            +item.lng, +item.lat,
-          ]]],
-        },
-      });
-    });
-
-    console.dir(geoObj);
-
-    map.data.addGeoJson(geoObj);
-    map.data.setStyle((feature) => {
-      let color = 'gray';
-      if (feature.getProperty('color')) {
-        color = feature.getProperty('color');
-      }
-      return /** @type {google.maps.Data.StyleOptions} */({
-        fillColor: color,
-        strokeColor: color,
-        strokeWeight: 2,
-      });
-    });
-  })
-    .catch((err) => {
-      console.log(err);
-    });
-
-
-  // const obj = {
-  //   type: 'FeatureCollection',
-  //   features: [
-  //     {
-  //       type: 'Feature',
-  //       id: '1',
-  //       properties: {
-  //         color: 'green',
-  //     info: {
-  //           name: 'location01',
-  //     },
-  //       },
-  //       geometry: {
-  //      type: 'Polygon',
-  //      coordinates: [
-  //           [
-  //      [36.24, 49.99], [36.24, 49.98], [36.23, 49.98], [36.23, 49.99], [36.24, 49.99],
-  //           ],
-  //    ],
-  //       },
-  //    },
-  //   ],
-  //   };
-
-  // map.data.addGeoJson(obj);
-
   window.onload = function () {
     const lat0 = map.getBounds().getNorthEast().lat();
     const lng0 = map.getBounds().getNorthEast().lng();
     const lat1 = map.getBounds().getSouthWest().lat();
     const lng1 = map.getBounds().getSouthWest().lng();
     console.log(lat0, lng0, lat1, lng1);
+
+    const getLocationPromise = new Promise((res, rej) => {
+      const xhr = new XMLHttpRequest();
+  
+      xhr.open('GET', '/api/locations');
+      xhr.send();
+      xhr.addEventListener('load', (e) => {
+        const srcXHR = e.target;
+        if (srcXHR.status === 200) {
+          res(JSON.parse(srcXHR.response).data);
+        } else {
+          rej(srcXHR.response);
+        }
+      });
+    });
+  
+    getLocationPromise.then((locArray) => {
+      const geoObj = {
+        type: 'FeatureCollection',
+        features: [],
+      };
+  
+      // creating geoJSON Object from recieved data
+  
+      locArray.forEach((item) => {
+        geoObj.features.push({
+          type: 'Feature',
+          id: item.loc_id,
+          properties: {
+            color: 'green',
+            info: {
+              master: item.master,
+            },
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[
+              +item.lng, +item.lat,
+            ], [
+              +item.lng, ((item.lat * 100) - 1) / 100,
+            ], [
+              ((item.lng * 100) - 1) / 100, ((item.lat * 100) - 1) / 100,
+            ], [
+              ((item.lng * 100) - 1) / 100, +item.lat,
+            ], [
+              +item.lng, +item.lat,
+            ]]],
+          },
+        });
+      });
+  
+      map.data.addGeoJson(geoObj);
+      
+    })
+      .catch((err) => {
+        console.log(err);
+      });
   };
+
+
+  map.data.setStyle((feature) => {
+    let color = 'gray';
+    if (feature.getProperty('color')) {
+      color = feature.getProperty('color');
+    }
+    return /** @type {google.maps.Data.StyleOptions} */({
+      fillColor: color,
+      strokeColor: color,
+      strokeWeight: 2,
+    });
+  });
   // Set mouseover event for each feature.
   map.data.addListener('click', (event) => {
     if (event.feature.getId() === 0) {
@@ -213,8 +185,8 @@ function initMap() {
 
 
   function occupyLocation(feature) {
-    alert('Congrats!');
-    feature.setProperty('color', 'blue');
+    //alert('Congrats!');
+    //feature.setProperty('color', 'blue');
 
 
     const locationId = Math.floor((Math.random() * new Date()) / 100000);
