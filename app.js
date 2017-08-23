@@ -96,6 +96,15 @@ app.post('/register', (req, res) => {
 
 app.use('/', auth);
 
+app.get('/', (req, res) => {
+  res.render('main');
+});
+
+app.post('/logout', (req, res) => {
+  res.clearCookie('auth');
+  res.redirect('/login');
+});
+
 function createNewUser(user) {
   db.none('insert into users(email, password, reg_date, cash, name)' +
 `values('${user.email}', '${user.pass}', '${new Date().toISOString()}', 150, '${user.name}')`)

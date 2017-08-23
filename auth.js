@@ -1,8 +1,9 @@
 'use strict';
 
 const express = require('express');
-const router = express.Router();
 const jwt = require('jsonwebtoken');
+
+const router = express.Router();
 
 router.use((req, res, next) => {
   const token = req.cookies || req.body.token || req.query.token || req.headers['x-access-token'];
@@ -20,13 +21,13 @@ router.use((req, res, next) => {
   }
 });
 
-router.get('/', (req, res) => {
-  res.render('main');
-});
+// router.get('/', (req, res) => {
+//   res.render('main');
+// });
 
-router.post('/logout', (req, res) => {
-  res.clearCookie('auth');
-  res.redirect('/login');
-});
+// router.post('/logout', (req, res) => {
+//   res.clearCookie('auth');
+//   res.redirect('/login');
+// });
 
 module.exports = router;
