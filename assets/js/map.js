@@ -38,7 +38,7 @@ function initMap() {
       xhr.addEventListener('load', (e) => {
         const srcXHR = e.target;
         if (srcXHR.status === 200) {
-          res(JSON.parse(srcXHR.response).data);
+          res(JSON.parse(srcXHR.response));
         } else {
           rej(srcXHR.response);
         }
@@ -68,11 +68,11 @@ function initMap() {
             coordinates: [[[
               +item.lng, +item.lat,
             ], [
-              +item.lng, ((item.lat * 100) - 1) / 100,
+              +item.lng, ((item.lat * 100) + 1) / 100,
             ], [
-              ((item.lng * 100) - 1) / 100, ((item.lat * 100) - 1) / 100,
+              ((item.lng * 100) + 1) / 100, ((item.lat * 100) + 1) / 100,
             ], [
-              ((item.lng * 100) - 1) / 100, +item.lat,
+              ((item.lng * 100) + 1) / 100, +item.lat,
             ], [
               +item.lng, +item.lat,
             ]]],
