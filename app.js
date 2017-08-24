@@ -108,6 +108,10 @@ app.get('/', (req, res) => {
 });
 app.use('/api/locations', locationsRoutes);
 
+app.post('/logout', (req, res) => {
+  res.clearCookie('auth');
+  res.redirect('/login');
+});
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
@@ -115,7 +119,6 @@ app.use((req, res, next) => {
   err.status = 404;
   next(err);
 });
-
 
 // error handler
 app.use((err, req, res) => {
@@ -127,11 +130,6 @@ app.use((err, req, res) => {
   res.status(err.status || 500);
   res.send(err.message);
   // res.render('error');
-});
-
-app.post('/logout', (req, res) => {
-  res.clearCookie('auth');
-  res.redirect('/login');
 });
 
 function createNewUser(user) {
