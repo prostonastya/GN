@@ -18,8 +18,9 @@ router.use((req, res, next) => {
           next();
         }
       });
+    } else {
+      res.status(401).send('UNAUTHORIZED');
     }
-    res.status(401).send('UNAUTHORIZED');
   }
   if (!req.url.match(regexp)) {
     if (token.auth) {
