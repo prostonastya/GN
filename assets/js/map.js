@@ -203,19 +203,20 @@ function initMap() {
       const getLocationInfoPromise = new Promise((res, rej) => {
         const xhr = new XMLHttpRequest();
 
-        xhr.open('GET', `/api/locations/${latCurrent * 100}${lngCurrent * 100}`);
+        xhr.open('GET', `/api/locations/${Math.round(latCurrent * 100)}${Math.round(lngCurrent * 100)}`);
         xhr.send();
         xhr.addEventListener('load', (e) => {
           const getLocationInfoXHR = e.srcElement;
 
-          if (getLocationInfoXHR !== 200) {
-            rej(getLocationInfoXHR.response);
+          if (getLocationInfoXHR.status !== 200) {
+            rej(getLocationInfoXHR.response); 
+            createCurrentLocation();
           }
           res(getLocationInfoXHR.response);
 
 
           if (getLocationInfoXHR.response.status !== 'success') {
-            // createCurrentLocation();
+            
           }
         });
       });
