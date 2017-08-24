@@ -7,16 +7,18 @@ const pgp = require('pg-promise')();
 const jwt = require('jsonwebtoken');
 const auth = require('./middleware/auth');
 const cookieParser = require('cookie-parser');
-// const path = require('path');
+// let favicon = require('serve-favicon');
+const logger = require('morgan');
+const locationsRoutes = require('./routes/locations.routes');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 const db = pgp({
   host: 'ec2-23-21-85-76.compute-1.amazonaws.com',
   port: 5432,
   database: 'detamp7dm7n5kt',
-  user: process.env.SERVICE_DB_USER || 'smdtzebruscqxv',
-  password: process.env.SERVICE_DB_PASS || 'b988acabcae53edc03642deec8eabbbd891f2c549a02100e9f5b134c624ea4cd',
+  user: process.env.SERVICE_DB_USER,
+  password: process.env.SERVICE_DB_PASS,
   ssl: true,
   sslfactory: 'org.postgresql.ssl.NonValidatingFactory',
 });
@@ -24,20 +26,24 @@ const db = pgp({
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.SERVICE_EMAIL || 'gamekh009@gmail.com',
-    pass: process.env.SERVICE_EMAIL_PASS || 'SoftServe',
+    user: process.env.SERVICE_EMAIL,
+    pass: process.env.SERVICE_EMAIL_PASS,
   },
 });
 
+const app = express();
+const port = process.env.PORT || 8080;
+
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // middlewares
-app.use(express.static('public'));
-app.use(bodyParser.urlencoded({
-  extended: true,
-}));
+app.use(logger('dev'));
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(express.static('assets'));
 
 // ROUTES
 app.route('/login')
@@ -98,13 +104,34 @@ app.post('/register', (req, res) => {
 app.use('/', auth);
 
 app.get('/', (req, res) => {
-  res.render('main');
+  res.render('index');
+});
+app.use('/api/locations', locationsRoutes);
+
+
+// catch 404 and forward to error handler
+app.use((req, res, next) => {
+  const err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+
+
+// error handler
+app.use((err, req, res) => {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  // render the error page
+  res.status(err.status || 500);
+  res.send(err.message);
+  // res.render('error');
 });
 
 app.post('/logout', (req, res) => {
   res.clearCookie('auth');
   res.redirect('/login');
-});
 
 function createNewUser(user) {
   db.none('insert into users(email, password, reg_date, cash, name)' +
