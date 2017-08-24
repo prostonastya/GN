@@ -19,8 +19,8 @@ global.db = pgp({
   host: 'ec2-23-21-85-76.compute-1.amazonaws.com',
   port: 5432,
   database: 'detamp7dm7n5kt',
-  user: process.env.SERVICE_DB_USER || 'smdtzebruscqxv',
-  password: process.env.SERVICE_DB_PASS || 'b988acabcae53edc03642deec8eabbbd891f2c549a02100e9f5b134c624ea4cd',
+  user: process.env.SERVICE_DB_USER,
+  password: process.env.SERVICE_DB_PASS,
   ssl: true,
   sslfactory: 'org.postgresql.ssl.NonValidatingFactory',
 });
@@ -28,8 +28,8 @@ global.db = pgp({
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.SERVICE_EMAIL || 'gamekh009@gmail.com',
-    pass: process.env.SERVICE_EMAIL_PASS || 'SoftServe',
+    user: process.env.SERVICE_EMAIL,
+    pass: process.env.SERVICE_EMAIL_PASS,
   },
 });
 
@@ -118,7 +118,6 @@ app.use((req, res, next) => {
   err.status = 404;
   next(err);
 });
-
 
 // error handler
 app.use((err, req, res) => {
