@@ -187,6 +187,9 @@ function initMap() {
 
   function getUserLocation() {
     navigator.geolocation.watchPosition((position) => {
+      if (map.data.getFeatureById('currentLocation')) {
+        map.data.remove(map.data.getFeatureById('currentLocation'));
+      }
       usersGeocordsInfo.textContent = `${position.coords.latitude} 
                                      ${position.coords.longitude}
                                      ${position.coords.accuracy}`;
