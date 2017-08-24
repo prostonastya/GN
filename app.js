@@ -5,9 +5,9 @@ const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
 const pgp = require('pg-promise')();
 const jwt = require('jsonwebtoken');
-const auth = require('./auth');
+const auth = require('./middleware/auth');
 const cookieParser = require('cookie-parser');
-const path = require('path');
+// const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -42,7 +42,7 @@ app.use(cookieParser());
 // ROUTES
 app.route('/login')
   .get((req, res) => {
-    res.render('login');    
+    res.render('login');
   })
   .post((req, res) => {
     const email = req.body['log-email'];
@@ -98,7 +98,7 @@ app.post('/register', (req, res) => {
 app.use('/', auth);
 
 app.get('/', (req, res) => {
-  res.render('main');  
+  res.render('main');
 });
 
 app.post('/logout', (req, res) => {

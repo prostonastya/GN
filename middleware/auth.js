@@ -2,7 +2,6 @@
 
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const url = require('url');
 
 const router = express.Router();
 const regexp = new RegExp(/^\/?api.*$/);
@@ -13,13 +12,14 @@ router.use((req, res, next) => {
     if (token.auth) {
       jwt.verify(token.auth, 'secret', (err, decoded) => {
         if (err) {
-          res.status(500).send('Internal Server Error');
+          res.status(403).send('Forbidden');
         } else {
           req.decoded = decoded;
           next();
         }
       });
-    } else res.status(401).send('UNAUTHORIZED');
+    }
+    res.status(401).send('UNAUTHORIZED');
   }
   if (!req.url.match(regexp)) {
     if (token.auth) {
