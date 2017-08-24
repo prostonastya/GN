@@ -12,7 +12,7 @@ function initMap() {
   const usersLocationInfo = document.getElementById('users-location');
   const occupyBtn = document.getElementById('occupy-btn');
 
-  const currentLocationId = null;
+  const currentLocationId = 'currentLocation';
 
   occupyBtn.addEventListener('click', occupyLocation);
 
@@ -79,12 +79,15 @@ function initMap() {
           },
         });
       });
+      console.log(geoObj);
 
       map.data.addGeoJson(geoObj);
     })
       .catch((err) => {
         console.log(err);
       });
+
+    getUserLocation();
   };
 
   map.data.setStyle((feature) => {
@@ -94,6 +97,7 @@ function initMap() {
     }
     return /** @type {google.maps.Data.StyleOptions} */({
       fillColor: color,
+      fillOpacity: 0.2,
       strokeColor: color,
       strokeWeight: 2,
     });
@@ -105,6 +109,7 @@ function initMap() {
 
     // get short location info
     if (event.feature.getId() === 'highlight') return;
+
 
     const getLocationInfoPromise = new Promise((res, rej) => {
       const xhr = new XMLHttpRequest();
@@ -144,18 +149,18 @@ function initMap() {
       map.data.remove(map.data.getFeatureById('highlight'));
     }
 
-    const lat01 = Math.floor(event.latLng.lat() * 100) / 100;
-    const lng01 = Math.floor(event.latLng.lng() * 100) / 100;
+    const lat = Math.floor(event.latLng.lat() * 100) / 100;
+    const lng = Math.floor(event.latLng.lng() * 100) / 100;
 
     clickedInfo.style.display = 'block';
     // clickedCordsInfo.textContent = `${event.latLng.lat()} ${event.latLng.lng()}`;
-    clickedLocationInfo.textContent = `${lat01} ${lng01}`;
+    clickedLocationInfo.textContent = `${lat} ${lng}`;
 
     const location = [
-      { lat: lat01, lng: lng01 }, // north west
-      { lat: ((lat01 * 100) + 1) / 100, lng: lng01 }, // south west
-      { lat: ((lat01 * 100) + 1) / 100, lng: ((lng01 * 100) + 1) / 100 }, // south east
-      { lat: lat01, lng: ((lng01 * 100) + 1) / 100 }, // north east
+      { lat, lng }, // north west
+      { lat: ((lat * 100) + 1) / 100, lng }, // south west
+      { lat: ((lat * 100) + 1) / 100, lng: ((lng * 100) + 1) / 100 }, // south east
+      { lat, lng: ((lng * 100) + 1) / 100 }, // north east
     ];
 
     const locationNew = {
@@ -182,9 +187,6 @@ function initMap() {
   });
 
 
-  getUserLocation();
-
-
   function getUserLocation() {
     navigator.geolocation.watchPosition((position) => {
       usersGeocordsInfo.textContent = `${position.coords.latitude} 
@@ -198,29 +200,62 @@ function initMap() {
       usersLocationInfo.textContent = `${latCurrent} 
                                      ${lngCurrent}`;
 
+      const getLocationInfoPromise = new Promise((res, rej) => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.open('GET', `/api/locations/${Math.round(latCurrent * 100)}${Math.round(lngCurrent * 100)}`);
+        xhr.send();
+        xhr.addEventListener('load', (e) => {
+          const getLocationInfoXHR = e.srcElement;
+
+          if (getLocationInfoXHR.status !== 200) {
+            rej(getLocationInfoXHR.response); 
+            createCurrentLocation();
+          }
+          res(getLocationInfoXHR.response);
+
+
+          if (getLocationInfoXHR.response.status !== 'success') {
+            
+          }
+        });
+      });
+
+        // need another SQL-query on server to get valid info (JOIN masters)
+
+      getLocationInfoPromise
+        .then((locationData) => {
+          console.dir(JSON.parse(locationData));
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+
       // if location is already created - change bg color only
       // if user go out from location - delete location
 
-      const location = [
-        { lat: latCurrent, lng: lngCurrent }, // north west
-        { lat: ((latCurrent * 100) + 1) / 100, lng: lngCurrent }, // south west
-        { lat: ((latCurrent * 100) + 1) / 100, lng: ((lngCurrent * 100) + 1) / 100 }, // south east
-        { lat: latCurrent, lng: ((lngCurrent * 100) + 1) / 100 }, // north east
-      ];
-      const locationId = currentLocationId;
+      function createCurrentLocation() {
+        const location = [
+          { lat: latCurrent, lng: lngCurrent }, // north west
+          { lat: ((latCurrent * 100) + 1) / 100, lng: lngCurrent }, // south west
+          { lat: ((latCurrent * 100) + 1) / 100, lng: ((lngCurrent * 100) + 1) / 100 }, // south east
+          { lat: latCurrent, lng: ((lngCurrent * 100) + 1) / 100 }, // north east
+        ];
+        const locationId = currentLocationId;
 
-      const locationAddition = {
-        type: 'Feature',
-        id: locationId,
-        properties: {
-          color: 'crimson',
-          info: {
-            name: `location ${locationId}`,
+        const locationAddition = {
+          type: 'Feature',
+          id: locationId,
+          properties: {
+            color: 'crimson',
+            info: {
+              name: `location ${locationId}`,
+            },
           },
-        },
-        geometry: new google.maps.Data.Polygon([location]),
-      };
-      map.data.add(locationAddition);
+          geometry: new google.maps.Data.Polygon([location]),
+        };
+        map.data.add(locationAddition);
+      }
     });
   }
 
@@ -261,24 +296,44 @@ function initMap() {
       })
       .then((response) => {
         console.log(response);
+        const thisFeature = map.data.getFeatureById('currentLocation');
+        const location = [
+          { lat: response.data.lat, lng: response.data.lng }, // north west
+          { lat: ((response.data.lat * 100) + 1) / 100, lng: response.data.lng }, // south west
+          { lat: ((response.data.lat * 100) + 1) / 100, lng: ((response.data.lng * 100) + 1) / 100 }, // south east
+          { lat: response.data.lat, lng: ((response.data.lng * 100) + 1) / 100 }, // north east
+        ];
+
+        const locationNew = {
+          type: 'Feature',
+          id: response.loc_id,
+          properties: {
+            color: 'green',
+            info: {
+            },
+          },
+          geometry: new google.maps.Data.Polygon([location]),
+        };
+        map.data.add(locationNew);
+        map.data.remove(thisFeature);
       })
       .catch((err) => {
         console.log(err);
       });
 
     // const locationId = Math.floor((Math.random() * new Date()) / 100000);
-    // const locationNew = {
-    //   type: 'Feature',
-    //   id: locationId,
-    //   properties: {
-    //     color: 'blue',
-    //     info: {
-    //       name: `location ${locationId}`,
-    //     },
-    //   },
-    //   geometry: feature.getGeometry(),
-    // };
-    // map.data.add(locationNew);
-    // map.data.remove(feature);
+    const locationNew = {
+      type: 'Feature',
+      id: locationId,
+      properties: {
+        color: 'blue',
+        info: {
+          name: `location ${locationId}`,
+        },
+      },
+      geometry: new google.maps.Data.Polygon([location]),
+    };
+    map.data.add(locationNew);
+    map.data.remove(feature);
   }
 }
