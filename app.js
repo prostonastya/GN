@@ -14,7 +14,8 @@ const locationsRoutes = require('./routes/locations.routes');
 
 const app = express();
 const port = process.env.PORT || 8080;
-const db = pgp({
+
+global.db = pgp({
   host: 'ec2-23-21-85-76.compute-1.amazonaws.com',
   port: 5432,
   database: 'detamp7dm7n5kt',
@@ -52,7 +53,7 @@ app.route('/login')
     const email = req.body['log-email'];
     const password = req.body['log-pass'];
 
-    db.one(`SELECT * FROM users
+    global.db.one(`SELECT * FROM users
     WHERE email = '${email}';`)
       .then((data) => {
         if (!data.password) {
@@ -133,7 +134,7 @@ app.post('/logout', (req, res) => {
 });
 
 function createNewUser(user) {
-  db.none('insert into users(email, password, reg_date, cash, name)' +
+  global.db.none('insert into users(email, password, reg_date, cash, name)' +
 `values('${user.email}', '${user.pass}', '${new Date().toISOString()}', 150, '${user.name}')`)
     .then(() => console.log('New user was added to db'))
     .catch(error => console.log('error:', error));

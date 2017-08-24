@@ -1,14 +1,14 @@
-const pgp = require('pg-promise')();
+// const pgp = require('pg-promise')();
 
-const db = pgp({
-  host: 'ec2-23-21-85-76.compute-1.amazonaws.com',
-  port: 5432,
-  database: 'detamp7dm7n5kt',
-  user: 'smdtzebruscqxv',
-  password: 'b988acabcae53edc03642deec8eabbbd891f2c549a02100e9f5b134c624ea4cd',
-  ssl: true,
-  sslfactory: 'org.postgresql.ssl.NonValidatingFactory',
-});
+// const db = pgp({
+//   host: 'ec2-23-21-85-76.compute-1.amazonaws.com',
+//   port: 5432,
+//   database: 'detamp7dm7n5kt',
+//   user: 'smdtzebruscqxv',
+//   password: 'b988acabcae53edc03642deec8eabbbd891f2c549a02100e9f5b134c624ea4cd',
+//   ssl: true,
+//   sslfactory: 'org.postgresql.ssl.NonValidatingFactory',
+// });
 
 module.exports = class Location {
   constructor(userData) {
@@ -24,7 +24,7 @@ module.exports = class Location {
   }
 
   saveLocation() {
-    return db.none(`insert into locations (loc_id, lat, lng, population, daily_bank, creation_date)
+    return global.db.none(`insert into locations (loc_id, lat, lng, population, daily_bank, creation_date)
                     values(
                       '${this.locationId}', 
                       ${this.lat}, 
@@ -61,12 +61,12 @@ module.exports = class Location {
   }
 
   static getAllLocations() {
-    return db.any(`select locations.loc_id AS loc_id, lat, lng, user_id from locations
+    return global.db.any(`select locations.loc_id AS loc_id, lat, lng, user_id from locations
                    full join master_location ON locations.loc_id = master_location.loc_id;`);
   }
 
   static getLocationById(id) {
-    return db.one(`select locations.loc_id AS loc_id, lat, lng, user_id from locations
+    return global.db.one(`select locations.loc_id AS loc_id, lat, lng, user_id from locations
             full join master_location on locations.loc_id = master_location.loc_id 
             where locations.loc_id = $1`, id);
   }
