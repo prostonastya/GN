@@ -12,8 +12,6 @@ function initMap() {
   const usersLocationInfo = document.getElementById('users-location');
   const occupyBtn = document.getElementById('occupy-btn');
 
-  const currentLocationId = 'currentLocation';
-
   occupyBtn.addEventListener('click', occupyLocation);
 
   map = new google.maps.Map(document.getElementById('map'), {
@@ -108,7 +106,7 @@ function initMap() {
     // occupyLocation(event.feature);
 
     // get short location info
-    if (event.feature.getId() === 'highlight') return;
+    if (event.feature.getId() === 'highlight' || event.feature.getId() === 'currentLocation') return;
 
 
     const getLocationInfoPromise = new Promise((res, rej) => {
@@ -209,15 +207,9 @@ function initMap() {
           const getLocationInfoXHR = e.srcElement;
 
           if (getLocationInfoXHR.status !== 200) {
-            rej(getLocationInfoXHR.response); 
-            createCurrentLocation();
+            rej(getLocationInfoXHR.response);
           }
-          res(getLocationInfoXHR.response);
-
-
-          if (getLocationInfoXHR.response.status !== 'success') {
-            
-          }
+          res(JSON.parse(getLocationInfoXHR.response));
         });
       });
 
@@ -225,7 +217,10 @@ function initMap() {
 
       getLocationInfoPromise
         .then((locationData) => {
-          console.dir(JSON.parse(locationData));
+          console.dir(locationData);
+          if (!locationData.length) {
+            createCurrentLocation();
+          }
         })
         .catch((err) => {
           console.log(err);
@@ -235,21 +230,31 @@ function initMap() {
       // if user go out from location - delete location
 
       function createCurrentLocation() {
-        const location = [
-          { lat: latCurrent, lng: lngCurrent }, // north west
-          { lat: ((latCurrent * 100) + 1) / 100, lng: lngCurrent }, // south west
-          { lat: ((latCurrent * 100) + 1) / 100, lng: ((lngCurrent * 100) + 1) / 100 }, // south east
-          { lat: latCurrent, lng: ((lngCurrent * 100) + 1) / 100 }, // north east
-        ];
-        const locationId = currentLocationId;
+        const location = [{
+          // north west
+          lat: latCurrent,
+          lng: lngCurrent,
+        }, {
+          // south west
+          lat: ((latCurrent * 100) + 1) / 100,
+          lng: lngCurrent,
+        }, {
+          // south east
+          lat: ((latCurrent * 100) + 1) / 100,
+          lng: ((lngCurrent * 100) + 1) / 100,
+        }, {
+          // north east
+          lat: latCurrent,
+          lng: ((lngCurrent * 100) + 1) / 100,
+        }];
 
         const locationAddition = {
           type: 'Feature',
-          id: locationId,
+          id: 'currentLocation',
           properties: {
             color: 'crimson',
             info: {
-              name: `location ${locationId}`,
+              name: 'Current location',
             },
           },
           geometry: new google.maps.Data.Polygon([location]),
@@ -286,33 +291,46 @@ function initMap() {
           createLocationXHR.addEventListener('load', (e) => {
             const xhr = e.srcElement;
 
-            if (xhr !== 200) {
+            if (xhr.status !== 200) {
               rej(xhr.response);
             }
 
-            res(xhr.response);
+            res(JSON.parse(xhr.response));
           });
         });
       })
       .then((response) => {
         console.log(response);
         const thisFeature = map.data.getFeatureById('currentLocation');
-        const location = [
-          { lat: response.data.lat, lng: response.data.lng }, // north west
-          { lat: ((response.data.lat * 100) + 1) / 100, lng: response.data.lng }, // south west
-          { lat: ((response.data.lat * 100) + 1) / 100, lng: ((response.data.lng * 100) + 1) / 100 }, // south east
-          { lat: response.data.lat, lng: ((response.data.lng * 100) + 1) / 100 }, // north east
-        ];
+
+        const location = [{
+          // north west
+          lat: response.lat,
+          lng: response.lng,
+        }, {
+          // south west
+          lat: ((response.lat * 100) + 1) / 100,
+          lng: response.lng,
+        }, {
+          // south east
+          lat: ((response.lat * 100) + 1) / 100,
+          lng: ((response.lng * 100) + 1) / 100,
+        }, {
+          // north east
+          lat: response.lat,
+          lng: ((response.lng * 100) + 1) / 100,
+        }];
 
         const locationNew = {
           type: 'Feature',
-          id: response.loc_id,
+          id: response.locationId,
           properties: {
             color: 'green',
             info: {
             },
           },
           geometry: new google.maps.Data.Polygon([location]),
+          // geometry: thisFeature.getGeometry(),
         };
         map.data.add(locationNew);
         map.data.remove(thisFeature);
@@ -322,18 +340,18 @@ function initMap() {
       });
 
     // const locationId = Math.floor((Math.random() * new Date()) / 100000);
-    const locationNew = {
-      type: 'Feature',
-      id: locationId,
-      properties: {
-        color: 'blue',
-        info: {
-          name: `location ${locationId}`,
-        },
-      },
-      geometry: new google.maps.Data.Polygon([location]),
-    };
-    map.data.add(locationNew);
-    map.data.remove(feature);
+    // const locationNew = {
+    //   type: 'Feature',
+    //   id: 'currentLocation',
+    //   properties: {
+    //     color: 'blue',
+    //     info: {
+    //       name: 'Current location',
+    //     },
+    //   },
+    //   geometry: new google.maps.Data.Polygon([location]),
+    // };
+    // map.data.add(locationNew);
+    // map.data.remove(feature);
   }
 }

@@ -20,10 +20,15 @@ router.get('/:id', (req, res, next) => {
     .catch(err => next(err));
 });
 router.post('/', (req, res, next) => {
-  const newLocation = new Location(req.body);
+  const userData = {
+    userId: req.decoded.id,
+    userLng: req.body.userLng,
+    userLat: req.body.userLat,
+  };
+  const newLocation = new Location(userData);
   newLocation.saveLocation()
     .then(() => {
-      res.sendStatus(200);
+      res.json(newLocation);
     })
     .catch(err => next(err));
 });

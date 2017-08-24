@@ -11,6 +11,7 @@ const cookieParser = require('cookie-parser');
 // let favicon = require('serve-favicon');
 const logger = require('morgan');
 const locationsRoutes = require('./routes/locations.routes');
+require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 8080;

@@ -15,7 +15,7 @@ module.exports = class Location {
     this.lat = Math.floor(userData.userLat * 100) / 100;
     this.lng = Math.floor(userData.userLng * 100) / 100;
     this.locationId = `${Math.round(this.lat * 100)}${Math.round(this.lng * 100)}`;
-    this.masterId = 1; // get from req when auth will be ready
+    this.masterId = userData.userId; // get from req when auth will be ready
     this.population = 10;
     this.dailyBank = 0;
     this.loyalPopulation = 1;
@@ -66,7 +66,7 @@ module.exports = class Location {
   }
 
   static getLocationById(id) {
-    return global.db.one(`select locations.loc_id AS loc_id, lat, lng, user_id from locations
+    return global.db.any(`select locations.loc_id AS loc_id, lat, lng, user_id from locations
             full join master_location on locations.loc_id = master_location.loc_id 
             where locations.loc_id = $1`, id);
   }
