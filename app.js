@@ -5,6 +5,7 @@ const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
 const pgp = require('pg-promise')();
 const jwt = require('jsonwebtoken');
+const path = require('path');
 const auth = require('./middleware/auth');
 const cookieParser = require('cookie-parser');
 // let favicon = require('serve-favicon');
@@ -30,9 +31,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.SERVICE_EMAIL_PASS,
   },
 });
-
-const app = express();
-const port = process.env.PORT || 8080;
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -132,6 +130,7 @@ app.use((err, req, res) => {
 app.post('/logout', (req, res) => {
   res.clearCookie('auth');
   res.redirect('/login');
+});
 
 function createNewUser(user) {
   db.none('insert into users(email, password, reg_date, cash, name)' +
