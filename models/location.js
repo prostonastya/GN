@@ -58,6 +58,7 @@ module.exports = class Location {
 
     //   return transaction.batch([createLocationQuery, createMasterQuery]);
     // });
+
   }
 
   static getAllLocations() {
@@ -66,8 +67,17 @@ module.exports = class Location {
   }
 
   static getLocationById(id) {
-    return db.one(`select locations.loc_id AS loc_id, lat, lng, user_id from locations
+    /*return db.one(`select locations.loc_id AS loc_id, lat, lng, user_id from locations
+            full join master_location on locations.loc_id = master_location.loc_id 
+            where locations.loc_id = $1`, id);*/
+      let queryResult = db.oneOrNone(`select locations.loc_id AS loc_id, lat, lng, user_id from locations
             full join master_location on locations.loc_id = master_location.loc_id 
             where locations.loc_id = $1`, id);
+      console.log(queryResult);
+      if(!queryResult) {
+        return {msg: 'this location has not been occupied yet'};
+      } else {
+        return queryResult;
+      }
   }
 };
