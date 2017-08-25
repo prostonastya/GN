@@ -20,7 +20,7 @@ global.db = pgp({
   host: 'ec2-23-21-85-76.compute-1.amazonaws.com',
   port: 5432,
   database: 'detamp7dm7n5kt',
-  user: process.env.SERVICE_DB_USER,
+  user: process.env.SERVICE_DB_USER || 'smdtzebruscqxv',
   password: process.env.SERVICE_DB_PASS,
   ssl: true,
   sslfactory: 'org.postgresql.ssl.NonValidatingFactory',
@@ -158,6 +158,9 @@ function sendMail(letter) {
     }
   });
 }
+
+
+// global.db.none('delete from locations');
 
 app.listen(port, () => {
   console.log(`Listen on port: ${port}`);

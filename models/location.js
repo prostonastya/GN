@@ -9,7 +9,6 @@
 //   ssl: true,
 //   sslfactory: 'org.postgresql.ssl.NonValidatingFactory',
 // });
-
 module.exports = class Location {
   constructor(userData) {
     this.lat = Math.floor(userData.userLat * 100) / 100;
@@ -58,6 +57,10 @@ module.exports = class Location {
 
     //   return transaction.batch([createLocationQuery, createMasterQuery]);
     // });
+  }
+
+  static deleteAllLocations() {
+    global.db.none('delete from location');
   }
 
   static getAllLocations() {

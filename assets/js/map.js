@@ -336,7 +336,7 @@ function initMap() {
           // geometry: thisFeature.getGeometry(),
         };
         map.data.add(locationNew);
-        map.data.remove(thisFeature);
+        // map.data.remove(thisFeature);
       })
       .catch((err) => {
         console.log(err);
