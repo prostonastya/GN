@@ -162,6 +162,7 @@ function sendMail(letter) {
 
 // global.db.none('delete from locations');
 
-app.listen(port, () => {
-	console.log(`Listen on port: ${port}`);
-});
+// app.listen(port, () => {
+// 	console.log(`Listen on port: ${port}`);
+// });
+module.exports = app;
