@@ -63,17 +63,23 @@ function initMap() {
 					},
 					geometry: {
 						type: 'Polygon',
-						coordinates: [[[
-							+item.lng, +item.lat,
-						], [
-							+item.lng, ((item.lat * 100) + 1) / 100,
-						], [
-							((item.lng * 100) + 1) / 100, ((item.lat * 100) + 1) / 100,
-						], [
-							((item.lng * 100) + 1) / 100, +item.lat,
-						], [
-							+item.lng, +item.lat,
-						]]],
+						coordinates: [
+							getLocationPointsByTopLeft({
+								lat: item.lat,
+								lng: item.lng,
+							}, true),
+							// [[
+							// 	+item.lng, +item.lat,
+							// ], [
+							// 	+item.lng, ((item.lat * 100) + 1) / 100,
+							// ], [
+							// 	((item.lng * 100) + 1) / 100, ((item.lat * 100) + 1) / 100,
+							// ], [
+							// 	((item.lng * 100) + 1) / 100, +item.lat,
+							// ], [
+							// 	+item.lng, +item.lat,
+							// ]],
+						],
 					},
 				});
 			});
@@ -147,19 +153,25 @@ function initMap() {
 			map.data.remove(map.data.getFeatureById('highlight'));
 		}
 
-		const lat = Math.floor(event.latLng.lat() * 100) / 100;
-		const lng = Math.floor(event.latLng.lng() * 100) / 100;
+		const topLeftCoords = getTopLeftLocationCoordsByPoint(event.latLng.lat(), event.latLng.lng());
+		const lat = topLeftCoords.lat;
+		const lng = topLeftCoords.lng;
+
+		// const lat = Math.floor(event.latLng.lat() * 100) / 100;
+		// const lng = Math.floor(event.latLng.lng() * 100) / 100;
 
 		clickedInfo.style.display = 'block';
 		// clickedCordsInfo.textContent = `${event.latLng.lat()} ${event.latLng.lng()}`;
 		clickedLocationInfo.textContent = `${lat} ${lng}`;
 
-		const location = [
-			{ lat, lng }, // north west
-			{ lat: ((lat * 100) + 1) / 100, lng }, // south west
-			{ lat: ((lat * 100) + 1) / 100, lng: ((lng * 100) + 1) / 100 }, // south east
-			{ lat, lng: ((lng * 100) + 1) / 100 }, // north east
-		];
+		const location = getLocationPointsByTopLeft(topLeftCoords);
+
+		// const location = [
+		// 	{ lat, lng }, // north west
+		// 	{ lat: ((lat * 100) + 1) / 100, lng }, // south west
+		// 	{ lat: ((lat * 100) + 1) / 100, lng: ((lng * 100) + 1) / 100 }, // south east
+		// 	{ lat, lng: ((lng * 100) + 1) / 100 }, // north east
+		// ];
 
 		const locationNew = {
 			type: 'Feature',
@@ -190,21 +202,25 @@ function initMap() {
 			if (map.data.getFeatureById('currentLocation')) {
 				map.data.remove(map.data.getFeatureById('currentLocation'));
 			}
+			console.dir(position);
+
 			usersGeocordsInfo.textContent = `${position.coords.latitude} 
 																		 ${position.coords.longitude}
 																		 ${position.coords.accuracy}`;
 
 			usersLocContainer.style.display = 'block';
-			const latCurrent = Math.floor(position.coords.latitude * 100) / 100;
-			const lngCurrent = Math.floor(position.coords.longitude * 100) / 100;
 
-			usersLocationInfo.textContent = `${latCurrent} 
-																		 ${lngCurrent}`;
+			const currentLocationCoords = getTopLeftLocationCoordsByPoint(position.coords.latitude, position.coords.longitude);
+			// const latCurrent = Math.floor(position.coords.latitude * 100) / 100;
+			// const lngCurrent = Math.floor(position.coords.longitude * 100) / 100;
+
+			usersLocationInfo.textContent = `${currentLocationCoords.lat} 
+																		 ${currentLocationCoords.lng}`;
 
 			const getLocationInfoPromise = new Promise((res, rej) => {
 				const xhr = new XMLHttpRequest();
 
-				xhr.open('GET', `/api/locations/${Math.round(latCurrent * 100)}${Math.round(lngCurrent * 100)}`);
+				xhr.open('GET', `/api/locations/${currentLocationCoords.lat}${currentLocationCoords.lng}`);
 				xhr.send();
 				xhr.addEventListener('load', (e) => {
 					const getLocationInfoXHR = e.srcElement;
@@ -221,7 +237,7 @@ function initMap() {
 			getLocationInfoPromise
 				.then((locationData) => {
 					console.dir(locationData);
-					if (!locationData.length) {
+					if (!locationData) {
 						createCurrentLocation();
 					}
 				})
@@ -233,25 +249,27 @@ function initMap() {
 			// if user go out from location - delete location
 
 			function createCurrentLocation() {
-				const location = [{
-					// north west
-					lat: latCurrent,
-					lng: lngCurrent,
-				}, {
-					// south west
-					lat: ((latCurrent * 100) + 1) / 100,
-					lng: lngCurrent,
-				}, {
-					// south east
-					lat: ((latCurrent * 100) + 1) / 100,
-					lng: ((lngCurrent * 100) + 1) / 100,
-				}, {
-					// north east
-					lat: latCurrent,
-					lng: ((lngCurrent * 100) + 1) / 100,
-				}];
+				const location = getLocationPointsByTopLeft(currentLocationCoords);
 
-				const locationAddition = {
+				// [{
+				// 	// north west
+				// 	lat: latCurrent,
+				// 	lng: lngCurrent,
+				// }, {
+				// 	// south west
+				// 	lat: ((latCurrent * 100) + 1) / 100,
+				// 	lng: lngCurrent,
+				// }, {
+				// 	// south east
+				// 	lat: ((latCurrent * 100) + 1) / 100,
+				// 	lng: ((lngCurrent * 100) + 1) / 100,
+				// }, {
+				// 	// north east
+				// 	lat: latCurrent,
+				// 	lng: ((lngCurrent * 100) + 1) / 100,
+				// }];
+
+				const locationGeoObj = {
 					type: 'Feature',
 					id: 'currentLocation',
 					properties: {
@@ -262,7 +280,7 @@ function initMap() {
 					},
 					geometry: new google.maps.Data.Polygon([location]),
 				};
-				map.data.add(locationAddition);
+				map.data.add(locationGeoObj);
 			}
 		});
 	}
@@ -307,23 +325,24 @@ function initMap() {
 				console.log(response);
 				const thisFeature = map.data.getFeatureById('currentLocation');
 
-				const location = [{
-					// north west
-					lat: response.lat,
-					lng: response.lng,
-				}, {
-					// south west
-					lat: ((response.lat * 100) + 1) / 100,
-					lng: response.lng,
-				}, {
-					// south east
-					lat: ((response.lat * 100) + 1) / 100,
-					lng: ((response.lng * 100) + 1) / 100,
-				}, {
-					// north east
-					lat: response.lat,
-					lng: ((response.lng * 100) + 1) / 100,
-				}];
+				const location = getLocationPointsByTopLeft(response);
+				// [{
+				// 	// north west
+				// 	lat: response.lat,
+				// 	lng: response.lng,
+				// }, {
+				// 	// south west
+				// 	lat: ((response.lat * 100) + 1) / 100,
+				// 	lng: response.lng,
+				// }, {
+				// 	// south east
+				// 	lat: ((response.lat * 100) + 1) / 100,
+				// 	lng: ((response.lng * 100) + 1) / 100,
+				// }, {
+				// 	// north east
+				// 	lat: response.lat,
+				// 	lng: ((response.lng * 100) + 1) / 100,
+				// }];
 
 				const locationNew = {
 					type: 'Feature',
@@ -357,5 +376,180 @@ function initMap() {
 		// };
 		// map.data.add(locationNew);
 		// map.data.remove(feature);
+	}
+
+	let relativeLatSize;
+	let relativeLngSize;
+	const lngSizeCoefficients = {};
+	const latBreakPoints = [];
+
+	initLocationGrid();
+
+	function initLocationGrid(options) {
+		options = options || {};
+		const preferableLocSideSize = options.preferableLocSideSize || 100;
+		const EARTH_EQUATOR_LENGTH = options.EARTH_EQUATOR_LENGTH || 40075696;
+		const EARTH_MERIDIAN_LENGTH = options.EARTH_MERIDIAN_LENGTH || 20004274;
+
+		const locSideMetersSizeOn30Lat = preferableLocSideSize;
+		const locSideMetersSizeOnEquatorLat = locSideMetersSizeOn30Lat * 1.5;
+		const minAbsoluteLatSize = EARTH_MERIDIAN_LENGTH / 1800000000;
+		const minAbsoluteLngSize = EARTH_EQUATOR_LENGTH / 3600000000;
+
+		relativeLatSize = getClosestRelSize(Math.round(preferableLocSideSize / minAbsoluteLatSize), 'lat');
+		relativeLngSize = getClosestRelSize(Math.round(locSideMetersSizeOnEquatorLat / minAbsoluteLngSize), 'lng');
+
+		let lngPrimeFactorsArr = findPrimeFactors(3600000000 / relativeLngSize);
+		lngPrimeFactorsArr.splice(-1);
+
+		lngPrimeFactorsArr = lngPrimeFactorsArr.map((item) => {
+			if (item > 2) {
+				return [item / 2, 2];
+			}
+			return item;
+		});
+
+		for (let i = 0; i < lngPrimeFactorsArr.length; i += 1) {
+			if (Array.isArray(lngPrimeFactorsArr[i])) {
+				const innerArr = lngPrimeFactorsArr.splice(i, 1)[0];
+				i -= 1;
+				innerArr.forEach((currentValue) => {
+					lngPrimeFactorsArr.push(currentValue);
+				});
+			}
+		}
+
+		let lngSizeCoefficient = 1;
+
+		lngPrimeFactorsArr.forEach((currentValue) => {
+			lngSizeCoefficient *= currentValue;
+			let lngBreakPoint = (Math.acos(1 / lngSizeCoefficient) * 180) / Math.PI;
+			lngBreakPoint = (Math.floor(Math.round(lngBreakPoint * 10000000) / relativeLatSize) * relativeLatSize) / 10000000;
+			lngSizeCoefficients[lngBreakPoint] = lngSizeCoefficient;
+			latBreakPoints.push(lngBreakPoint);
+		});
+		console.dir(lngSizeCoefficients);
+	}
+
+	function getTopLeftLocationCoordsByPoint(pointLat, pointLng) {
+		const lat = (Math.ceil(Math.round(pointLat * 10000000) /	relativeLatSize) * relativeLatSize) / 10000000;
+		const lng = (Math.floor(Math.round(pointLng * 10000000) / getRelLngSize(lat)) * getRelLngSize(lat)) / 10000000;
+
+		return {
+			lat,
+			lng,
+		};
+	}
+
+	function getClosestRelSize(preferRelSize, latOrLng) {
+		let maxDeg;
+		if (latOrLng === 'lat') {
+			maxDeg = 1800000000;
+		} else if (latOrLng === 'lng') {
+			maxDeg = 3600000000;
+		} else {
+			return false;
+		}
+
+		if (Math.round(maxDeg / preferRelSize) === maxDeg / preferRelSize) {
+			return preferRelSize;
+		}
+
+		if (Math.round(maxDeg / preferRelSize) !== maxDeg / preferRelSize) {
+			let relativeSizeToIncrease = preferRelSize;
+			let relativeSizeToDecrease = preferRelSize;
+			while (true) {
+				relativeSizeToIncrease += 1;
+				relativeSizeToDecrease -= 1;
+				if (Math.round(maxDeg / relativeSizeToIncrease) === maxDeg / relativeSizeToIncrease) {
+					return relativeSizeToIncrease;
+				}
+
+				if (Math.round(maxDeg / relativeSizeToDecrease) === maxDeg / relativeSizeToDecrease) {
+					return relativeSizeToDecrease;
+				}
+			}
+		}
+	}
+
+	function getLocationPointsByTopLeft(topLeftCoords, isForMapArray) {
+		if (!isForMapArray) {
+			return [{
+			// north west
+				lat: topLeftCoords.lat,
+				lng: topLeftCoords.lng,
+			}, {
+			// south west
+				lat: ((topLeftCoords.lat * 10000000) - relativeLatSize) / 10000000,
+				lng: topLeftCoords.lng,
+			}, {
+			// south east
+				lat: ((topLeftCoords.lat * 10000000) - relativeLatSize) / 10000000,
+				lng: ((topLeftCoords.lng * 10000000) + getRelLngSize(topLeftCoords.lat)) / 10000000,
+			}, {
+			// north east
+				lat: topLeftCoords.lat,
+				lng: ((topLeftCoords.lng * 10000000) + getRelLngSize(topLeftCoords.lat)) / 10000000,
+			}];
+		}
+		return [[
+			// north west
+			+topLeftCoords.lng,
+			+topLeftCoords.lat,
+		], [
+			// south west
+			+topLeftCoords.lng,
+			((topLeftCoords.lat * 10000000) - relativeLatSize) / 10000000,
+		], [
+			// south east
+			((topLeftCoords.lng * 10000000) + getRelLngSize(topLeftCoords.lat)) / 10000000,
+			((topLeftCoords.lat * 10000000) - relativeLatSize) / 10000000,
+		], [
+			// north east
+			((topLeftCoords.lng * 10000000) + getRelLngSize(topLeftCoords.lat)) / 10000000,
+			+topLeftCoords.lat,
+		], [
+			// north west
+			+topLeftCoords.lng,
+			+topLeftCoords.lat,
+		]];
+	}
+
+	function getRelLngSize(topLeftLat) {
+		if (topLeftLat < 0) {
+			topLeftLat = (topLeftLat - (relativeLatSize / 10000000)) * (-1);
+		}
+
+		if (topLeftLat <= latBreakPoints[0]) {
+			return relativeLngSize;
+		}
+
+		for (let i = 0, maxValue = latBreakPoints.length; i < maxValue; i += 1) {
+			if (
+				(topLeftLat > latBreakPoints[i] && topLeftLat <= latBreakPoints[i + 1]) ||
+				(topLeftLat > latBreakPoints[i] && !latBreakPoints[i + 1])
+			) {
+				return relativeLngSize * lngSizeCoefficients[latBreakPoints[i]];
+			}
+		}
+	}
+
+	function findPrimeFactors(value) {
+		let tempValue = value;
+		let checker = 2;
+		const result = [];
+
+		while (checker * checker <= tempValue) {
+			if (tempValue % checker === 0) {
+				result.push(checker);
+				tempValue /= checker;
+			} else {
+				checker += 1;
+			}
+		}
+		if (tempValue !== 1)	{
+			result.push(tempValue);
+		}
+		return result;
 	}
 }

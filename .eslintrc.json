@@ -20,9 +20,10 @@
     "indent": [ 2, "tab", { "SwitchCase": 1 }],
     "no-tabs": 0,
     "strict": [2, "global"],
-    "jsx-a11y/href-no-hash": 0,
+    // "jsx-a11y/href-no-hash": 0,
     "no-param-reassign": 0,
-    "linebreak-style": 0
+    "linebreak-style": 0,
+    "no-constant-condition": ["error", { "checkLoops": false }]
   }
 }
 
