@@ -1,5 +1,6 @@
 'use strict';
 
+const EventEmitter = require('events').EventEmitter;
 const express = require('express');
 const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
@@ -11,10 +12,13 @@ const cookieParser = require('cookie-parser');
 // let favicon = require('serve-favicon');
 const logger = require('morgan');
 const locationsRoutes = require('./routes/locations.routes');
+const Location = require('./models/location');
+const schedule = require('node-schedule');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 8080;
+const eventEmitter = new EventEmitter();
 
 global.db = pgp({
 	host: 'ec2-23-21-85-76.compute-1.amazonaws.com',
@@ -159,6 +163,16 @@ function sendMail(letter) {
 	});
 }
 
+
+// schedule.scheduleJob('*/300 * * * * *', () => {
+// 	console.log('daily event!');
+// 	Location.recalcLocationsLifecycle();
+// 	eventEmitter.emit('daily-event');
+// });
+
+eventEmitter.on('daily-event', () => {
+	console.log('daily event handled!');
+});
 
 // global.db.none('delete from locations');
 
