@@ -12,6 +12,8 @@ function initMap() {
 	const usersLocationInfo = document.getElementById('users-location');
 	const occupyBtn = document.getElementById('occupy-btn');
 
+	let userGeoData;
+
 	occupyBtn.addEventListener('click', occupyLocation);
 
 	map = new google.maps.Map(document.getElementById('map'), {
@@ -199,10 +201,9 @@ function initMap() {
 
 	function getUserLocation() {
 		navigator.geolocation.watchPosition((position) => {
-			if (map.data.getFeatureById('currentLocation')) {
-				map.data.remove(map.data.getFeatureById('currentLocation'));
-			}
 			console.dir(position);
+
+			userGeoData = position;
 
 			usersGeocordsInfo.textContent = `${position.coords.latitude} 
 																		 ${position.coords.longitude}
@@ -210,7 +211,7 @@ function initMap() {
 
 			usersLocContainer.style.display = 'block';
 
-			const currentLocationCoords = getTopLeftLocationCoordsByPoint(position.coords.latitude, position.coords.longitude);
+			const currentLocationCoords = getTopLeftLocationCoordsByPoint(position.coords.latitude,	position.coords.longitude);
 			// const latCurrent = Math.floor(position.coords.latitude * 100) / 100;
 			// const lngCurrent = Math.floor(position.coords.longitude * 100) / 100;
 
@@ -239,6 +240,9 @@ function initMap() {
 					console.dir(locationData);
 					if (!locationData) {
 						createCurrentLocation();
+						if (map.data.getFeatureById('currentLocation')) {
+							map.data.remove(map.data.getFeatureById('currentLocation'));
+						}
 					}
 				})
 				.catch((err) => {
@@ -288,39 +292,25 @@ function initMap() {
 
 	function occupyLocation() {
 		const createLocatonPromise = new Promise((res, rej) => {
-			navigator.geolocation.getCurrentPosition((position) => {
-				res(position.coords);
-			}, (err) => {
-				rej(err);
-			}, {
-				enableHighAccuracy: true,
-				maximumAge: 0,
-			});
-		});
-		createLocatonPromise
-			.then((userCoords) => {
-				console.log(userCoords);
-				return new Promise((res, rej) => {
-					const createLocationXHR = new XMLHttpRequest();
-					createLocationXHR.open('POST', 'api/locations');
-					createLocationXHR.setRequestHeader('Content-Type', 'application/json');
-					createLocationXHR.send(JSON.stringify({
-						userLat: userCoords.latitude,
-						userLng: userCoords.longitude,
-						accuracy: userCoords.accuracy,
-					}));
-					createLocationXHR.addEventListener('load', (e) => {
-						const xhr = e.srcElement;
-						console.log(xhr);
-						if (xhr.status !== 200) {
-							rej(xhr.response);
-						}
-						console.log(xhr.response);
+			const createLocationXHR = new XMLHttpRequest();
+			createLocationXHR.open('POST', 'api/locations');
+			createLocationXHR.setRequestHeader('Content-Type', 'application/json');
+			createLocationXHR.send(JSON.stringify({
+				userLat: userGeoData.coords.latitude,
+				userLng: userGeoData.coords.longitude,
+				accuracy: userGeoData.coords.accuracy,
+			}));
+			createLocationXHR.addEventListener('load', (e) => {
+				const xhr = e.srcElement;
+				console.log(xhr);
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				console.log(xhr.response);
 
-						res(JSON.parse(xhr.response));
-					});
-				});
-			})
+				res(JSON.parse(xhr.response));
+			});
+		})
 			.then((response) => {
 				console.log(response);
 				const thisFeature = map.data.getFeatureById('currentLocation');
