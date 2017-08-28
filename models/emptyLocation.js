@@ -1,5 +1,4 @@
-
-class Location {
+class EmptyLocation {
 	constructor(userData) {
 		this.lat = this.getTopLeftLocationCoordsByPoint({
 			lat: userData.userLat,
@@ -17,80 +16,81 @@ class Location {
 		this.dailyCheckin = true;
 		this.creationDate = new Date();
 	}
-	saveLocation() {
-		// ESLint deleted curly braces. Not sure if it is OK
+	// saveLocation() {
+	// 	// ESLint deleted curly braces. Not sure if it is OK
 
-		return global.db.tx(t => t.batch([
-			t.none(`insert into locations (loc_id, lat, lng,
-					population, daily_bank, creation_date)
-				      values(
-				        '${this.locationId}',
-				        ${this.lat},
-				        ${this.lng},
-				        ${this.population},
-				        ${this.dailyBank},
-				        '${this.creationDate.toISOString()}'
-				    	)`),
-			t.none(`insert into master_location (user_id, loc_id, loyal_popul, daily_checkin)
-								values(
-									${this.masterId},
-									'${this.locationId}',
-									${this.loyalPopulation},
-									${this.dailyCheckin}
-				    		)`),
-		]))
-			.then((data) => {
-				console.log(data);
-			})
-			.catch((error) => {
-				console.log(error);
-			});
-	}
+	// 	return global.db.tx(t => t.batch([
+	// 		t.none(`insert into locations (loc_id, lat, lng,
+	// 				population, daily_bank, creation_date)
+	// 			      values(
+	// 			        '${this.locationId}',
+	// 			        ${this.lat},
+	// 			        ${this.lng},
+	// 			        ${this.population},
+	// 			        ${this.dailyBank},
+	// 			        '${this.creationDate.toISOString()}'
+	// 			    	)`),
+	// 		t.none(`insert into master_location (user_id, loc_id, loyal_popul, daily_checkin)
+	// 							values(
+	// 								${this.masterId},
+	// 								'${this.locationId}',
+	// 								${this.loyalPopulation},
+	// 								${this.dailyCheckin}
+	// 			    		)`),
+	// 	]))
+	// 		.then((data) => {
+	// 			console.log(data);
+	// 		})
+	// 		.catch((error) => {
+	// 			console.log(error);
+	// 		});
+	// }
 
 
-	static deleteAllLocations() {
-		global.db.none('delete from location');
-	}
+	// static deleteAllLocations() {
+	// 	global.db.none('delete from location');
+	// }
 
-	static getAllLocations() {
-		return global.db.any(`select locations.loc_id AS loc_id, lat, lng, user_id from locations
-									 full join master_location ON locations.loc_id = master_location.loc_id;`);
-	}
+	// static getAllLocations() {
+	// 	return global.db.any(`select locations.loc_id AS loc_id, lat, lng, user_id from locations
+	// 								 full join master_location ON locations.loc_id = master_location.loc_id;`);
+	// }
 
-	static getLocationById(id) {
-		const queryResult = global.db.oneOrNone(`select locations.loc_id AS loc_id, lat, lng, user_id from locations
-						full join master_location on locations.loc_id = master_location.loc_id
-						where locations.loc_id = $1`, id);
-		console.log(queryResult);
-		if (!queryResult) {
-			return [];
-		}
-		return queryResult;
-	}
+	// static getLocationById(id) {
+	// 	const queryResult = global.db.oneOrNone(`select locations.loc_id AS loc_id, lat, lng,
+	// user_id from locations
+	// 					full join master_location on locations.loc_id = master_location.loc_id
+	// 					where locations.loc_id = $1`, id);
+	// 	console.log(queryResult);
+	// 	if (!queryResult) {
+	// 		return [];
+	// 	}
+	// 	return queryResult;
+	// }
 
 	// location grid methods
 
 	static initLocationGrid(options) {
 		options = options || {};
 
-		Location.prototype.EQUATOR_LENGTH = options.EQUATOR_LENGTH || 40075696;
-		Location.prototype.MERIDIAN_LENGTH = options.MERIDIAN_LENGTH || 20004274;
-		Location.prototype.preferableLocSideSize = options.preferableLocSideSize || 100;
+		EmptyLocation.prototype.EQUATOR_LENGTH = options.EQUATOR_LENGTH || 40075696;
+		EmptyLocation.prototype.MERIDIAN_LENGTH = options.MERIDIAN_LENGTH || 20004274;
+		EmptyLocation.prototype.preferableLocSideSize = options.preferableLocSideSize || 100;
 
-		Location.prototype.locSideMetersSizeOnEquatorLat = this.prototype.preferableLocSideSize * 1.5;
+		EmptyLocation.prototype.locSideMetersSizeOnEquatorLat = this.prototype.preferableLocSideSize * 1.5;
 
 		const minAbsoluteLatSize = this.prototype.MERIDIAN_LENGTH / 1800000000;
 		const minAbsoluteLngSize = this.prototype.EQUATOR_LENGTH / 3600000000;
 
-		Location.prototype.relativeLatSize = this.getClosestRelSize(
+		EmptyLocation.prototype.relativeLatSize = this.getClosestRelSize(
 			Math.round(this.prototype.preferableLocSideSize / minAbsoluteLatSize),
 			'lat');
-		Location.prototype.relativeLngSize = this.getClosestRelSize(
+		EmptyLocation.prototype.relativeLngSize = this.getClosestRelSize(
 			Math.round(this.prototype.locSideMetersSizeOnEquatorLat / minAbsoluteLngSize),
 			'lng');
 
-		Location.prototype.lngSizeCoefficients = {};
-		Location.prototype.latBreakPoints = [];
+		EmptyLocation.prototype.lngSizeCoefficients = {};
+		EmptyLocation.prototype.latBreakPoints = [];
 
 		let lngPrimeFactorsArr = this.findPrimeFactors(3600000000 / this.prototype.relativeLngSize);
 		lngPrimeFactorsArr.splice(-1);
@@ -118,11 +118,11 @@ class Location {
 			lngSizeCoefficient *= currentValue;
 			let lngBreakPoint = (Math.acos(1 / lngSizeCoefficient) * 180) / Math.PI;
 			lngBreakPoint = (
-				Math.floor(Math.round(lngBreakPoint * 10000000) / Location.prototype.relativeLatSize) *
-				Location.prototype.relativeLatSize) /
+				Math.floor(Math.round(lngBreakPoint * 10000000) / EmptyLocation.prototype.relativeLatSize) *
+				EmptyLocation.prototype.relativeLatSize) /
 				10000000;
-			Location.prototype.lngSizeCoefficients[lngBreakPoint] = lngSizeCoefficient;
-			Location.prototype.latBreakPoints.push(lngBreakPoint);
+			EmptyLocation.prototype.lngSizeCoefficients[lngBreakPoint] = lngSizeCoefficient;
+			EmptyLocation.prototype.latBreakPoints.push(lngBreakPoint);
 		});
 	}
 
@@ -233,46 +233,46 @@ class Location {
 		}];
 	}
 
-	static recalcLocationsLifecycle() {
-		global.db.tx(t => t.batch([
-			t.none(`delete from locations
-							where loc_id IN (
-								select loc_id from master_location
-								where loyal_popul = 0
-							);`),
-			t.none(`delete from master_location
-							where loyal_popul = 0;`),
-		]))
-			.then(() => global.db.none(`update locations
-																	set daily_bank = loyal_popul
-																	from master_location
-																	where locations.loc_id = master_location.loc_id;`))
-			.then(() => global.db.none(`update master_location 
-																	set loyal_popul = loyal_popul - ceil(loyal_popul * 0.1)
-																	where daily_checkin = false;`))
-			.then(() => global.db.none('update master_location set daily_checkin = false;'))
-			.then(() => {
-				console.log('OK');
-			})
-			.catch((err) => {
-				console.log(err.message);
-			});
-	}
+	// static recalcLocationsLifecycle() {
+	// 	global.db.tx(t => t.batch([
+	// 		t.none(`delete from locations
+	// 						where loc_id IN (
+	// 							select loc_id from master_location
+	// 							where loyal_popul = 0
+	// 						);`),
+	// 		t.none(`delete from master_location
+	// 						where loyal_popul = 0;`),
+	// 	]))
+	// 		.then(() => global.db.none(`update locations
+	// 																set daily_bank = loyal_popul
+	// 																from master_location
+	// 																where locations.loc_id = master_location.loc_id;`))
+	// 		.then(() => global.db.none(`update master_location 
+	// 																set loyal_popul = loyal_popul - ceil(loyal_popul * 0.1)
+	// 																where daily_checkin = false;`))
+	// 		.then(() => global.db.none('update master_location set daily_checkin = false;'))
+	// 		.then(() => {
+	// 			console.log('OK');
+	// 		})
+	// 		.catch((err) => {
+	// 			console.log(err.message);
+	// 		});
+	// }
 
-	static restoreLoyalPopulByLocId(id) {
-		return global.db.none(`update master_location
-													 set loyal_popul = population
-													 from locations
-													 where locations.loc_id = master_location.loc_id
-													 and locations.loc_id = '${id}';`);
-	}
+	// static restoreLoyalPopulByLocId(id) {
+	// 	return global.db.none(`update master_location
+	// 												 set loyal_popul = population
+	// 												 from locations
+	// 												 where locations.loc_id = master_location.loc_id
+	// 												 and locations.loc_id = '${id}';`);
+	// }
 
-	static getOwnerByLocId(id) {
-		return global.db.oneOrNone(`select user_id from master_location
-													 where loc_id = '${id}';`);
-	}
+	// static getOwnerByLocId(id) {
+	// 	return global.db.oneOrNone(`select user_id from master_location
+	// 												 where loc_id = '${id}';`);
+	// }
 }
 
-Location.initLocationGrid();
+EmptyLocation.initLocationGrid();
 
-module.exports = Location;
+module.exports = EmptyLocation;

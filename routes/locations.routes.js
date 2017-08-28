@@ -1,10 +1,12 @@
 const express = require('express');
-const Location = require('../models/location');
+// need to take into account that 2 new classes were created!
+// const EmptyLocation = require('../models/emptyLocation');
+const OccupiedLocation = require('../models/occupiedLocation');
 
 const router = express.Router();
 
 router.get('/', (req, res, next) => {
-	Location.getAllLocations()
+	OccupiedLocation.getAllLocations()
 		.then((locations) => {
 			res.status(200)
 				.json(locations);
@@ -15,24 +17,21 @@ router.get('/:id', (req, res, next) => {
 	const userId = req.decoded.id;
 	const locId = req.params.id;
 	let isMaster;
-	Location.getOwnerByLocId(locId)
+	OccupiedLocation.getOwnerByLocId(locId)
 		.then((data) => {
-			if(data) {
+			if (data) {
 				isMaster = data.user_id === userId;
-			}
-			else {
+			} else {
 				isMaster = false;
 			}
-			return Location.getLocationById(req.params.id);
+			return OccupiedLocation.getLocationById(req.params.id);
 		})
 		.then((location) => {
-			if(location) {
+			if (location) {
 				location.isMaster = isMaster;
 				res.status(200)
 					.json(location);
-			}
-			else {
-				
+			} else {
 				res.status(200)
 					.json({});
 			}
@@ -45,7 +44,7 @@ router.post('/', (req, res, next) => {
 		userLng: req.body.userLng,
 		userLat: req.body.userLat,
 	};
-	const newLocation = new Location(userData);
+	const newLocation = new OccupiedLocation(userData);
 	newLocation.saveLocation()
 		.then(() => {
 			res.json(newLocation);
@@ -55,12 +54,12 @@ router.post('/', (req, res, next) => {
 router.put('/:id/restore-population', (req, res, next) => {
 	const userId = req.decoded.id;
 	const locId = req.params.id;
-	Location.getOwnerByLocId(locId)
+	OccupiedLocation.getOwnerByLocId(locId)
 		.then((data) => {
 			if (data.user_id !== userId) {
 				throw new Error('Permission denied!');
 			}
-			return Location.restoreLoyalPopulByLocId(locId);
+			return OccupiedLocation.restoreLoyalPopulByLocId(locId);
 		})
 		.then(() => {
 			res.sendStatus(200);

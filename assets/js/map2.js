@@ -29,8 +29,8 @@ class Game {
 			map.setZoom(15);
 			map.setCenter({ lat: userCoords.latitude, lng: userCoords.longitude });
 			this.currentCoords = {
-				lat: userCoords.latitude, 
-				lng: userCoords.longitude
+				lat: userCoords.latitude,
+				lng: userCoords.longitude,
 			};
 		});
 
@@ -39,7 +39,6 @@ class Game {
 		this.occupyBtn.addEventListener('click', () => {
 			this.occupyLocation();
 		});
-
 	}
 
 	setMapCenter() {
@@ -48,7 +47,7 @@ class Game {
 	}
 
 	setUserGeoData(position) {
-		this.userGeoData = position; 
+		this.userGeoData = position;
 	}
 
 	setStyleLocation(location) {
@@ -301,9 +300,8 @@ class Game {
 						map.data.remove(map.data.getFeatureById('currentLocation'));
 					}
 					map.data.add(this.createLocation(currentLocationCoords));
-				}
-				else {
-					let currentLocation = map.data.getFeatureById(locationData.loc_id);
+				} else {
+					const currentLocation = map.data.getFeatureById(locationData.loc_id);
 					currentLocation.setProperty('color', 'crimson');
 				}
 			})
@@ -527,10 +525,9 @@ function initMap() {
 
 		game.renderLocationsFromDB();
 
-		
 
 		map.addListener('click', (event) => {
-			game.hilightEmptyLocation(event)
+			game.hilightEmptyLocation(event);
 		});
 	};
 }

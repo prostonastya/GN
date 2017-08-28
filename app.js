@@ -9,15 +9,16 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const auth = require('./middleware/auth');
 const cookieParser = require('cookie-parser');
-// let favicon = require('serve-favicon');
+const favicon = require('serve-favicon');
 const logger = require('morgan');
 const locationsRoutes = require('./routes/locations.routes');
-const Location = require('./models/location');
+// const EmptyLocation = require('./models/emptyLocation');
+// const OccupiedLocation = require('./models/occupiedLocation');
 const schedule = require('node-schedule');
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 8080;
+// const port = process.env.PORT || 8080;
 const eventEmitter = new EventEmitter();
 
 global.db = pgp({
@@ -48,6 +49,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static('assets'));
+app.use(favicon('./assets/favicon.png'));
 
 // ROUTES
 app.route('/login')
