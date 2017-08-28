@@ -25,13 +25,21 @@ class Game {
 			console.log(userCoords);
 			// this.currentCoords = userCoords;
 			this.createCurrentLocation(userCoords);
+			this.setUserGeoData(userCoords);
 			map.setZoom(15);
 			map.setCenter({ lat: userCoords.latitude, lng: userCoords.longitude });
+			this.currentCoords = {
+				lat: userCoords.latitude, 
+				lng: userCoords.longitude
+			};
 		});
 
 		this.initLocationGrid();
 
-		// this.setMapCenter(this.currentCoords);
+		this.occupyBtn.addEventListener('click', () => {
+			this.occupyLocation();
+		});
+
 	}
 
 	setMapCenter() {
@@ -39,13 +47,21 @@ class Game {
 		map.setCenter({ lat: this.currentCoords.lat, lng: this.currentCoords.lng });
 	}
 
-	static setStyleLocation(location) {
+	setUserGeoData(position) {
+		this.userGeoData = position; 
+	}
+
+	setStyleLocation(location) {
 		let color = 'gray';
+		let background = 'white';
 		if (location.getProperty('color')) {
 			color = location.getProperty('color');
 		}
+		if (location.getProperty('background')) {
+			background = location.getProperty('background');
+		}
 		return /** @type {google.maps.Data.StyleOptions} */({
-			fillColor: color,
+			fillColor: background,
 			fillOpacity: 0.2,
 			strokeColor: color,
 			strokeWeight: 2,
@@ -82,6 +98,7 @@ class Game {
 					id: item.loc_id,
 					properties: {
 						color: 'green',
+						background: 'green',
 						info: {
 							master: item.master,
 						},
@@ -115,6 +132,8 @@ class Game {
 			.catch((err) => {
 				console.log(err);
 			});
+
+		map.data.setStyle(this.setStyleLocation);
 	}
 
 
@@ -235,6 +254,7 @@ class Game {
 	getUserLocationPromise() {
 		const createCurrentLocatonPromise = new Promise((res, rej) => {
 			navigator.geolocation.watchPosition((position) => {
+				console.log(position);
 			  res(position.coords);
 			}, (err) => {
 			  rej(err);
@@ -275,12 +295,16 @@ class Game {
 		});
 		getLocationInfoPromise
 			.then((locationData) => {
-				console.dir(locationData);
-				if (!locationData) {
-					map.data.add(this.createLocation());
+				if (!locationData.loc_id) {
+					console.log(locationData);
 					if (map.data.getFeatureById('currentLocation')) {
 						map.data.remove(map.data.getFeatureById('currentLocation'));
 					}
+					map.data.add(this.createLocation(currentLocationCoords));
+				}
+				else {
+					let currentLocation = map.data.getFeatureById(locationData.loc_id);
+					currentLocation.setProperty('color', 'crimson');
 				}
 			})
 			.catch((err) => {
@@ -292,19 +316,19 @@ class Game {
 		if (!isForMapArray) {
 			return [{
 			// north west
-				lat: topLeftCoords.lat,
-				lng: topLeftCoords.lng,
+				lat: +topLeftCoords.lat,
+				lng: +topLeftCoords.lng,
 			}, {
 			// south west
 				lat: ((topLeftCoords.lat * 10000000) - this.relativeLatSize) / 10000000,
-				lng: topLeftCoords.lng,
+				lng: +topLeftCoords.lng,
 			}, {
 			// south east
 				lat: ((topLeftCoords.lat * 10000000) - this.relativeLatSize) / 10000000,
 				lng: ((topLeftCoords.lng * 10000000) + this.getRelLngSize(topLeftCoords.lat)) / 10000000,
 			}, {
 			// north east
-				lat: topLeftCoords.lat,
+				lat: +topLeftCoords.lat,
 				lng: ((topLeftCoords.lng * 10000000) + this.getRelLngSize(topLeftCoords.lat)) / 10000000,
 			}];
 		}
@@ -330,9 +354,8 @@ class Game {
 			+topLeftCoords.lat,
 		]];
 	}
-	createLocation() {
-		const location = this.getLocationPointsByTopLeft(currentLocationCoords);
-
+	createLocation(locationCoords) {
+		const location = this.getLocationPointsByTopLeft(locationCoords);
 		const locationGeoObj = {
 			type: 'Feature',
 			id: 'currentLocation',
@@ -353,7 +376,7 @@ class Game {
 
 		const topLeftCoords = this.getTopLeftLocationCoordsByPoint(event.latLng.lat(), event.latLng.lng());
 
-		this.getTopLeftLocationCoordsByPoint(currentCoords.latitude,	currentCoords.longitude);
+		this.getTopLeftLocationCoordsByPoint(this.currentCoords.latitude,	this.currentCoords.longitude);
 		const lat = topLeftCoords.lat;
 		const lng = topLeftCoords.lng;
 
@@ -405,6 +428,84 @@ class Game {
 			lng,
 		};
 	}
+
+	occupyLocation() {
+		const createLocatonPromise = new Promise((res, rej) => {
+			const createLocationXHR = new XMLHttpRequest();
+			createLocationXHR.open('POST', 'api/locations');
+			createLocationXHR.setRequestHeader('Content-Type', 'application/json');
+			createLocationXHR.send(JSON.stringify({
+				userLat: this.userGeoData.latitude,
+				userLng: this.userGeoData.longitude,
+				accuracy: this.userGeoData.accuracy,
+			}));
+			createLocationXHR.addEventListener('load', (e) => {
+				const xhr = e.srcElement;
+				console.log(xhr);
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				console.log(xhr.response);
+
+				res(JSON.parse(xhr.response));
+			});
+		})
+			.then((response) => {
+				console.log(response);
+				const thisLocation = map.data.getFeatureById('currentLocation');
+
+				const location = this.getLocationPointsByTopLeft(response);
+				// [{
+				// 	// north west
+				// 	lat: response.lat,
+				// 	lng: response.lng,
+				// }, {
+				// 	// south west
+				// 	lat: ((response.lat * 100) + 1) / 100,
+				// 	lng: response.lng,
+				// }, {
+				// 	// south east
+				// 	lat: ((response.lat * 100) + 1) / 100,
+				// 	lng: ((response.lng * 100) + 1) / 100,
+				// }, {
+				// 	// north east
+				// 	lat: response.lat,
+				// 	lng: ((response.lng * 100) + 1) / 100,
+				// }];
+
+				const locationNew = {
+					type: 'Feature',
+					id: response.locationId,
+					properties: {
+						color: 'green',
+						info: {
+						},
+					},
+					geometry: new google.maps.Data.Polygon([location]),
+					// geometry: thisFeature.getGeometry(),
+				};
+				map.data.add(locationNew);
+				 map.data.remove(thisLocation);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+
+		// const locationId = Math.floor((Math.random() * new Date()) / 100000);
+		// const locationNew = {
+		//   type: 'Feature',
+		//   id: 'currentLocation',
+		//   properties: {
+		//     color: 'blue',
+		//     info: {
+		//       name: 'Current location',
+		//     },
+		//   },
+		//   geometry: new google.maps.Data.Polygon([location]),
+		// };
+		// map.data.add(locationNew);
+		// map.data.remove(feature);
+	}
 }
 
 
@@ -418,7 +519,6 @@ function initMap() {
 	window.onload = function () {
 		const game = new Game();
 
-
 		const lat0 = map.getBounds().getNorthEast().lat();
 		const lng0 = map.getBounds().getNorthEast().lng();
 		const lat1 = map.getBounds().getSouthWest().lat();
@@ -427,8 +527,10 @@ function initMap() {
 
 		game.renderLocationsFromDB();
 
-		map.data.setStyle(game.setStyleLocation);
+		
 
-		map.addListener('click', game.hilightEmptyLocation);
+		map.addListener('click', (event) => {
+			game.hilightEmptyLocation(event)
+		});
 	};
 }

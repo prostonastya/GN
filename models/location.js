@@ -268,7 +268,7 @@ class Location {
 	}
 
 	static getOwnerByLocId(id) {
-		return global.db.one(`select user_id from master_location
+		return global.db.oneOrNone(`select user_id from master_location
 													 where loc_id = '${id}';`);
 	}
 }

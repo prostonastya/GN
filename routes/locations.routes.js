@@ -17,13 +17,25 @@ router.get('/:id', (req, res, next) => {
 	let isMaster;
 	Location.getOwnerByLocId(locId)
 		.then((data) => {
-			isMaster = data.user_id === userId;
+			if(data) {
+				isMaster = data.user_id === userId;
+			}
+			else {
+				isMaster = false;
+			}
 			return Location.getLocationById(req.params.id);
 		})
 		.then((location) => {
-			location.isMaster = isMaster;
-			res.status(200)
-				.json(location);
+			if(location) {
+				location.isMaster = isMaster;
+				res.status(200)
+					.json(location);
+			}
+			else {
+				
+				res.status(200)
+					.json({});
+			}
 		})
 		.catch(err => next(err));
 });
