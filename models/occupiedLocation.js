@@ -1,7 +1,15 @@
 const EmptyLocation = require('./emptyLocation');
 
-class occupiedLocation extends EmptyLocation {
-// need to know if we need to override the constructor
+class OccupiedLocation extends EmptyLocation {
+	constructor(userData) {
+		super(userData);
+		this.masterId = userData.userId;
+		this.population = 10;
+		this.dailyBank = 0;
+		this.loyalPopulation = 1;
+		this.dailyCheckin = true;
+		this.creationDate = new Date();
+	}
 	saveLocation() {
 	// ESLint deleted curly braces. Not sure if it is OK
 
@@ -45,13 +53,22 @@ class occupiedLocation extends EmptyLocation {
 		const queryResult = global.db.oneOrNone(`select locations.loc_id AS loc_id, lat, lng, user_id from locations
 						full join master_location on locations.loc_id = master_location.loc_id
 						where locations.loc_id = $1`, id);
-		console.log(queryResult);
+		// console.log(queryResult);
 		if (!queryResult) {
 			return [];
 		}
 		return queryResult;
 	}
 
+	static getLocationByCoords(coords) {
+		const queryResult = global.db.oneOrNone(`select locations.loc_id AS loc_id, lat, lng, user_id from locations
+						full join master_location on locations.loc_id = master_location.loc_id
+						where locations.lat = ${coords.lat}, locations.lng = ${coords.lng}`, coords);
+		if (!queryResult) {
+			return [];
+		}
+		return queryResult;
+	}
 	static recalcLocationsLifecycle() {
 		global.db.tx(t => t.batch([
 			t.none(`delete from locations
@@ -91,4 +108,4 @@ class occupiedLocation extends EmptyLocation {
 													 where loc_id = '${id}';`);
 	}
 }
-module.exports = occupiedLocation;
+module.exports = OccupiedLocation;

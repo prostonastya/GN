@@ -1,5 +1,4 @@
 const express = require('express');
-// need to take into account that 2 new classes were created!
 // const EmptyLocation = require('../models/emptyLocation');
 const OccupiedLocation = require('../models/occupiedLocation');
 
@@ -38,6 +37,35 @@ router.get('/:id', (req, res, next) => {
 		})
 		.catch(err => next(err));
 });
+router.get('/:lat/:lng', (req, res, next) => {
+	const coords = {
+		lat: req.params.lat,
+		lng: req.params.lng,
+	};
+	const userId = req.decoded.id;
+	let isMaster;
+	OccupiedLocation.getLocationByCoords(coords)
+		.then((data) => {
+			if (data) {
+				isMaster = data.user_id === userId;
+			} else {
+				isMaster = false;
+			}
+			return OccupiedLocation.getLocationById(req.params.id);
+		})
+		.then((location) => {
+			if (location) {
+				location.isMaster = isMaster;
+				res.status(200)
+					.json(location);
+			} else {
+				res.status(200)
+					.json({});
+			}
+		})
+		.catch(err => next(err));
+});
+
 router.post('/', (req, res, next) => {
 	const userData = {
 		userId: req.decoded.id,
@@ -68,6 +96,5 @@ router.put('/:id/restore-population', (req, res, next) => {
 			next(err);
 		});
 });
-
 
 module.exports = router;
