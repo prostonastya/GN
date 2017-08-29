@@ -23,7 +23,8 @@
     // "jsx-a11y/href-no-hash": 0,
     "no-param-reassign": 0,
     "linebreak-style": 0,
-    "no-constant-condition": ["error", { "checkLoops": false }]
+    "no-constant-condition": ["error", { "checkLoops": false }],
+    "comma-dangle": ["error", "never"]
   }
 }
 

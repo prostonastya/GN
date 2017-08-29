@@ -1,44 +1,56 @@
 class EmptyLocation {
-	constructor(userData) {
-		this.lat = this.getTopLeftLocationCoordsByPoint({
-			lat: userData.userLat,
-			lng: userData.userLng,
-		}).lat;
-		this.lng = this.getTopLeftLocationCoordsByPoint({
-			lat: userData.userLat,
-			lng: userData.userLng,
-		}).lng;
+	constructor(geoData) {
+		this.coords = this.getLocationPointsByTopLeft(
+			this.getTopLeftLocationCoordsByPoint(geoData)
+		);
 	}
 
-	set locationId(locId) {
-		this.locationId = `${this.lat}${this.lng}`;
+	get locationId() {
+		const northWestPoint = this.coords.northWest;
+
+		return `${
+			this.convertCoordToIdString(northWestPoint.lat, true)
+		}${
+			this.convertCoordToIdString(northWestPoint.lng, false)
+		}`;
 	}
 
-	// location grid methods
+	// location ID string convertor
 
-	static initLocationGrid(options) {
-		options = options || {};
+	static convertCoordToIdString(coord, isLat) {
+		const digitsQuantity = isLat ? 2 : 3;
+		coord = `${coord}`;
+		coord = coord.split('.');
+		if (coord[0].indexOf('-') === 0) {
+			coord[0] = coord[0][0].slice(1);
 
-		EmptyLocation.prototype.EQUATOR_LENGTH = options.EQUATOR_LENGTH || 40075696;
-		EmptyLocation.prototype.MERIDIAN_LENGTH = options.MERIDIAN_LENGTH || 20004274;
-		EmptyLocation.prototype.preferableLocSideSize = options.preferableLocSideSize || 100;
+			while (coord[0].length < digitsQuantity) {
+				coord[0] = `0${coord[0]}`;
+			}
 
-		EmptyLocation.prototype.locSideMetersSizeOnEquatorLat = this.prototype.preferableLocSideSize * 1.5;
+			coord[0] = `n${coord[0]}`;
+		} else {
+			while (coord[0].length < digitsQuantity) {
+				coord[0] = `0${coord[0]}`;
+			}
 
-		const minAbsoluteLatSize = this.prototype.MERIDIAN_LENGTH / 1800000000;
-		const minAbsoluteLngSize = this.prototype.EQUATOR_LENGTH / 3600000000;
+			coord[0][0] = `p${coord[0][0]}`;
+		}
 
-		EmptyLocation.prototype.relativeLatSize = this.getClosestRelSize(
-			Math.round(this.prototype.preferableLocSideSize / minAbsoluteLatSize),
-			'lat');
-		EmptyLocation.prototype.relativeLngSize = this.getClosestRelSize(
-			Math.round(this.prototype.locSideMetersSizeOnEquatorLat / minAbsoluteLngSize),
-			'lng');
+		while (coord[1].length < 7) {
+			coord[1] = `${coord[1]}0`;
+		}
 
-		EmptyLocation.prototype.lngSizeCoefficients = {};
-		EmptyLocation.prototype.latBreakPoints = [];
+		return coord.join('x');
+	}
 
-		let lngPrimeFactorsArr = this.findPrimeFactors(3600000000 / this.prototype.relativeLngSize);
+	getLatutideBreakpointsObject() {
+		// this.prototype.lngSizeCoefficients = {};
+		// this.prototype.latBreakPoints = [];
+
+		const lngSizeCoefficients = {};
+		// const latBreakPoints = [];
+		let lngPrimeFactorsArr = EmptyLocation.findPrimeFactors(3600000000 / this.relativeLngSize);
 		lngPrimeFactorsArr.splice(-1);
 
 		lngPrimeFactorsArr = lngPrimeFactorsArr.map((item) => {
@@ -64,12 +76,39 @@ class EmptyLocation {
 			lngSizeCoefficient *= currentValue;
 			let lngBreakPoint = (Math.acos(1 / lngSizeCoefficient) * 180) / Math.PI;
 			lngBreakPoint = (
-				Math.floor(Math.round(lngBreakPoint * 10000000) / EmptyLocation.prototype.relativeLatSize) *
-				EmptyLocation.prototype.relativeLatSize) /
-				10000000;
-			EmptyLocation.prototype.lngSizeCoefficients[lngBreakPoint] = lngSizeCoefficient;
-			EmptyLocation.prototype.latBreakPoints.push(lngBreakPoint);
+				Math.floor(
+					Math.round(lngBreakPoint * 10000000) / this.relativeLatSize
+				) * this.relativeLatSize
+			) /	10000000;
+			lngSizeCoefficients[lngBreakPoint] = lngSizeCoefficient;
+			// latBreakPoints.push(lngBreakPoint);
 		});
+
+		return lngSizeCoefficients;
+	}
+
+	static initLocationGrid(options) {
+		options = options || {};
+
+		EmptyLocation.prototype.EQUATOR_LENGTH = options.EQUATOR_LENGTH || 40075696;
+		EmptyLocation.prototype.MERIDIAN_LENGTH = options.MERIDIAN_LENGTH || 20004274;
+		EmptyLocation.prototype.preferableLocSideSize = options.preferableLocSideSize || 100;
+
+		EmptyLocation.prototype
+			.locSideMetersSizeOnEquatorLat = EmptyLocation.prototype.preferableLocSideSize * 1.5;
+
+		const minAbsoluteLatSize = EmptyLocation.prototype.MERIDIAN_LENGTH / 1800000000;
+		const minAbsoluteLngSize = EmptyLocation.prototype.EQUATOR_LENGTH / 3600000000;
+
+		EmptyLocation.prototype.relativeLatSize = this.getClosestRelSize(
+			Math.round(EmptyLocation.prototype.preferableLocSideSize / minAbsoluteLatSize),
+			'lat');
+		EmptyLocation.prototype.relativeLngSize = this.getClosestRelSize(
+			Math.round(EmptyLocation.prototype.locSideMetersSizeOnEquatorLat / minAbsoluteLngSize),
+			'lng');
+
+		EmptyLocation.prototype.lngSizeCoefficients = EmptyLocation.prototype.getLatutideBreakpointsObject();
+		EmptyLocation.prototype.latBreakPoints = Object.keys(EmptyLocation.prototype.lngSizeCoefficients);
 	}
 
 	static getClosestRelSize(preferRelSize, latOrLng) {
@@ -93,14 +132,17 @@ class EmptyLocation {
 				relativeSizeToIncrease += 1;
 				relativeSizeToDecrease -= 1;
 				if (Math.round(maxDeg / relativeSizeToIncrease) === maxDeg / relativeSizeToIncrease) {
-					return relativeSizeToIncrease;
+					preferRelSize = relativeSizeToIncrease;
+					break;
 				}
 
 				if (Math.round(maxDeg / relativeSizeToDecrease) === maxDeg / relativeSizeToDecrease) {
-					return relativeSizeToDecrease;
+					preferRelSize = relativeSizeToDecrease;
+					break;
 				}
 			}
 		}
+		return preferRelSize;
 	}
 
 	static findPrimeFactors(value) {
@@ -123,16 +165,20 @@ class EmptyLocation {
 	}
 
 	getTopLeftLocationCoordsByPoint(point) {
-		const lat = (Math.ceil(Math.round(point.lat * 10000000) /
-								this.relativeLatSize) * this.relativeLatSize) /
-								10000000;
-		const lng = (Math.floor(Math.round(point.lng * 10000000) /
-								this.getRelLngSize(this.lat)) * this.getRelLngSize(this.lat)) /
-								10000000;
+		const lat = (
+			Math.ceil(
+				Math.round(point.lat * 10000000) / this.relativeLatSize
+			) * this.relativeLatSize
+		) /	10000000;
+		const lng = (
+			Math.floor(
+				Math.round(point.lng * 10000000) / this.getRelLngSize(point.lat)
+			) * this.getRelLngSize(point.lat)
+		) /	10000000;
 
 		return {
 			lat,
-			lng,
+			lng
 		};
 	}
 
@@ -159,24 +205,33 @@ class EmptyLocation {
 		return result;
 	}
 
-	getLocationPointsByTopLeft() {
-		return [{
-			// north west
-			lat: this.lat,
-			lng: this.lng,
-		}, {
-			// south west
-			lat: ((this.lat * 10000000) - this.relativeLatSize) / 10000000,
-			lng: this.lng,
-		}, {
-			// south east
-			lat: ((this.lat * 10000000) - this.relativeLatSize) / 10000000,
-			lng: ((this.lng * 10000000) + this.getRelLngSize(this.lat)) / 10000000,
-		}, {
-			// north east
-			lat: this.lat,
-			lng: ((this.lng * 10000000) + this.getRelLngSize(this.lat)) / 10000000,
-		}];
+	static getLocationPointsByNorthWestPoint(northWestPoint) {
+		return {
+			northWest: {
+				lat: northWestPoint.lat,
+				lng: northWestPoint.lng
+			},
+			southWest: {
+				lat: (
+					(northWestPoint.lat * 10000000) - this.relativeLatSize
+				) / 10000000,
+				lng: northWestPoint.lng
+			},
+			southEast: {
+				lat: (
+					(northWestPoint.lat * 10000000) - this.relativeLatSize
+				) / 10000000,
+				lng: (
+					(northWestPoint.lng * 10000000) + this.getRelLngSize(this.lat)
+				) / 10000000
+			},
+			northEast: {
+				lat: northWestPoint.lat,
+				lng: (
+					(northWestPoint.lng * 10000000) + this.getRelLngSize(this.lat)
+				) / 10000000
+			}
+		};
 	}
 }
 
