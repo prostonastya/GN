@@ -9,6 +9,9 @@ class Game {
 		this.usersLocContainer = document.getElementById('current-loc-info');
 		this.usersLocationInfo = document.getElementById('users-location');
 		this.occupyBtn = document.getElementById('occupy-btn');
+		
+
+		this.map = null;
 
 
 		this.userGeoData = null;
@@ -26,8 +29,8 @@ class Game {
 			// this.currentCoords = userCoords;
 			this.createCurrentLocation(userCoords);
 			this.setUserGeoData(userCoords);
-			map.setZoom(15);
-			map.setCenter({ lat: userCoords.latitude, lng: userCoords.longitude });
+			this.map.setZoom(15);
+			this.map.setCenter({ lat: userCoords.latitude, lng: userCoords.longitude });
 			this.currentCoords = {
 				lat: userCoords.latitude, 
 				lng: userCoords.longitude
@@ -43,8 +46,8 @@ class Game {
 	}
 
 	setMapCenter() {
-		map.setZoom(15);
-		map.setCenter({ lat: this.currentCoords.lat, lng: this.currentCoords.lng });
+		this.map.setZoom(15);
+		this.map.setCenter({ lat: this.currentCoords.lat, lng: this.currentCoords.lng });
 	}
 
 	setUserGeoData(position) {
@@ -127,13 +130,13 @@ class Game {
 			});
 			console.log(geoObj);
 
-			map.data.addGeoJson(geoObj);
+			this.map.data.addGeoJson(geoObj);
 		})
 			.catch((err) => {
 				console.log(err);
 			});
 
-		map.data.setStyle(this.setStyleLocation);
+		this.map.data.setStyle(this.setStyleLocation);
 	}
 
 
@@ -297,13 +300,13 @@ class Game {
 			.then((locationData) => {
 				if (!locationData.loc_id) {
 					console.log(locationData);
-					if (map.data.getFeatureById('currentLocation')) {
-						map.data.remove(map.data.getFeatureById('currentLocation'));
+					if (this.map.data.getFeatureById('currentLocation')) {
+						this.map.data.remove(this.map.data.getFeatureById('currentLocation'));
 					}
-					map.data.add(this.createLocation(currentLocationCoords));
+					this.map.data.add(this.createLocation(currentLocationCoords));
 				}
 				else {
-					let currentLocation = map.data.getFeatureById(locationData.loc_id);
+					let currentLocation = this.map.data.getFeatureById(locationData.loc_id);
 					currentLocation.setProperty('color', 'crimson');
 				}
 			})
@@ -370,8 +373,8 @@ class Game {
 		return locationGeoObj;
 	}
 	hilightEmptyLocation(event) {
-		if (map.data.getFeatureById('highlight')) {
-			map.data.remove(map.data.getFeatureById('highlight'));
+		if (this.map.data.getFeatureById('highlight')) {
+			this.map.data.remove(this.map.data.getFeatureById('highlight'));
 		}
 
 		const topLeftCoords = this.getTopLeftLocationCoordsByPoint(event.latLng.lat(), event.latLng.lng());
@@ -383,7 +386,8 @@ class Game {
 		// const lat = Math.floor(event.latLng.lat() * 100) / 100;
 		// const lng = Math.floor(event.latLng.lng() * 100) / 100;
 
-		this.clickedInfo.style.display = 'block';
+		this.clickedInfo.classList.add("open");
+		this.clickedInfo.style.zIndex = '4';
 		// clickedCordsInfo.textContent = `${event.latLng.lat()} ${event.latLng.lng()}`;
 		this.clickedLocationInfo.textContent = `${lat} ${lng}`;
 
@@ -408,7 +412,7 @@ class Game {
 			geometry: new google.maps.Data.Polygon([location]),
 		};
 		console.log(locationNew);
-		map.data.add(locationNew);
+		this.map.data.add(locationNew);
 		this.clickedLocationHeading.textContent = 'Empty location';
 		// setTimeout(() => {
 		//   if (!confirm('Поставить поселение?')) {
@@ -452,7 +456,7 @@ class Game {
 		})
 			.then((response) => {
 				console.log(response);
-				const thisLocation = map.data.getFeatureById('currentLocation');
+				const thisLocation = this.map.data.getFeatureById('currentLocation');
 
 				const location = this.getLocationPointsByTopLeft(response);
 				// [{
@@ -484,53 +488,41 @@ class Game {
 					geometry: new google.maps.Data.Polygon([location]),
 					// geometry: thisFeature.getGeometry(),
 				};
-				map.data.add(locationNew);
-				 map.data.remove(thisLocation);
+				this.map.data.add(locationNew);
+				this.map.data.remove(thisLocation);
 			})
 			.catch((err) => {
 				console.log(err);
 			});
 
-		// const locationId = Math.floor((Math.random() * new Date()) / 100000);
-		// const locationNew = {
-		//   type: 'Feature',
-		//   id: 'currentLocation',
-		//   properties: {
-		//     color: 'blue',
-		//     info: {
-		//       name: 'Current location',
-		//     },
-		//   },
-		//   geometry: new google.maps.Data.Polygon([location]),
-		// };
-		// map.data.add(locationNew);
-		// map.data.remove(feature);
 	}
 }
 
 
-let map;
 function initMap() {
-	map = new google.maps.Map(document.getElementById('map'), {
+		const game = new Game();
+	game.map = new google.maps.Map(document.getElementById('map'), {
 		zoom: 12,
 		center: { lat: 49.9891, lng: 36.2322 },
 		clickableIcons: false,
 	});
 	window.onload = function () {
-		const game = new Game();
 
-		const lat0 = map.getBounds().getNorthEast().lat();
-		const lng0 = map.getBounds().getNorthEast().lng();
-		const lat1 = map.getBounds().getSouthWest().lat();
-		const lng1 = map.getBounds().getSouthWest().lng();
+		const lat0 = game.map.getBounds().getNorthEast().lat();
+		const lng0 = game.map.getBounds().getNorthEast().lng();
+		const lat1 = game.map.getBounds().getSouthWest().lat();
+		const lng1 = game.map.getBounds().getSouthWest().lng();
 		console.log(lat0, lng0, lat1, lng1);
 
 		game.renderLocationsFromDB();
 
-		
-
-		map.addListener('click', (event) => {
+		game.map.addListener('click', (event) => {
 			game.hilightEmptyLocation(event)
 		});
+
+
+
 	};
+
+
 }
