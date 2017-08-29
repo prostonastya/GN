@@ -64,7 +64,7 @@ app.route('/login')
 		WHERE email = '${email}';`)
 			.then((data) => {
 				if (!data.password) {
-					res.status(401).json({ message: 'no such user found' });
+					res.redirect('/login');					
 				}
 				if (data.password === password) {
 				// create a token
@@ -79,10 +79,10 @@ app.route('/login')
 					res.cookie('auth', token);
 					res.redirect('/');
 				} else {
-					res.status(401).json({ message: 'passwords did not match' });
+					res.redirect('/login');
 				}
 			}).catch((err) => {
-				res.send(`Something went wrong:${err.message}`);
+				res.redirect('/login');
 			});
 	});
 
