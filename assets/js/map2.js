@@ -9,7 +9,7 @@ class Game {
 		this.usersLocContainer = document.getElementById('current-loc-info');
 		this.usersLocationInfo = document.getElementById('users-location');
 		this.occupyBtn = document.getElementById('occupy-btn');
-		
+
 
 		this.map = null;
 
@@ -29,11 +29,11 @@ class Game {
 			// this.currentCoords = userCoords;
 			this.createCurrentLocation(userCoords);
 			this.setUserGeoData(userCoords);
-			this.map.setZoom(15);
-			this.map.setCenter({ lat: userCoords.latitude, lng: userCoords.longitude });
+			this.setMapCenter(userCoords.latitude, userCoords.longitude);
+			this.addMarker(userCoords.latitude, userCoords.longitude);
 			this.currentCoords = {
-				lat: userCoords.latitude, 
-				lng: userCoords.longitude
+				lat: userCoords.latitude,
+				lng: userCoords.longitude,
 			};
 		});
 
@@ -42,16 +42,21 @@ class Game {
 		this.occupyBtn.addEventListener('click', () => {
 			this.occupyLocation();
 		});
-
 	}
 
-	setMapCenter() {
+	setMapCenter(lat, lng) {
 		this.map.setZoom(15);
-		this.map.setCenter({ lat: this.currentCoords.lat, lng: this.currentCoords.lng });
+		this.map.setCenter({ lat, lng });
 	}
-
+	addMarker(lat, lng) {
+		const marker = new google.maps.Marker({
+			position: { lat, lng },
+			map: this.map,
+			title: 'Hello World!',
+		  });
+	}
 	setUserGeoData(position) {
-		this.userGeoData = position; 
+		this.userGeoData = position;
 	}
 
 	setStyleLocation(location) {
@@ -275,7 +280,7 @@ class Game {
 											${currentCoords.longitude}
 											${currentCoords.accuracy}`;
 
-		this.usersLocContainer.style.display = 'block';
+		this.usersLocContainer.classList.add('open');
 
 		const currentLocationCoords = this.getTopLeftLocationCoordsByPoint(currentCoords.latitude,	currentCoords.longitude);
 
@@ -304,10 +309,12 @@ class Game {
 						this.map.data.remove(this.map.data.getFeatureById('currentLocation'));
 					}
 					this.map.data.add(this.createLocation(currentLocationCoords));
-				}
-				else {
-					let currentLocation = this.map.data.getFeatureById(locationData.loc_id);
+					this.occupyBtn.style.display = 'block';
+				} else {
+					const currentLocation = this.map.data.getFeatureById(locationData.loc_id);
 					currentLocation.setProperty('color', 'crimson');
+
+					this.occupyBtn.style.display = 'none';
 				}
 			})
 			.catch((err) => {
@@ -386,8 +393,9 @@ class Game {
 		// const lat = Math.floor(event.latLng.lat() * 100) / 100;
 		// const lng = Math.floor(event.latLng.lng() * 100) / 100;
 
-		this.clickedInfo.classList.add("open");
-		this.clickedInfo.style.zIndex = '4';
+		this.clickedInfo.style.display = 'block';
+		this.clickedInfo.classList.add('open');
+		this.usersLocContainer.classList.remove('open');
 		// clickedCordsInfo.textContent = `${event.latLng.lat()} ${event.latLng.lng()}`;
 		this.clickedLocationInfo.textContent = `${lat} ${lng}`;
 
@@ -494,20 +502,18 @@ class Game {
 			.catch((err) => {
 				console.log(err);
 			});
-
 	}
 }
 
 
 function initMap() {
-		const game = new Game();
+	const game = new Game();
 	game.map = new google.maps.Map(document.getElementById('map'), {
 		zoom: 12,
 		center: { lat: 49.9891, lng: 36.2322 },
 		clickableIcons: false,
 	});
 	window.onload = function () {
-
 		const lat0 = game.map.getBounds().getNorthEast().lat();
 		const lng0 = game.map.getBounds().getNorthEast().lng();
 		const lat1 = game.map.getBounds().getSouthWest().lat();
@@ -517,12 +523,18 @@ function initMap() {
 		game.renderLocationsFromDB();
 
 		game.map.addListener('click', (event) => {
-			game.hilightEmptyLocation(event)
+			game.hilightEmptyLocation(event);
 		});
-
-
-
 	};
 
-
+	game.usersLocContainer.addEventListener('click', (e) => {
+		if (e.target.classList[0] == 'close') {
+			game.usersLocContainer.classList.toggle('open');
+		}
+	});
+	game.clickedInfo.addEventListener('click', (e) => {
+		if (e.target.classList[0] == 'close') {
+			game.clickedInfo.classList.toggle('open');
+		}
+	});
 }
