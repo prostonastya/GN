@@ -21,10 +21,24 @@ class Game {
 		this.latBreakPoints = [];
 		this.lngSizeCoefficients = {};
 
-		this.userLocationPromise = this.getUserLocationPromise();
+		// this.userLocationPromise = this.getUserLocationPromise();
 		// this.currentCoords = null;
 
-		this.userLocationPromise.then((userCoords) => {
+		// this.userLocationPromise.then((userCoords) => {
+		// 	console.log(userCoords);
+		// 	// this.currentCoords = userCoords;
+		// 	this.createCurrentLocation(userCoords);
+		// 	this.setUserGeoData(userCoords);
+		// 	this.setMapCenter(userCoords.latitude, userCoords.longitude);
+		// 	this.addMarker(userCoords.latitude, userCoords.longitude);
+		// 	this.currentCoords = {
+		// 		lat: userCoords.latitude,
+		// 		lng: userCoords.longitude
+		// 	};
+		// });
+
+		navigator.geolocation.watchPosition((position) => {
+			const userCoords = position.coords;
 			console.log(userCoords);
 			// this.currentCoords = userCoords;
 			this.createCurrentLocation(userCoords);
@@ -33,7 +47,7 @@ class Game {
 			this.addMarker(userCoords.latitude, userCoords.longitude);
 			this.currentCoords = {
 				lat: userCoords.latitude,
-				lng: userCoords.longitude,
+				lng: userCoords.longitude
 			};
 		});
 
@@ -52,7 +66,7 @@ class Game {
 		const marker = new google.maps.Marker({
 			position: { lat, lng },
 			map: this.map,
-			title: 'Hello World!',
+			title: 'Hello World!'
 		  });
 	}
 	setUserGeoData(position) {
@@ -72,7 +86,7 @@ class Game {
 			fillColor: background,
 			fillOpacity: 0.2,
 			strokeColor: color,
-			strokeWeight: 2,
+			strokeWeight: 2
 		});
 	}
 
@@ -95,7 +109,7 @@ class Game {
 		getLocationPromise.then((locArray) => {
 			const geoObj = {
 				type: 'FeatureCollection',
-				features: [],
+				features: []
 			};
 
 			// creating geoJSON Object from recieved data
@@ -108,16 +122,16 @@ class Game {
 						color: 'green',
 						background: 'green',
 						info: {
-							master: item.master,
-						},
+							master: item.master
+						}
 					},
 					geometry: {
 						type: 'Polygon',
 						coordinates: [
 							this.getLocationPointsByTopLeft({
 								lat: item.lat,
-								lng: item.lng,
-							}, true),
+								lng: item.lng
+							}, true)
 							// [[
 							// 	+item.lng, +item.lat,
 							// ], [
@@ -129,8 +143,8 @@ class Game {
 							// ], [
 							// 	+item.lng, +item.lat,
 							// ]],
-						],
-					},
+						]
+					}
 				});
 			});
 			console.log(geoObj);
@@ -259,21 +273,21 @@ class Game {
 		return result;
 	}
 
-	getUserLocationPromise() {
-		const createCurrentLocatonPromise = new Promise((res, rej) => {
-			navigator.geolocation.watchPosition((position) => {
-				console.log(position);
-			  res(position.coords);
-			}, (err) => {
-			  rej(err);
-			}, {
-			  enableHighAccuracy: true,
-			  maximumAge: 0,
-			});
-		  });
+	// getUserLocationPromise() {
+	// 	const createCurrentLocatonPromise = new Promise((res, rej) => {
+	// 		navigator.geolocation.watchPosition((position) => {
+	// 			console.log(position);
+	// 		  res(position.coords);
+	// 		}, (err) => {
+	// 		  rej(err);
+	// 		}, {
+	// 		  enableHighAccuracy: true,
+	// 		  maximumAge: 0
+	// 		});
+	// 	  });
 
-		return createCurrentLocatonPromise;
-	}
+	// 	return createCurrentLocatonPromise;
+	// }
 
 	createCurrentLocation(currentCoords) {
 		this.usersGeocordsInfo.textContent = `${currentCoords.latitude} 
@@ -303,17 +317,16 @@ class Game {
 		});
 		getLocationInfoPromise
 			.then((locationData) => {
-				if (!locationData.loc_id) {
+				if (!locationData) {
 					console.log(locationData);
 					if (this.map.data.getFeatureById('currentLocation')) {
 						this.map.data.remove(this.map.data.getFeatureById('currentLocation'));
 					}
 					this.map.data.add(this.createLocation(currentLocationCoords));
+					this.occupyBtn.style.display = 'block';
 				} else {
 					const currentLocation = this.map.data.getFeatureById(locationData.loc_id);
 					currentLocation.setProperty('color', 'crimson');
-
-					this.occupyBtn.style.display = 'none';
 				}
 			})
 			.catch((err) => {
@@ -326,41 +339,41 @@ class Game {
 			return [{
 			// north west
 				lat: +topLeftCoords.lat,
-				lng: +topLeftCoords.lng,
+				lng: +topLeftCoords.lng
 			}, {
 			// south west
 				lat: ((topLeftCoords.lat * 10000000) - this.relativeLatSize) / 10000000,
-				lng: +topLeftCoords.lng,
+				lng: +topLeftCoords.lng
 			}, {
 			// south east
 				lat: ((topLeftCoords.lat * 10000000) - this.relativeLatSize) / 10000000,
-				lng: ((topLeftCoords.lng * 10000000) + this.getRelLngSize(topLeftCoords.lat)) / 10000000,
+				lng: ((topLeftCoords.lng * 10000000) + this.getRelLngSize(topLeftCoords.lat)) / 10000000
 			}, {
 			// north east
 				lat: +topLeftCoords.lat,
-				lng: ((topLeftCoords.lng * 10000000) + this.getRelLngSize(topLeftCoords.lat)) / 10000000,
+				lng: ((topLeftCoords.lng * 10000000) + this.getRelLngSize(topLeftCoords.lat)) / 10000000
 			}];
 		}
 		return [[
 			// north west
 			+topLeftCoords.lng,
-			+topLeftCoords.lat,
+			+topLeftCoords.lat
 		], [
 			// south west
 			+topLeftCoords.lng,
-			((topLeftCoords.lat * 10000000) - this.relativeLatSize) / 10000000,
+			((topLeftCoords.lat * 10000000) - this.relativeLatSize) / 10000000
 		], [
 			// south east
 			((topLeftCoords.lng * 10000000) + this.getRelLngSize(topLeftCoords.lat)) / 10000000,
-			((topLeftCoords.lat * 10000000) - this.relativeLatSize) / 10000000,
+			((topLeftCoords.lat * 10000000) - this.relativeLatSize) / 10000000
 		], [
 			// north east
 			((topLeftCoords.lng * 10000000) + this.getRelLngSize(topLeftCoords.lat)) / 10000000,
-			+topLeftCoords.lat,
+			+topLeftCoords.lat
 		], [
 			// north west
 			+topLeftCoords.lng,
-			+topLeftCoords.lat,
+			+topLeftCoords.lat
 		]];
 	}
 	createLocation(locationCoords) {
@@ -371,10 +384,10 @@ class Game {
 			properties: {
 				color: 'crimson',
 				info: {
-					name: 'Current location',
-				},
+					name: 'Current location'
+				}
 			},
-			geometry: new google.maps.Data.Polygon([location]),
+			geometry: new google.maps.Data.Polygon([location])
 		};
 		return locationGeoObj;
 	}
@@ -411,12 +424,12 @@ class Game {
 			type: 'Feature',
 			id: 'highlight',
 			properties: {
-				color: 'blue',
+				color: 'blue'
 				// info: {
 				//   name: 'Empty location',
 				// },
 			},
-			geometry: new google.maps.Data.Polygon([location]),
+			geometry: new google.maps.Data.Polygon([location])
 		};
 		console.log(locationNew);
 		this.map.data.add(locationNew);
@@ -436,7 +449,7 @@ class Game {
 
 		return {
 			lat,
-			lng,
+			lng
 		};
 	}
 
@@ -448,7 +461,7 @@ class Game {
 			createLocationXHR.send(JSON.stringify({
 				userLat: this.userGeoData.latitude,
 				userLng: this.userGeoData.longitude,
-				accuracy: this.userGeoData.accuracy,
+				accuracy: this.userGeoData.accuracy
 			}));
 			createLocationXHR.addEventListener('load', (e) => {
 				const xhr = e.srcElement;
@@ -490,13 +503,14 @@ class Game {
 					properties: {
 						color: 'green',
 						info: {
-						},
+						}
 					},
-					geometry: new google.maps.Data.Polygon([location]),
+					geometry: new google.maps.Data.Polygon([location])
 					// geometry: thisFeature.getGeometry(),
 				};
 				this.map.data.add(locationNew);
 				this.map.data.remove(thisLocation);
+				this.occupyBtn.style.display = 'none';
 			})
 			.catch((err) => {
 				console.log(err);
@@ -510,7 +524,7 @@ function initMap() {
 	game.map = new google.maps.Map(document.getElementById('map'), {
 		zoom: 12,
 		center: { lat: 49.9891, lng: 36.2322 },
-		clickableIcons: false,
+		clickableIcons: false
 	});
 	window.onload = function () {
 		const lat0 = game.map.getBounds().getNorthEast().lat();
@@ -522,7 +536,6 @@ function initMap() {
 		game.renderLocationsFromDB();
 
 		game.map.addListener('click', (event) => {
-
 			game.hilightEmptyLocation(event);
 		});
 	};
