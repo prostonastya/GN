@@ -87,18 +87,34 @@ class EmptyLocation {
 		return lngSizeCoefficients;
 	}
 
-	static initLocationGrid(options) {
-		options = options || {};
+	static getEquatorLength() {
+		return 40075696;
+	}
 
-		EmptyLocation.prototype.EQUATOR_LENGTH = options.EQUATOR_LENGTH || 40075696;
-		EmptyLocation.prototype.MERIDIAN_LENGTH = options.MERIDIAN_LENGTH || 20004274;
-		EmptyLocation.prototype.preferableLocSideSize = options.preferableLocSideSize || 100;
+	static getMeridianLength() {
+		return 20004274;
+	}
+
+	static getPreferableLocSideSize() {
+		return 100;
+	}
+
+	// static getLocSideMetersSizeOnEquatorLat() {
+	// 	return this.getPreferableLocSideSize() * 1.5;
+	// }
+
+	static initLocationGrid() {
+		// options = options || {};
+
+		// EmptyLocation.prototype.EQUATOR_LENGTH = options.EQUATOR_LENGTH || 40075696;
+		// EmptyLocation.prototype.MERIDIAN_LENGTH = options.MERIDIAN_LENGTH || 20004274;
+		// EmptyLocation.prototype.preferableLocSideSize = options.preferableLocSideSize || 100;
 
 		EmptyLocation.prototype
-			.locSideMetersSizeOnEquatorLat = EmptyLocation.prototype.preferableLocSideSize * 1.5;
+			.locSideMetersSizeOnEquatorLat = EmptyLocation.getPreferableLocSideSize() * 1.5;
 
-		const minAbsoluteLatSize = EmptyLocation.prototype.MERIDIAN_LENGTH / 1800000000;
-		const minAbsoluteLngSize = EmptyLocation.prototype.EQUATOR_LENGTH / 3600000000;
+		const minAbsoluteLatSize = EmptyLocation.getEquatorLength() / 1800000000;
+		const minAbsoluteLngSize = EmptyLocation.getMeridianLength() / 3600000000;
 
 		EmptyLocation.prototype.relativeLatSize = this.getClosestRelSize(
 			Math.round(EmptyLocation.prototype.preferableLocSideSize / minAbsoluteLatSize),
@@ -107,8 +123,10 @@ class EmptyLocation {
 			Math.round(EmptyLocation.prototype.locSideMetersSizeOnEquatorLat / minAbsoluteLngSize),
 			'lng');
 
-		EmptyLocation.prototype.lngSizeCoefficients = EmptyLocation.prototype.getLatutideBreakpointsObject();
-		EmptyLocation.prototype.latBreakPoints = Object.keys(EmptyLocation.prototype.lngSizeCoefficients);
+		EmptyLocation.prototype
+			.lngSizeCoefficients = EmptyLocation.prototype.getLatutideBreakpointsObject();
+		EmptyLocation.prototype
+			.latBreakPoints = Object.keys(EmptyLocation.prototype.lngSizeCoefficients);
 	}
 
 	static getClosestRelSize(preferRelSize, latOrLng) {
