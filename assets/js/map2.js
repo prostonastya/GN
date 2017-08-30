@@ -11,6 +11,9 @@ class Game {
 		this.occupyBtn = document.getElementById('occupy-btn');
 
 
+		this.map = null;
+
+
 		this.userGeoData = null;
 
 		this.relativeLatSize = null;
@@ -26,8 +29,8 @@ class Game {
 			// this.currentCoords = userCoords;
 			this.createCurrentLocation(userCoords);
 			this.setUserGeoData(userCoords);
-			map.setZoom(15);
-			map.setCenter({ lat: userCoords.latitude, lng: userCoords.longitude });
+			this.setMapCenter(userCoords.latitude, userCoords.longitude);
+			this.addMarker(userCoords.latitude, userCoords.longitude);
 			this.currentCoords = {
 				lat: userCoords.latitude,
 				lng: userCoords.longitude,
@@ -41,11 +44,17 @@ class Game {
 		});
 	}
 
-	setMapCenter() {
-		map.setZoom(15);
-		map.setCenter({ lat: this.currentCoords.lat, lng: this.currentCoords.lng });
+	setMapCenter(lat, lng) {
+		this.map.setZoom(15);
+		this.map.setCenter({ lat, lng });
 	}
-
+	addMarker(lat, lng) {
+		const marker = new google.maps.Marker({
+			position: { lat, lng },
+			map: this.map,
+			title: 'Hello World!',
+		  });
+	}
 	setUserGeoData(position) {
 		this.userGeoData = position;
 	}
@@ -126,13 +135,13 @@ class Game {
 			});
 			console.log(geoObj);
 
-			map.data.addGeoJson(geoObj);
+			this.map.data.addGeoJson(geoObj);
 		})
 			.catch((err) => {
 				console.log(err);
 			});
 
-		map.data.setStyle(this.setStyleLocation);
+		this.map.data.setStyle(this.setStyleLocation);
 	}
 
 
@@ -271,7 +280,7 @@ class Game {
 											${currentCoords.longitude}
 											${currentCoords.accuracy}`;
 
-		this.usersLocContainer.style.display = 'block';
+		this.usersLocContainer.classList.add('open');
 
 		const currentLocationCoords = this.getTopLeftLocationCoordsByPoint(currentCoords.latitude,	currentCoords.longitude);
 
@@ -296,13 +305,15 @@ class Game {
 			.then((locationData) => {
 				if (!locationData.loc_id) {
 					console.log(locationData);
-					if (map.data.getFeatureById('currentLocation')) {
-						map.data.remove(map.data.getFeatureById('currentLocation'));
+					if (this.map.data.getFeatureById('currentLocation')) {
+						this.map.data.remove(this.map.data.getFeatureById('currentLocation'));
 					}
-					map.data.add(this.createLocation(currentLocationCoords));
+					this.map.data.add(this.createLocation(currentLocationCoords));
 				} else {
-					const currentLocation = map.data.getFeatureById(locationData.loc_id);
+					const currentLocation = this.map.data.getFeatureById(locationData.loc_id);
 					currentLocation.setProperty('color', 'crimson');
+
+					this.occupyBtn.style.display = 'none';
 				}
 			})
 			.catch((err) => {
@@ -368,8 +379,8 @@ class Game {
 		return locationGeoObj;
 	}
 	hilightEmptyLocation(event) {
-		if (map.data.getFeatureById('highlight')) {
-			map.data.remove(map.data.getFeatureById('highlight'));
+		if (this.map.data.getFeatureById('highlight')) {
+			this.map.data.remove(this.map.data.getFeatureById('highlight'));
 		}
 
 		const topLeftCoords = this.getTopLeftLocationCoordsByPoint(event.latLng.lat(), event.latLng.lng());
@@ -382,6 +393,8 @@ class Game {
 		// const lng = Math.floor(event.latLng.lng() * 100) / 100;
 
 		this.clickedInfo.style.display = 'block';
+		this.clickedInfo.classList.add('open');
+		this.usersLocContainer.classList.remove('open');
 		// clickedCordsInfo.textContent = `${event.latLng.lat()} ${event.latLng.lng()}`;
 		this.clickedLocationInfo.textContent = `${lat} ${lng}`;
 
@@ -406,7 +419,7 @@ class Game {
 			geometry: new google.maps.Data.Polygon([location]),
 		};
 		console.log(locationNew);
-		map.data.add(locationNew);
+		this.map.data.add(locationNew);
 		this.clickedLocationHeading.textContent = 'Empty location';
 		// setTimeout(() => {
 		//   if (!confirm('Поставить поселение?')) {
@@ -450,7 +463,7 @@ class Game {
 		})
 			.then((response) => {
 				console.log(response);
-				const thisLocation = map.data.getFeatureById('currentLocation');
+				const thisLocation = this.map.data.getFeatureById('currentLocation');
 
 				const location = this.getLocationPointsByTopLeft(response);
 				// [{
@@ -482,52 +495,46 @@ class Game {
 					geometry: new google.maps.Data.Polygon([location]),
 					// geometry: thisFeature.getGeometry(),
 				};
-				map.data.add(locationNew);
-				 map.data.remove(thisLocation);
+				this.map.data.add(locationNew);
+				this.map.data.remove(thisLocation);
 			})
 			.catch((err) => {
 				console.log(err);
 			});
-
-		// const locationId = Math.floor((Math.random() * new Date()) / 100000);
-		// const locationNew = {
-		//   type: 'Feature',
-		//   id: 'currentLocation',
-		//   properties: {
-		//     color: 'blue',
-		//     info: {
-		//       name: 'Current location',
-		//     },
-		//   },
-		//   geometry: new google.maps.Data.Polygon([location]),
-		// };
-		// map.data.add(locationNew);
-		// map.data.remove(feature);
 	}
 }
 
 
-let map;
 function initMap() {
-	map = new google.maps.Map(document.getElementById('map'), {
+	const game = new Game();
+	game.map = new google.maps.Map(document.getElementById('map'), {
 		zoom: 12,
 		center: { lat: 49.9891, lng: 36.2322 },
 		clickableIcons: false,
 	});
 	window.onload = function () {
-		const game = new Game();
-
-		const lat0 = map.getBounds().getNorthEast().lat();
-		const lng0 = map.getBounds().getNorthEast().lng();
-		const lat1 = map.getBounds().getSouthWest().lat();
-		const lng1 = map.getBounds().getSouthWest().lng();
+		const lat0 = game.map.getBounds().getNorthEast().lat();
+		const lng0 = game.map.getBounds().getNorthEast().lng();
+		const lat1 = game.map.getBounds().getSouthWest().lat();
+		const lng1 = game.map.getBounds().getSouthWest().lng();
 		console.log(lat0, lng0, lat1, lng1);
 
 		game.renderLocationsFromDB();
 
+		game.map.addListener('click', (event) => {
 
-		map.addListener('click', (event) => {
 			game.hilightEmptyLocation(event);
 		});
 	};
+
+	game.usersLocContainer.addEventListener('click', (e) => {
+		if (e.target.classList[0] == 'close') {
+			game.usersLocContainer.classList.toggle('open');
+		}
+	});
+	game.clickedInfo.addEventListener('click', (e) => {
+		if (e.target.classList[0] == 'close') {
+			game.clickedInfo.classList.toggle('open');
+		}
+	});
 }

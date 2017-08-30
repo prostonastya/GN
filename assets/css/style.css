@@ -163,3 +163,9 @@ input {
 .foot-lnk{
 	text-align:center;
 }
+
+@media screen and (max-width: 480px) {
+	.login-html {
+		padding: 50px 20px;
+	}
+}
