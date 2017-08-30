@@ -309,7 +309,6 @@ class Game {
 						this.map.data.remove(this.map.data.getFeatureById('currentLocation'));
 					}
 					this.map.data.add(this.createLocation(currentLocationCoords));
-					this.occupyBtn.style.display = 'block';
 				} else {
 					const currentLocation = this.map.data.getFeatureById(locationData.loc_id);
 					currentLocation.setProperty('color', 'crimson');
@@ -523,6 +522,7 @@ function initMap() {
 		game.renderLocationsFromDB();
 
 		game.map.addListener('click', (event) => {
+
 			game.hilightEmptyLocation(event);
 		});
 	};

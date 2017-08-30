@@ -1,10 +1,11 @@
 const express = require('express');
-const Location = require('../models/location');
+const EmptyLocation = require('../models/emptyLocation');
+const OccupiedLocation = require('../models/occupiedLocation');
 
 const router = express.Router();
 
 router.get('/', (req, res, next) => {
-	Location.getAllLocations()
+	OccupiedLocation.getAllLocations()
 		.then((locations) => {
 			res.status(200)
 				.json(locations);
@@ -15,37 +16,72 @@ router.get('/:id', (req, res, next) => {
 	const userId = req.decoded.id;
 	const locId = req.params.id;
 	let isMaster;
-	Location.getOwnerByLocId(locId)
+	OccupiedLocation.getOwnerByLocId(locId)
 		.then((data) => {
-			if(data) {
+			if (data) {
 				isMaster = data.user_id === userId;
-			}
-			else {
+			} else {
 				isMaster = false;
 			}
-			return Location.getLocationById(req.params.id);
+			return OccupiedLocation.getLocationById(req.params.id);
 		})
 		.then((location) => {
-			if(location) {
+			if (location) {
 				location.isMaster = isMaster;
 				res.status(200)
 					.json(location);
-			}
-			else {
-				
+			} else {
 				res.status(200)
 					.json({});
 			}
 		})
 		.catch(err => next(err));
 });
+// '/grid?lat=xxx&lng=xxx'
+router.get('/grid', (req, res, next) => {
+	const geoData = {
+		lat: req.query.lat,
+		lng: req.query.lng
+	};
+
+	res.json(new EmptyLocation(geoData));
+});
+// router.get('/:lat/:lng', (req, res, next) => {
+// 	const coords = {
+// 		lat: req.params.lat,
+// 		lng: req.params.lng
+// 	};
+// 	const userId = req.decoded.id;
+// 	let isMaster;
+// 	OccupiedLocation.getLocationByCoords(coords)
+// 		.then((data) => {
+// 			if (data) {
+// 				isMaster = data.user_id === userId;
+// 			} else {
+// 				isMaster = false;
+// 			}
+// 			return OccupiedLocation.getLocationById(req.params.id);
+// 		})
+// 		.then((location) => {
+// 			if (location) {
+// 				location.isMaster = isMaster;
+// 				res.status(200)
+// 					.json(location);
+// 			} else {
+// 				res.status(200)
+// 					.json({});
+// 			}
+// 		})
+// 		.catch(err => next(err));
+// });
+
 router.post('/', (req, res, next) => {
 	const userData = {
 		userId: req.decoded.id,
 		userLng: req.body.userLng,
-		userLat: req.body.userLat,
+		userLat: req.body.userLat
 	};
-	const newLocation = new Location(userData);
+	const newLocation = new OccupiedLocation(userData);
 	newLocation.saveLocation()
 		.then(() => {
 			res.json(newLocation);
@@ -55,12 +91,12 @@ router.post('/', (req, res, next) => {
 router.put('/:id/restore-population', (req, res, next) => {
 	const userId = req.decoded.id;
 	const locId = req.params.id;
-	Location.getOwnerByLocId(locId)
+	OccupiedLocation.getOwnerByLocId(locId)
 		.then((data) => {
 			if (data.user_id !== userId) {
 				throw new Error('Permission denied!');
 			}
-			return Location.restoreLoyalPopulByLocId(locId);
+			return OccupiedLocation.restoreLoyalPopulByLocId(locId);
 		})
 		.then(() => {
 			res.sendStatus(200);
@@ -69,6 +105,5 @@ router.put('/:id/restore-population', (req, res, next) => {
 			next(err);
 		});
 });
-
 
 module.exports = router;
