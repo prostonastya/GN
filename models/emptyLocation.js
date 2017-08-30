@@ -1,56 +1,123 @@
 class EmptyLocation {
 	constructor(geoData) {
-		this.coords = this.getLocationPointsByTopLeft(
-			this.getTopLeftLocationCoordsByPoint(geoData)
+		this.coords = this.getLocationPointsByNorthWest(
+			this.getNorthWestLocationCoordsByPoint(geoData)
 		);
 	}
 
-	get locationId() {
-		const northWestPoint = this.coords.northWest;
-
-		return `${
-			this.convertCoordToIdString(northWestPoint.lat, true)
-		}${
-			this.convertCoordToIdString(northWestPoint.lng, false)
-		}`;
+	getLocationPointsByNorthWest(northWestCoords) {
+		const getRelLngSize = this.getRelLngSize(northWestCoords.lat);
+		return {
+			northWest: {
+				lat: +northWestCoords.lat,
+				lng: +northWestCoords.lng
+			},
+			southWest: {
+				lat: ((northWestCoords.lat * 10000000) - this.relativeLatSize) / 10000000,
+				lng: +northWestCoords.lng
+			},
+			southEast: {
+				lat: ((northWestCoords.lat * 10000000) - this.relativeLatSize) / 10000000,
+				lng: ((northWestCoords.lng * 10000000) + getRelLngSize) / 10000000
+			},
+			northEast: {
+				lat: +northWestCoords.lat,
+				lng: ((northWestCoords.lng * 10000000) + getRelLngSize) / 10000000
+			}
+		};
 	}
 
-	// location ID string convertor
+	get lngSizeCoefficients() {
+		return this.getLatutideBreakpointsObject();
+	}
 
-	static convertCoordToIdString(coord, isLat) {
-		const digitsQuantity = isLat ? 2 : 3;
-		coord = `${coord}`;
-		coord = coord.split('.');
-		if (coord[0].indexOf('-') === 0) {
-			coord[0] = coord[0][0].slice(1);
+	get latBreakPoints() {
+		return Object.keys(this.lngSizeCoefficients);
+	}
 
-			while (coord[0].length < digitsQuantity) {
-				coord[0] = `0${coord[0]}`;
-			}
+	get equatorLength() {
+		return 40075696;
+	}
 
-			coord[0] = `n${coord[0]}`;
-		} else {
-			while (coord[0].length < digitsQuantity) {
-				coord[0] = `0${coord[0]}`;
-			}
+	get meridianLength() {
+		return 20004274;
+	}
 
-			coord[0][0] = `p${coord[0][0]}`;
-		}
+	get preferableLocSideSize() {
+		return 100;
+	}
 
-		while (coord[1].length < 7) {
-			coord[1] = `${coord[1]}0`;
-		}
+	get locSideMetersSizeOnEquatorLat() {
+		return this.preferableLocSideSize * 1.5;
+	}
 
-		return coord.join('x');
+	get minAbsoluteLatSize() {
+		return this.meridianLength / 1800000000;
+	}
+
+	get minAbsoluteLngSize() {
+		return this.equatorLength / 3600000000;
+	}
+
+	get relativeLatSize() {
+		return this.getClosestRelSize(
+			Math.round(this.preferableLocSideSize / this.minAbsoluteLatSize),
+			'lat');
+	}
+
+	get relativeLngSize() {
+		return this.getClosestRelSize(
+			Math.round(this.locSideMetersSizeOnEquatorLat / this.minAbsoluteLngSize),
+			'lng');
+	}
+
+	getMapFeatureCoords() {
+		return [{
+			// north west
+			lat: this.northWest.lat,
+			lng: this.northWest.lng
+		}, {
+			// south west
+			lat: this.southWest.lat,
+			lng: this.southWest.lng
+		}, {
+			// south east
+			lat: this.southEast.lat,
+			lng: this.southEast.lng
+		}, {
+			// north east
+			lat: this.northEast.lat,
+			lng: this.northEast.lng
+		}];
+	}
+
+	getMapFeatureGeometry() {
+		return [[
+		// north west
+			this.northWest.lng,
+			this.northWest.lat
+		], [
+		// south west
+			this.southWest.lng,
+			this.southWest.lat
+		], [
+		// south east
+			this.southEast.lng,
+			this.southEast.lat
+		], [
+		// north east
+			this.northEast.lng,
+			this.northEast.lat
+		], [
+		// north west
+			this.northWest.lng,
+			this.northWest.lat
+		]];
 	}
 
 	getLatutideBreakpointsObject() {
-		// this.prototype.lngSizeCoefficients = {};
-		// this.prototype.latBreakPoints = [];
-
 		const lngSizeCoefficients = {};
-		// const latBreakPoints = [];
-		let lngPrimeFactorsArr = EmptyLocation.findPrimeFactors(3600000000 / this.relativeLngSize);
+		let lngPrimeFactorsArr = this.findPrimeFactors(3600000000 / this.relativeLngSize);
 		lngPrimeFactorsArr.splice(-1);
 
 		lngPrimeFactorsArr = lngPrimeFactorsArr.map((item) => {
@@ -81,55 +148,12 @@ class EmptyLocation {
 				) * this.relativeLatSize
 			) /	10000000;
 			lngSizeCoefficients[lngBreakPoint] = lngSizeCoefficient;
-			// latBreakPoints.push(lngBreakPoint);
 		});
 
 		return lngSizeCoefficients;
 	}
 
-	static getEquatorLength() {
-		return 40075696;
-	}
-
-	static getMeridianLength() {
-		return 20004274;
-	}
-
-	static getPreferableLocSideSize() {
-		return 100;
-	}
-
-	// static getLocSideMetersSizeOnEquatorLat() {
-	// 	return this.getPreferableLocSideSize() * 1.5;
-	// }
-
-	static initLocationGrid() {
-		// options = options || {};
-
-		// EmptyLocation.prototype.EQUATOR_LENGTH = options.EQUATOR_LENGTH || 40075696;
-		// EmptyLocation.prototype.MERIDIAN_LENGTH = options.MERIDIAN_LENGTH || 20004274;
-		// EmptyLocation.prototype.preferableLocSideSize = options.preferableLocSideSize || 100;
-
-		EmptyLocation.prototype
-			.locSideMetersSizeOnEquatorLat = EmptyLocation.getPreferableLocSideSize() * 1.5;
-
-		const minAbsoluteLatSize = EmptyLocation.getEquatorLength() / 1800000000;
-		const minAbsoluteLngSize = EmptyLocation.getMeridianLength() / 3600000000;
-
-		EmptyLocation.prototype.relativeLatSize = this.getClosestRelSize(
-			Math.round(EmptyLocation.prototype.preferableLocSideSize / minAbsoluteLatSize),
-			'lat');
-		EmptyLocation.prototype.relativeLngSize = this.getClosestRelSize(
-			Math.round(EmptyLocation.prototype.locSideMetersSizeOnEquatorLat / minAbsoluteLngSize),
-			'lng');
-
-		EmptyLocation.prototype
-			.lngSizeCoefficients = EmptyLocation.prototype.getLatutideBreakpointsObject();
-		EmptyLocation.prototype
-			.latBreakPoints = Object.keys(EmptyLocation.prototype.lngSizeCoefficients);
-	}
-
-	static getClosestRelSize(preferRelSize, latOrLng) {
+	getClosestRelSize(preferRelSize, latOrLng) {
 		let maxDeg;
 		if (latOrLng === 'lat') {
 			maxDeg = 1800000000;
@@ -139,11 +163,11 @@ class EmptyLocation {
 			return false;
 		}
 
-		if (Math.round(maxDeg / preferRelSize) === maxDeg / preferRelSize) {
+		if (Math.round(maxDeg / this.preferRelSize) === maxDeg / this.preferRelSize) {
 			return preferRelSize;
 		}
 
-		if (Math.round(maxDeg / preferRelSize) !== maxDeg / preferRelSize) {
+		if (Math.round(maxDeg / this.preferRelSize) !== maxDeg / this.preferRelSize) {
 			let relativeSizeToIncrease = preferRelSize;
 			let relativeSizeToDecrease = preferRelSize;
 			while (true) {
@@ -163,7 +187,7 @@ class EmptyLocation {
 		return preferRelSize;
 	}
 
-	static findPrimeFactors(value) {
+	findPrimeFactors(value) {
 		let tempValue = value;
 		let checker = 2;
 		const result = [];
@@ -182,7 +206,33 @@ class EmptyLocation {
 		return result;
 	}
 
-	getTopLeftLocationCoordsByPoint(point) {
+	getRelLngSize(lat) {
+		let result;
+		const lngSizeCoefficients = this.getLatutideBreakpointsObject();
+		const breakPoints = Object.keys(lngSizeCoefficients);
+
+		if (lat < 0) {
+			lat = (lat - (this.relativeLatSize / 10000000)) * (-1);
+		}
+
+		if (lat <= breakPoints[0]) {
+			return this.relativeLngSize;
+		}
+
+		for (let i = 0, maxValue = this.latBreakPoints.length; i < maxValue; i += 1) {
+			if (
+				(lat > breakPoints[i] && lat <= breakPoints[i + 1]) ||
+				(lat > breakPoints[i] && !breakPoints[i + 1])
+			) {
+				result = this.relativeLngSize * lngSizeCoefficients[breakPoints[i]];
+			}
+		}
+
+		return result;
+	}
+
+	getNorthWestLocationCoordsByPoint(point) {
+		const relLngSize = this.getRelLngSize(point.lat);
 		const lat = (
 			Math.ceil(
 				Math.round(point.lat * 10000000) / this.relativeLatSize
@@ -190,8 +240,8 @@ class EmptyLocation {
 		) /	10000000;
 		const lng = (
 			Math.floor(
-				Math.round(point.lng * 10000000) / this.getRelLngSize(point.lat)
-			) * this.getRelLngSize(point.lat)
+				Math.round(point.lng * 10000000) / relLngSize
+			) * relLngSize
 		) /	10000000;
 
 		return {
@@ -200,59 +250,16 @@ class EmptyLocation {
 		};
 	}
 
-	getRelLngSize() {
-		let result;
+	validateLocationGrid() {
+		const locLat = this.coords.northWest.lat;
+		const locLng = this.coords.northWest.lng;
+		const checkedCoords = this.getNorthWestLocationCoordsByPoint({
+			lat: locLat,
+			lng: locLng
+		});
 
-		if (this.lat < 0) {
-			this.lat = (this.lat - (this.relativeLatSize / 10000000)) * (-1);
-		}
-
-		if (this.lat <= this.latBreakPoints[0]) {
-			return this.relativeLngSize;
-		}
-
-		for (let i = 0, maxValue = this.latBreakPoints.length; i < maxValue; i += 1) {
-			if (
-				(this.lat > this.latBreakPoints[i] && this.lat <= this.latBreakPoints[i + 1]) ||
-			(this.lat > this.latBreakPoints[i] && !this.latBreakPoints[i + 1])
-			) {
-				result = this.relativeLngSize * this.lngSizeCoefficients[this.latBreakPoints[i]];
-			}
-		}
-
-		return result;
-	}
-
-	static getLocationPointsByNorthWestPoint(northWestPoint) {
-		return {
-			northWest: {
-				lat: northWestPoint.lat,
-				lng: northWestPoint.lng
-			},
-			southWest: {
-				lat: (
-					(northWestPoint.lat * 10000000) - this.relativeLatSize
-				) / 10000000,
-				lng: northWestPoint.lng
-			},
-			southEast: {
-				lat: (
-					(northWestPoint.lat * 10000000) - this.relativeLatSize
-				) / 10000000,
-				lng: (
-					(northWestPoint.lng * 10000000) + this.getRelLngSize(this.lat)
-				) / 10000000
-			},
-			northEast: {
-				lat: northWestPoint.lat,
-				lng: (
-					(northWestPoint.lng * 10000000) + this.getRelLngSize(this.lat)
-				) / 10000000
-			}
-		};
+		return (locLat === checkedCoords.lat && locLng === checkedCoords.lng);
 	}
 }
-
-EmptyLocation.initLocationGrid();
 
 module.exports = EmptyLocation;
