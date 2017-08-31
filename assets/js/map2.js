@@ -41,8 +41,8 @@ class Game {
 			const userCoords = position.coords;
 			console.log(userCoords);
 			// this.currentCoords = userCoords;
-			this.createCurrentLocation(userCoords);
 			this.setUserGeoData(userCoords);
+			this.createCurrentLocation(userCoords);
 			this.setMapCenter(userCoords.latitude, userCoords.longitude);
 			this.addMarker(userCoords.latitude, userCoords.longitude);
 			this.currentCoords = {
@@ -305,6 +305,7 @@ class Game {
 			const xhr = new XMLHttpRequest();
 
 			xhr.open('GET', `/api/locations/${currentLocationCoords.lat}${currentLocationCoords.lng}`);
+			// xhr.open('GET', `/api/locations/grid?lat=${this.userGeoData.latitude}&lng=${this.userGeoData.longitude}`);
 			xhr.send();
 			xhr.addEventListener('load', (e) => {
 				const getLocationInfoXHR = e.srcElement;

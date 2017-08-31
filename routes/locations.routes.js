@@ -12,6 +12,16 @@ router.get('/', (req, res, next) => {
 		})
 		.catch(err => next(err));
 });
+// '/grid?lat=xxx&lng=xxx'
+router.get('/grid', (req, res) => {
+	const geoData = {
+		lat: +req.query.lat,
+		lng: +req.query.lng
+	};
+
+	const location = new EmptyLocation(geoData);
+	res.json(location.getMapFeatureCoords());
+});
 router.get('/:id', (req, res, next) => {
 	const userId = req.decoded.id;
 	const locId = req.params.id;
@@ -36,15 +46,6 @@ router.get('/:id', (req, res, next) => {
 			}
 		})
 		.catch(err => next(err));
-});
-// '/grid?lat=xxx&lng=xxx'
-router.get('/grid', (req, res, next) => {
-	const geoData = {
-		lat: req.query.lat,
-		lng: req.query.lng
-	};
-
-	res.json(new EmptyLocation(geoData));
 });
 // router.get('/:lat/:lng', (req, res, next) => {
 // 	const coords = {

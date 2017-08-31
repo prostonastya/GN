@@ -74,44 +74,44 @@ class EmptyLocation {
 	getMapFeatureCoords() {
 		return [{
 			// north west
-			lat: this.northWest.lat,
-			lng: this.northWest.lng
+			lat: this.coords.northWest.lat,
+			lng: this.coords.northWest.lng
 		}, {
 			// south west
-			lat: this.southWest.lat,
-			lng: this.southWest.lng
+			lat: this.coords.southWest.lat,
+			lng: this.coords.southWest.lng
 		}, {
 			// south east
-			lat: this.southEast.lat,
-			lng: this.southEast.lng
+			lat: this.coords.southEast.lat,
+			lng: this.coords.southEast.lng
 		}, {
 			// north east
-			lat: this.northEast.lat,
-			lng: this.northEast.lng
+			lat: this.coords.northEast.lat,
+			lng: this.coords.northEast.lng
 		}];
 	}
 
 	getMapFeatureGeometry() {
 		return [[
 		// north west
-			this.northWest.lng,
-			this.northWest.lat
+			this.coords.northWest.lng,
+			this.coords.northWest.lat
 		], [
 		// south west
-			this.southWest.lng,
-			this.southWest.lat
+			this.coords.southWest.lng,
+			this.coords.southWest.lat
 		], [
 		// south east
-			this.southEast.lng,
-			this.southEast.lat
+			this.coords.southEast.lng,
+			this.coords.southEast.lat
 		], [
 		// north east
-			this.northEast.lng,
-			this.northEast.lat
+			this.coords.northEast.lng,
+			this.coords.northEast.lat
 		], [
 		// north west
-			this.northWest.lng,
-			this.northWest.lat
+			this.coords.northWest.lng,
+			this.coords.northWest.lat
 		]];
 	}
 
