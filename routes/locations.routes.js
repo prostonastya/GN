@@ -7,8 +7,7 @@ const router = express.Router();
 router.get('/', (req, res, next) => {
 	OccupiedLocation.getAllLocations()
 		.then((locations) => {
-			res.status(200)
-				.json(locations);
+			res.json(locations);
 		})
 		.catch(err => next(err));
 });
@@ -21,6 +20,26 @@ router.get('/grid', (req, res) => {
 
 	const location = new EmptyLocation(geoData);
 	res.json(location);
+});
+// '/check-location?lat=xxx&lng=xxx'
+router.get('/check-location', (req, res, next) => {
+	const geoData = {
+		lat: +req.query.lat,
+		lng: +req.query.lng
+	};
+
+	OccupiedLocation.checkLocationOnCoords(geoData)
+		.then((locationObj) => {
+			if (locationObj.masterId === req.decoded.id) {
+				Object.assign(locationObj, {
+					isMaster: true
+				});
+			}
+			res.json(locationObj);
+		})
+		.catch((err) => {
+			next(err);
+		});
 });
 router.get('/:id', (req, res, next) => {
 	const userId = req.decoded.id;
@@ -77,12 +96,10 @@ router.get('/:id', (req, res, next) => {
 // });
 
 router.post('/', (req, res, next) => {
-	const userData = {
-		userId: req.decoded.id,
-		userLng: req.body.userLng,
-		userLat: req.body.userLat
-	};
-	const newLocation = new OccupiedLocation(userData);
+	const newLocationData = Object.assign({
+		userId: req.decoded.id
+	}, req.body);
+	const newLocation = new OccupiedLocation(newLocationData);
 	newLocation.saveLocation()
 		.then(() => {
 			res.json(newLocation);
