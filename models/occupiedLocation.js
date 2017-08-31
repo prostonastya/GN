@@ -94,7 +94,23 @@ class OccupiedLocation extends EmptyLocation {
 	static getLocationById(id) {
 		return global.db.one(`select locations2.loc_id AS loc_id, lat, lng, user_id from locations2
 						full join master_location2 on locations2.loc_id = master_location2.loc_id
-						where locations2.loc_id = $1`, id);
+						where locations2.loc_id = $1`, id)
+			.then(foundLocation => new Promise((res) => {
+				res(new OccupiedLocation({
+					northWest: {
+						lat: foundLocation.lat,
+						lng: foundLocation.lng
+					},
+					locationId: foundLocation.loc_id,
+					userId: foundLocation.user_id,
+					population: foundLocation.population,
+					dailyBank: foundLocation.daily_bank,
+					loyalPopulation: foundLocation.loyal_pop,
+					dailyCheckin: foundLocation.daily_checkin,
+					creationDate: foundLocation.creation_date
+
+				}));
+			}));
 	}
 
 	static checkLocationOnCoords(coords) {

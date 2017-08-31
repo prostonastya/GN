@@ -43,26 +43,16 @@ router.get('/check-location', (req, res, next) => {
 });
 router.get('/:id', (req, res, next) => {
 	const userId = req.decoded.id;
-	const locId = req.params.id;
-	let isMaster;
-	OccupiedLocation.getOwnerByLocId(locId)
-		.then((data) => {
-			if (data) {
-				isMaster = data.user_id === userId;
-			} else {
-				isMaster = false;
+	const locId = +req.params.id;
+
+	OccupiedLocation.getLocationById(locId)
+		.then((foundLocation) => {
+			if (foundLocation.masterId === userId) {
+				Object.assign(foundLocation, {
+					isMaster: true
+				});
 			}
-			return OccupiedLocation.getLocationById(req.params.id);
-		})
-		.then((location) => {
-			if (location) {
-				location.isMaster = isMaster;
-				res.status(200)
-					.json(location);
-			} else {
-				res.status(200)
-					.json({});
-			}
+			res.json(foundLocation);
 		})
 		.catch(err => next(err));
 });
