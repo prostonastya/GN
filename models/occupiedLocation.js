@@ -92,7 +92,7 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	static getLocationById(id) {
-		return global.db.one(`select locations2.loc_id AS loc_id, lat, lng, user_id from locations2
+		return global.db.one(`select * from locations2
 						full join master_location2 on locations2.loc_id = master_location2.loc_id
 						where locations2.loc_id = $1`, id)
 			.then(foundLocation => new Promise((res) => {
