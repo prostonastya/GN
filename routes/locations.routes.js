@@ -20,7 +20,7 @@ router.get('/grid', (req, res) => {
 	};
 
 	const location = new EmptyLocation(geoData);
-	res.json(location.getMapFeatureCoords());
+	res.json(location);
 });
 router.get('/:id', (req, res, next) => {
 	const userId = req.decoded.id;

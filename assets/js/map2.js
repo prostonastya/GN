@@ -21,22 +21,6 @@ class Game {
 		this.latBreakPoints = [];
 		this.lngSizeCoefficients = {};
 
-		// this.userLocationPromise = this.getUserLocationPromise();
-		// this.currentCoords = null;
-
-		// this.userLocationPromise.then((userCoords) => {
-		// 	console.log(userCoords);
-		// 	// this.currentCoords = userCoords;
-		// 	this.createCurrentLocation(userCoords);
-		// 	this.setUserGeoData(userCoords);
-		// 	this.setMapCenter(userCoords.latitude, userCoords.longitude);
-		// 	this.addMarker(userCoords.latitude, userCoords.longitude);
-		// 	this.currentCoords = {
-		// 		lat: userCoords.latitude,
-		// 		lng: userCoords.longitude
-		// 	};
-		// });
-
 		navigator.geolocation.watchPosition((position) => {
 			const userCoords = position.coords;
 			console.log(userCoords);
@@ -132,17 +116,6 @@ class Game {
 								lat: item.lat,
 								lng: item.lng
 							}, true)
-							// [[
-							// 	+item.lng, +item.lat,
-							// ], [
-							// 	+item.lng, ((item.lat * 100) + 1) / 100,
-							// ], [
-							// 	((item.lng * 100) + 1) / 100, ((item.lat * 100) + 1) / 100,
-							// ], [
-							// 	((item.lng * 100) + 1) / 100, +item.lat,
-							// ], [
-							// 	+item.lng, +item.lat,
-							// ]],
 						]
 					}
 				});
@@ -273,22 +246,6 @@ class Game {
 		return result;
 	}
 
-	// getUserLocationPromise() {
-	// 	const createCurrentLocatonPromise = new Promise((res, rej) => {
-	// 		navigator.geolocation.watchPosition((position) => {
-	// 			console.log(position);
-	// 		  res(position.coords);
-	// 		}, (err) => {
-	// 		  rej(err);
-	// 		}, {
-	// 		  enableHighAccuracy: true,
-	// 		  maximumAge: 0
-	// 		});
-	// 	  });
-
-	// 	return createCurrentLocatonPromise;
-	// }
-
 	createCurrentLocation(currentCoords) {
 		this.usersGeocordsInfo.textContent = `${currentCoords.latitude} 
 											${currentCoords.longitude}
@@ -397,51 +354,48 @@ class Game {
 			this.map.data.remove(this.map.data.getFeatureById('highlight'));
 		}
 
-		const topLeftCoords = this.getTopLeftLocationCoordsByPoint(event.latLng.lat(), event.latLng.lng());
+		const gridPromise = new Promise((res, rej) => {
+			const gridXHR = new XMLHttpRequest();
+			gridXHR.open('GET', `/api/locations/grid?lat=${event.latLng.lat()}&lng=${event.latLng.lng()}`);
+			gridXHR.send();
 
-		this.getTopLeftLocationCoordsByPoint(this.currentCoords.latitude,	this.currentCoords.longitude);
-		const lat = topLeftCoords.lat;
-		const lng = topLeftCoords.lng;
+			gridXHR.onload = (e) => {
+				const xhr = e.srcElement;
 
-		// const lat = Math.floor(event.latLng.lat() * 100) / 100;
-		// const lng = Math.floor(event.latLng.lng() * 100) / 100;
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
 
-		this.clickedInfo.style.display = 'block';
-		this.clickedInfo.classList.add('open');
-		this.usersLocContainer.classList.remove('open');
-		// clickedCordsInfo.textContent = `${event.latLng.lat()} ${event.latLng.lng()}`;
-		this.clickedLocationInfo.textContent = `${lat} ${lng}`;
+				res(JSON.parse(xhr.response));
+			};
+		});
 
-		const location = this.getLocationPointsByTopLeft(topLeftCoords);
+		gridPromise
+			.then((clickedLocation) => {
+				this.clickedInfo.style.display = 'block';
+				this.clickedInfo.classList.add('open');
+				this.usersLocContainer.classList.remove('open');
+				this.clickedLocationInfo.textContent = `${clickedLocation.northWest.lat} ${clickedLocation.northWest.lng}`;
+				this.clickedLocationHeading.textContent = 'Empty location';
+				console.log(clickedLocation);
 
-		// const location = [
-		// 	{ lat, lng }, // north west
-		// 	{ lat: ((lat * 100) + 1) / 100, lng }, // south west
-		// 	{ lat: ((lat * 100) + 1) / 100, lng: ((lng * 100) + 1) / 100 }, // south east
-		// 	{ lat, lng: ((lng * 100) + 1) / 100 }, // north east
-		// ];
+				const locationNew = {
+					type: 'Feature',
+					id: 'highlight',
+					properties: {
+						color: 'blue'
+						// info: {
+						//   name: 'Empty location',
+						// },
+					},
+					geometry: new google.maps.Data.Polygon([clickedLocation.mapFeatureCoords])
+				};
 
-		const locationNew = {
-			type: 'Feature',
-			id: 'highlight',
-			properties: {
-				color: 'blue'
-				// info: {
-				//   name: 'Empty location',
-				// },
-			},
-			geometry: new google.maps.Data.Polygon([location])
-		};
-		console.log(locationNew);
-		this.map.data.add(locationNew);
-		this.clickedLocationHeading.textContent = 'Empty location';
-		// setTimeout(() => {
-		//   if (!confirm('Поставить поселение?')) {
-		//     map.data.remove(map.data.getFeatureById(locationNew.id));
-		//     console.log(map.data.getFeatureById(locationNew.id));
-		//   }
-		//   // here post request for create location
-		// }, 1000);
+				this.map.data.add(locationNew);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
 	}
 
 	getTopLeftLocationCoordsByPoint(pointLat, pointLng) {
@@ -480,23 +434,6 @@ class Game {
 				const thisLocation = this.map.data.getFeatureById('currentLocation');
 
 				const location = this.getLocationPointsByTopLeft(response);
-				// [{
-				// 	// north west
-				// 	lat: response.lat,
-				// 	lng: response.lng,
-				// }, {
-				// 	// south west
-				// 	lat: ((response.lat * 100) + 1) / 100,
-				// 	lng: response.lng,
-				// }, {
-				// 	// south east
-				// 	lat: ((response.lat * 100) + 1) / 100,
-				// 	lng: ((response.lng * 100) + 1) / 100,
-				// }, {
-				// 	// north east
-				// 	lat: response.lat,
-				// 	lng: ((response.lng * 100) + 1) / 100,
-				// }];
 
 				const locationNew = {
 					type: 'Feature',
@@ -542,12 +479,12 @@ function initMap() {
 	};
 
 	game.usersLocContainer.addEventListener('click', (e) => {
-		if (e.target.classList[0] == 'close') {
+		if (e.target.classList[0] === 'close') {
 			game.usersLocContainer.classList.toggle('open');
 		}
 	});
 	game.clickedInfo.addEventListener('click', (e) => {
-		if (e.target.classList[0] == 'close') {
+		if (e.target.classList[0] === 'close') {
 			game.clickedInfo.classList.toggle('open');
 		}
 	});
