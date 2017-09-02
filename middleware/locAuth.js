@@ -14,11 +14,11 @@ module.exports = (req, res, next) => {
 							req.reqLocation = foundLocation;
 							next();
 						});
+				} else {
+					req.reqLocation = foundLocation;
+					next();
 				}
-				req.reqLocation = foundLocation;
-				next();
-			}
-			if (req.decoded.isAdmin) {
+			} else if (req.decoded.isAdmin) {
 				global.db.one(
 					`select is_admin from users
 					 where id = ${req.decoded.id}`
@@ -30,8 +30,9 @@ module.exports = (req, res, next) => {
 						req.reqLocation = foundLocation;
 						next();
 					});
+			} else {
+				req.reqLocation = foundLocation;
+				next();
 			}
-			req.reqLocation = foundLocation;
-			next();
 		});
 };

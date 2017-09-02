@@ -14,7 +14,6 @@ class OccupiedLocation extends EmptyLocation {
 		this.dailyMessage = locationData.daily_msg || null;
 	}
 	saveLocation() {
-		// rewrite with sequenced TRANSACTIONS!!!
 		return global.db.tx(t => t.batch([
 			t.none(
 				`insert into locations2 (
@@ -68,18 +67,16 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	takeDailyBank() {
-		// rewrite with sequenced TRANSACTIONS!!!
 		return global.db.tx(t => t.batch([
 			t.none(
 				`update users
 				 set cash = cash + locations2.daily_bank
-				 where id = ${this.masterId}			 
 				 from locations2, master_location2
-				 where locations2.loc_id = master_location2.loc_id and locations2.loc_id = ${this.locationId}`
+				 where locations2.loc_id = master_location2.loc_id and locations2.loc_id = ${this.locationId} and id = ${this.masterId}`
 			),
 			t.none(
 				`update locations2
-				 set dayly_bank = 0
+				 set daily_bank = 0
 				 where loc_id = ${this.locationId}`
 			)
 		]));
@@ -99,22 +96,19 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	restoreLoyalPopulation() {
-		// rewrite with sequenced TRANSACTIONS!!!
-
 		return global.db.tx(t => t.batch([
+			t.none(
+				`update users
+				 set cash = cash - (population - loyal_popul)
+				 from locations2, master_location2
+				 where locations2.loc_id = master_location2.loc_id and locations2.loc_id = ${this.locationId} and id = ${this.masterId}`
+			),
 			t.none(
 				`update master_location2
 				 set loyal_popul = population
 				 from locations2
 			   where locations2.loc_id = master_location2.loc_id
-				 and locations2.loc_id = '${this.locationId}';`
-			),
-			t.none(
-				`update users
-				 set cash = cash - (population - loyal_popul)
-				 where id = ${this.masterId}			 
-				 from locations2, master_location2
-				 where locations2.loc_id = master_location2.loc_id and locations2.loc_id = ${this.locationId}`
+				 and locations2.loc_id = ${this.locationId}`
 			)
 		]));
 	}
