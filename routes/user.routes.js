@@ -1,10 +1,9 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-// const login = require('../views/login.ejs');
+const nodemailer = require('nodemailer');
 
 const router = express.Router();
-const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
 	service: 'gmail',
@@ -64,12 +63,7 @@ router.post('/register', (req, res) => {
 	const newUser = new User(userData);
 	newUser.createNewUser();
 	const letter = newUser.createLetter(newUser.email);
-	console.log(letter);
-	try {
-		User.sendMail(letter, transporter);
-	} catch (e) {
-		console.log(e);
-	}
+	User.sendMail(letter, transporter);
 	res.redirect('../');
 });
 

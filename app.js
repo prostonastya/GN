@@ -2,10 +2,8 @@
 
 const EventEmitter = require('events').EventEmitter;
 const express = require('express');
-// const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
 const pgp = require('pg-promise')();
-// const jwt = require('jsonwebtoken');
 const path = require('path');
 const auth = require('./middleware/auth');
 const cookieParser = require('cookie-parser');
@@ -14,8 +12,6 @@ const logger = require('morgan');
 const locationsRoutes = require('./routes/locations.routes');
 const userRoutes = require('./routes/user.routes');
 const indexRoutes = require('./routes/index.routes');
-// const EmptyLocation = require('./models/emptyLocation');
-// const OccupiedLocation = require('./models/occupiedLocation');
 const schedule = require('node-schedule');
 require('dotenv').config();
 
@@ -32,14 +28,6 @@ global.db = pgp({
 	ssl: true,
 	sslfactory: 'org.postgresql.ssl.NonValidatingFactory'
 });
-
-// const transporter = nodemailer.createTransport({
-// 	service: 'gmail',
-// 	auth: {
-// 		user: process.env.SERVICE_EMAIL,
-// 		pass: process.env.SERVICE_EMAIL_PASS
-// 	}
-// });
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
