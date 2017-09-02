@@ -27,7 +27,6 @@ router.get('/check-location', (req, res, next) => {
 		lat: +req.query.lat,
 		lng: +req.query.lng
 	};
-
 	OccupiedLocation.checkLocationOnCoords(geoData)
 		.then((locationObj) => {
 			if (locationObj.masterId === req.decoded.id) {
