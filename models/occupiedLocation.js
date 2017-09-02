@@ -156,8 +156,9 @@ class OccupiedLocation extends EmptyLocation {
 							color: 'gray',
 							background: 'gray',
 							info: {
-								master: item.masterId,
-								dailyBank: item.daily_bank > 0
+								masterId: item.masterId,
+								dailyBank: item.dailyBank > 0,
+								population: item.population
 							}
 						},
 						geometry: {

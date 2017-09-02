@@ -11,6 +11,10 @@ router.get('/', (req, res, next) => {
 			locations.forEach((item) => {
 				if (item.masterId === req.decoded.id) {
 					item.isMaster = true;
+				} else {
+					item.dailyBank = undefined;
+					item.loyalPopulation = undefined;
+					item.dailyCheckin = undefined;
 				}
 			});
 			res.json(locations);
@@ -34,7 +38,7 @@ router.get('/geo-json', (req, res, next) => {
 	OccupiedLocation.getAllLocationsGeoJSON()
 		.then((geoJSON) => {
 			geoJSON.features.forEach((item) => {
-				if (item.properties.info.master === req.decoded.id) {
+				if (item.properties.info.masterId === req.decoded.id) {
 					item.properties.info.isMaster = true;
 				} else {
 					item.properties.info.dailyBank = undefined;
@@ -64,9 +68,7 @@ router.get('/check-location', (req, res, next) => {
 	OccupiedLocation.checkLocationOnCoords(geoData)
 		.then((locationObj) => {
 			if (locationObj.masterId === req.decoded.id) {
-				Object.assign(locationObj, {
-					isMaster: true
-				});
+				locationObj.isMaster = true;
 			}
 			res.json(locationObj);
 		})

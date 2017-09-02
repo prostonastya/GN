@@ -105,8 +105,27 @@ nav{
   transition: transform .6s ease;
 }
 
-.loc-info{
+.loc-info {
   transform: translateY(-60px);
+  display: none;
+}
+
+.loc-info.show-current,
+.loc-info.show-clicked {
+  display: block;
+}
+
+.clicked-loc-info,
+.current-loc-info {
+  display: none;
+}
+
+.loc-info.show-current .current-loc-info {
+  display: block;
+}
+
+.loc-info.show-clicked .clicked-loc-info {
+  display: block;
 }
 
 .info-heading {
