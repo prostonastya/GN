@@ -33,12 +33,7 @@ class User {
 			}
 		});
 	}
-	// function createNewUser(user) {
-	//   global.db.none('insert into users(email, password, reg_date, cash, name)' +
-	// `values('${user.email}', '${user.pass}', '${new Date().toISOString()}', 150, '${user.name}')`)
-	//     .then(() => console.log('New user was added to db'))
-	//     .catch(error => console.log('error:', error));
-	// }
+
 	// function createLetter(userEmail) {
 	//   return {
 	//     from: '"Game team" <gamekh009@gmail.com>', // sender address
