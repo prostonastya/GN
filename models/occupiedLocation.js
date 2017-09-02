@@ -14,6 +14,7 @@ class OccupiedLocation extends EmptyLocation {
 		this.dailyMessage = locationData.daily_msg || null;
 	}
 	saveLocation() {
+		// rewrite with sequenced TRANSACTIONS!!!
 		return global.db.tx(t => t.batch([
 			t.none(
 				`insert into locations2 (
@@ -49,7 +50,6 @@ class OccupiedLocation extends EmptyLocation {
 		]));
 	}
 
-
 	editLocation() {
 		return global.db(
 			`update locations2
@@ -68,7 +68,7 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	takeDailyBank() {
-		// rewrite with nested TRANSACTIONS!!!
+		// rewrite with sequenced TRANSACTIONS!!!
 		return global.db.tx(t => t.batch([
 			t.none(
 				`update users
@@ -99,7 +99,7 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	restoreLoyalPopulation() {
-		// rewrite with nested TRANSACTIONS!!!
+		// rewrite with sequenced TRANSACTIONS!!!
 
 		return global.db.tx(t => t.batch([
 			t.none(
