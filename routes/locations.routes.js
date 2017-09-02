@@ -1,13 +1,46 @@
 const express = require('express');
 const EmptyLocation = require('../models/emptyLocation');
 const OccupiedLocation = require('../models/occupiedLocation');
+const locAuth = require('../middleware/locAuth');
 
 const router = express.Router();
 
 router.get('/', (req, res, next) => {
 	OccupiedLocation.getAllLocations()
 		.then((locations) => {
+			locations.forEach((item) => {
+				if (item.masterId === req.decoded.id) {
+					item.isMaster = true;
+				}
+			});
 			res.json(locations);
+		})
+		.catch(err => next(err));
+});
+
+router.post('/', (req, res, next) => {
+	const newLocationData = Object.assign({
+		userId: req.decoded.id
+	}, req.body);
+	const newLocation = new OccupiedLocation(newLocationData);
+	newLocation.saveLocation()
+		.then(() => {
+			res.json(newLocation);
+		})
+		.catch(err => next(err));
+});
+
+router.get('/geo-json', (req, res, next) => {
+	OccupiedLocation.getAllLocationsGeoJSON()
+		.then((geoJSON) => {
+			geoJSON.features.forEach((item) => {
+				if (item.properties.info.master === req.decoded.id) {
+					item.properties.info.isMaster = true;
+				} else {
+					item.properties.info.dailyBank = undefined;
+				}
+			});
+			res.json(geoJSON);
 		})
 		.catch(err => next(err));
 });
@@ -41,77 +74,83 @@ router.get('/check-location', (req, res, next) => {
 			next(err);
 		});
 });
-router.get('/:id', (req, res, next) => {
-	const userId = req.decoded.id;
-	const locId = +req.params.id;
 
-	OccupiedLocation.getLocationById(locId)
-		.then((foundLocation) => {
-			if (foundLocation.masterId === userId) {
-				Object.assign(foundLocation, {
-					isMaster: true
-				});
-			}
-			res.json(foundLocation);
-		})
-		.catch(err => next(err));
-});
-// router.get('/:lat/:lng', (req, res, next) => {
-// 	const coords = {
-// 		lat: req.params.lat,
-// 		lng: req.params.lng
-// 	};
-// 	const userId = req.decoded.id;
-// 	let isMaster;
-// 	OccupiedLocation.getLocationByCoords(coords)
-// 		.then((data) => {
-// 			if (data) {
-// 				isMaster = data.user_id === userId;
-// 			} else {
-// 				isMaster = false;
-// 			}
-// 			return OccupiedLocation.getLocationById(req.params.id);
-// 		})
-// 		.then((location) => {
-// 			if (location) {
-// 				location.isMaster = isMaster;
-// 				res.status(200)
-// 					.json(location);
-// 			} else {
-// 				res.status(200)
-// 					.json({});
-// 			}
-// 		})
-// 		.catch(err => next(err));
-// });
+router.use('/:id', locAuth);
 
-router.post('/', (req, res, next) => {
-	const newLocationData = Object.assign({
-		userId: req.decoded.id
-	}, req.body);
-	const newLocation = new OccupiedLocation(newLocationData);
-	newLocation.saveLocation()
-		.then(() => {
-			res.json(newLocation);
-		})
-		.catch(err => next(err));
+router.get('/:id', (req, res) => {
+	res.json(req.reqLocation);
 });
+
+router.put('/:id', (req, res, next) => {
+	if (req.reqLocation.isMaster || req.decoded.isAdmin) {
+		const editedLocation = Object.assign(req.reqLocation, req.body);
+
+		editedLocation.editLocation()
+			.then(() => {
+				res.sendStatus(200);
+			})
+			.catch((err) => {
+				next(err);
+			});
+	} else {
+		next(new Error('No such rights!'));
+	}
+});
+
+router.delete('/:id', (req, res, next) => {
+	if (req.reqLocation.isMaster || req.decoded.isAdmin) {
+		req.reqLocation.deleteLocation()
+			.then(() => {
+				res.sendStatus(200);
+			})
+			.catch((err) => {
+				next(err);
+			});
+	} else {
+		next(new Error('No such rights!'));
+	}
+});
+
+router.put('/:id/do-checkin', (req, res, next) => {
+	if (req.reqLocation.userIsThere && req.reqLocation.isMaster) {
+		req.reqLocation.doCheckin()
+			.then(() => {
+				res.sendStatus(200);
+			})
+			.catch((err) => {
+				next(err);
+			});
+	} else {
+		next(new Error('You must be master of be there!'));
+	}
+});
+
+router.put('/:id/get-bank', (req, res, next) => {
+	if (req.reqLocation.userIsThere && req.reqLocation.isMaster) {
+		req.reqLocation.takeDailyBank()
+			.then(() => {
+				res.sendStatus(200);
+			})
+			.catch((err) => {
+				next(err);
+			});
+	} else {
+		next(new Error('You must be master of be there!'));
+	}
+});
+
 router.put('/:id/restore-population', (req, res, next) => {
-	const userId = req.decoded.id;
-	const locId = req.params.id;
-	OccupiedLocation.getOwnerByLocId(locId)
-		.then((data) => {
-			if (data.user_id !== userId) {
-				throw new Error('Permission denied!');
-			}
-			return OccupiedLocation.restoreLoyalPopulByLocId(locId);
-		})
-		.then(() => {
-			res.sendStatus(200);
-		})
-		.catch((err) => {
-			next(err);
-		});
+	if (req.reqLocation.isMaster || req.decoded.isAdmin) {
+		req.reqLocation.restoreLoyalPopulation()
+			.then(() => {
+				res.sendStatus(200);
+			})
+			.catch((err) => {
+				next(err);
+			});
+	} else {
+		next(new Error('No such rights!'));
+	}
 });
 
 module.exports = router;

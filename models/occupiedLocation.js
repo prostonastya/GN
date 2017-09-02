@@ -10,18 +10,22 @@ class OccupiedLocation extends EmptyLocation {
 		this.loyalPopulation = locationData.loyalPopulation || 10;
 		this.dailyCheckin = locationData.dailyCheckin || true;
 		this.creationDate = locationData.creationDate || new Date().toISOString();
+		this.locationName = locationData.loc_name || null;
+		this.dailyMessage = locationData.daily_msg || null;
 	}
 	saveLocation() {
-		// rewrite with TRANSACTIONS!!!
+		// rewrite with nested TRANSACTIONS!!!
 
-		return global.db.none(`insert into locations2 (lat, lng,
-													 population, daily_bank, creation_date)
+		return global.db.none(`insert into locations2 (lat, lng, population, daily_bank, 
+																								   creation_date, loc_name, daily_msg)
 						values(
 							${this.northWest.lat},
 							${this.northWest.lng},
 							${this.population},
 							${this.dailyBank},
 							'${this.creationDate}'
+							'${this.locationName}'
+							'${this.dailyMessage}'
 						)`)
 			.then(() => global.db.one(`select loc_id from locations2																			 
 																 where locations2.lat = ${this.northWest.lat} and locations2.lng = ${this.northWest.lng}`)
@@ -42,7 +46,6 @@ class OccupiedLocation extends EmptyLocation {
 					});
 			});
 
-
 		// return global.db.tx(t => t.batch([
 		// 	t.none(`insert into locations2 (loc_id, lat, lng,
 		// 		population, daily_bank, creation_date)
@@ -61,6 +64,76 @@ class OccupiedLocation extends EmptyLocation {
 		// 						${this.dailyCheckin}
 		// 					)`)
 		// ]));
+	}
+
+
+	editLocation() {
+		return global.db(
+			`update locations2
+			 set loc_name = '${this.locationName}',
+						daily_msg = '${this.dailyMessage}'
+			 where loc_id = ${this.locationId}`
+		);
+	}
+
+	doCheckin() {
+		return global.db(
+			`update master_locations
+			 set daily_checkin = true
+			 where loc_id = ${this.locationId}`
+		);
+	}
+
+	takeDailyBank() {
+		// rewrite with nested TRANSACTIONS!!!
+		return global.db.tx(t => t.batch([
+			t.none(
+				`update users
+				 set cash = cash + locations2.daily_bank
+				 where id = ${this.masterId}			 
+				 from locations2, master_location2
+				 where locations2.loc_id = master_location2.loc_id and locations2.loc_id = ${this.locationId}`
+			),
+			t.none(
+				`update locations2
+				 set dayly_bank = 0
+				 where loc_id = ${this.locationId}`
+			)
+		]));
+	}
+
+	deleteLocation() {
+		return global.db.tx(t => t.batch([
+			t.none(
+				`delete from locations2
+				 where loc_id = ${this.locationId}`
+			),
+			t.none(
+				`delete from master_location2
+				 where loc_id = ${this.locationId}`
+			)
+		]));
+	}
+
+	restoreLoyalPopulation() {
+		// rewrite with nested TRANSACTIONS!!!
+
+		return global.db.tx(t => t.batch([
+			t.none(
+				`update master_location2
+				 set loyal_popul = population
+				 from locations2
+			   where locations2.loc_id = master_location2.loc_id
+				 and locations2.loc_id = '${this.locationId}';`
+			),
+			t.none(
+				`update users
+				 set cash = cash - (population - loyal_popul)
+				 where id = ${this.masterId}			 
+				 from locations2, master_location2
+				 where locations2.loc_id = master_location2.loc_id and locations2.loc_id = ${this.locationId}`
+			)
+		]));
 	}
 
 	static deleteAllLocations() {
@@ -89,6 +162,39 @@ class OccupiedLocation extends EmptyLocation {
 				});
 				res(occupiedLocations);
 			}));
+	}
+
+	static getAllLocationsGeoJSON() {
+		return OccupiedLocation.getAllLocations()
+			.then(locArray => new Promise((res) => {
+				const geoObj = {
+					type: 'FeatureCollection',
+					features: []
+				};
+				locArray.forEach((item) => {
+					geoObj.features.push({
+						type: 'Feature',
+						id: item.locationId,
+						properties: {
+							color: 'gray',
+							background: 'gray',
+							info: {
+								master: item.masterId,
+								dailyBank: item.daily_bank > 0
+							}
+						},
+						geometry: {
+							type: 'Polygon',
+							coordinates: [
+								item.mapFeatureGeometry
+							]
+						}
+					});
+				});
+				res(geoObj);
+			})
+
+			);
 	}
 
 	static getLocationById(id) {
@@ -167,17 +273,9 @@ class OccupiedLocation extends EmptyLocation {
 			});
 	}
 
-	static restoreLoyalPopulByLocId(id) {
-		return global.db.none(`update master_location2
-													 set loyal_popul = population
-													 from locations2
-													 where locations2.loc_id = master_location2.loc_id
-													 and locations2.loc_id = '${id}';`);
-	}
-
-	static getOwnerByLocId(id) {
-		return global.db.oneOrNone(`select user_id from master_location2
-													 where loc_id = '${id}';`);
-	}
+	// static getOwnerByLocId(id) {
+	// 	return global.db.oneOrNone(`select user_id from master_location2
+	// 												 where loc_id = '${id}';`);
+	// }
 }
 module.exports = OccupiedLocation;

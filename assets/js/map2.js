@@ -56,7 +56,7 @@ class Game {
 		const getLocationPromise = new Promise((res, rej) => {
 			const xhr = new XMLHttpRequest();
 
-			xhr.open('GET', '/api/locations');
+			xhr.open('GET', '/api/locations/geo-json');
 			xhr.send();
 			xhr.addEventListener('load', (e) => {
 				const srcXHR = e.target;
@@ -68,36 +68,8 @@ class Game {
 			});
 		});
 
-		getLocationPromise.then((locArray) => {
-			const geoObj = {
-				type: 'FeatureCollection',
-				features: []
-			};
-
-			// creating geoJSON Object from recieved data
-
-			locArray.forEach((item) => {
-				geoObj.features.push({
-					type: 'Feature',
-					id: item.locationId,
-					properties: {
-						color: 'green',
-						background: 'green',
-						info: {
-							master: item.masterId
-						}
-					},
-					geometry: {
-						type: 'Polygon',
-						coordinates: [
-							item.mapFeatureGeometry
-						]
-					}
-				});
-			});
-			console.log(geoObj);
-
-			this.map.data.addGeoJson(geoObj);
+		getLocationPromise.then((geoJSON) => {
+			this.map.data.addGeoJson(geoJSON);
 
 			navigator.geolocation.watchPosition((position) => {
 				const userCoords = position.coords;
