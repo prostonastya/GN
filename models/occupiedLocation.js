@@ -14,56 +14,39 @@ class OccupiedLocation extends EmptyLocation {
 		this.dailyMessage = locationData.daily_msg || null;
 	}
 	saveLocation() {
-		// rewrite with nested TRANSACTIONS!!!
-
-		return global.db.none(`insert into locations2 (lat, lng, population, daily_bank, 
-																								   creation_date, loc_name, daily_msg)
-						values(
-							${this.northWest.lat},
-							${this.northWest.lng},
-							${this.population},
-							${this.dailyBank},
-							'${this.creationDate}'
-							'${this.locationName}'
-							'${this.dailyMessage}'
-						)`)
-			.then(() => global.db.one(`select loc_id from locations2																			 
-																 where locations2.lat = ${this.northWest.lat} and locations2.lng = ${this.northWest.lng}`)
+		return global.db.tx(t => t.batch([
+			t.none(
+				`insert into locations2 (
+						lat, lng, population, daily_bank, 
+						creation_date
+					)
+					values(
+					${this.northWest.lat},
+					${this.northWest.lng},
+					${this.population},
+					${this.dailyBank},
+					'${this.creationDate}'
+					)`
+			),
+			t.tx(t1 => t1.one(
+				`select loc_id from locations2																			 
+						where locations2.lat = ${this.northWest.lat} 
+						and locations2.lng = ${this.northWest.lng}`
 			)
-			.then((data) => {
-				this.locationId = data.loc_id;
-				return global.db.none(`insert into master_location2 (user_id, loc_id, loyal_popul, daily_checkin)
-															 values(
-																 ${this.masterId},
-																 ${this.locationId},
-																 ${this.loyalPopulation},
-																 ${this.dailyCheckin}
-															 )`)
-					.catch((err) => {
-						global.db.none(`delete from locations2
-												where loc_id = ${this.locationId}`);
-						throw err;
-					});
-			});
-
-		// return global.db.tx(t => t.batch([
-		// 	t.none(`insert into locations2 (loc_id, lat, lng,
-		// 		population, daily_bank, creation_date)
-		// 				values(
-		// 					${this.northWest.lat},
-		// 					${this.northWest.lng},
-		// 					${this.population},
-		// 					${this.dailyBank},
-		// 					'${this.creationDate.toISOString()}'
-		// 				)`),
-		// 	t.none(`insert into master_location2 (user_id, loc_id, loyal_popul, daily_checkin)
-		// 					values(
-		// 						${this.masterId},
-		// 						'${this.locationId}',
-		// 						${this.loyalPopulation},
-		// 						${this.dailyCheckin}
-		// 					)`)
-		// ]));
+				.then((data) => {
+					this.locationId = data.loc_id;
+					return t1.none(
+						`insert into master_location2 (user_id, loc_id, loyal_popul, daily_checkin)
+							values(
+								${this.masterId},
+								${this.locationId},
+								${this.loyalPopulation},
+								${this.dailyCheckin}
+							)`
+					);
+				})
+			)
+		]));
 	}
 
 
