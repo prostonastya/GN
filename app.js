@@ -19,12 +19,21 @@ const app = express();
 // const port = process.env.PORT || 8080;
 const eventEmitter = new EventEmitter();
 
+// global.db = pgp({
+// 	host: 'ec2-23-21-85-76.compute-1.amazonaws.com',
+// 	port: 5432,
+// 	database: 'detamp7dm7n5kt',
+// 	user: process.env.SERVICE_DB_USER || 'smdtzebruscqxv',
+// 	password: process.env.SERVICE_DB_PASS || 'b988acabcae53edc03642deec8eabbbd891f2c549a02100e9f5b134c624ea4cd',
+// 	ssl: true,
+// 	sslfactory: 'org.postgresql.ssl.NonValidatingFactory'
+// });
 global.db = pgp({
 	host: 'ec2-23-21-85-76.compute-1.amazonaws.com',
 	port: 5432,
 	database: 'detamp7dm7n5kt',
-	user: process.env.SERVICE_DB_USER || 'smdtzebruscqxv',
-	password: process.env.SERVICE_DB_PASS || 'b988acabcae53edc03642deec8eabbbd891f2c549a02100e9f5b134c624ea4cd',
+	user: process.env.SERVICE_DB_USER,
+	password: process.env.SERVICE_DB_PASS,
 	ssl: true,
 	sslfactory: 'org.postgresql.ssl.NonValidatingFactory'
 });
@@ -65,11 +74,11 @@ app.use((err, req, res) => {
 	// res.render('error');
 });
 
-// schedule.scheduleJob('*/300 * * * * *', () => {
-// 	console.log('daily event!');
-// 	Location.recalcLocationsLifecycle();
-// 	eventEmitter.emit('daily-event');
-// });
+schedule.scheduleJob('* * 3 * * *', () => {
+	console.log('daily event!');
+	Location.recalcLocationsLifecycle();
+	eventEmitter.emit('daily-event');
+});
 
 eventEmitter.on('daily-event', () => {
 	console.log('daily event handled!');

@@ -2,6 +2,7 @@
 
 class Game {
 	constructor() {
+		// use template for output		
 		this.usersGeocordsInfo = document.getElementById('users-geocords');
 		this.clickedInfo = document.getElementById('output');
 		this.clickedLocationHeading = document.getElementById('click-loc-heading');
@@ -12,9 +13,10 @@ class Game {
 		this.userLocSettingsForm = document.getElementById('nameDailyMsgForm');
 		this.closeForm = document.getElementById('closeForm');
 		this.map = null;
-
 		this.userGeoData = null;
 		this.currentLocation = null;
+		this.currentLocationMapFeature = null;
+		this.currentHighlightedMapFeature = null;
 
 		this.occupyBtn.addEventListener('click', () => {
 			document.getElementById('popup-container').style.display = 'flex';
@@ -39,17 +41,52 @@ class Game {
 
 	}
 
-	setMapCenter(lat, lng) {
+	get featuresPropertiesStyles() {
+		return {
+			currentEmptyLocation: {
+				color: 'crimson',
+				info: {
+					name: 'Current location'
+				}
+			},
+			highlightedEmptyLocation: {
+				color: 'blue',
+				info: {
+					name: 'Highlighted location'
+				}
+			},
+			newlyOccupiedLocation: {
+				color: 'green',
+				background: 'green'
+			},
+			ownedLocation: {
+				color: 'green',
+				background: 'green'
+			},
+			currentOwnedLocation: {
+				color: 'crimson',
+				background: 'green'
+			}
+		};
+	}
+
+	centerMapByUserGeoData() {
+		const lat = this.userGeoData.latitude;
+		const lng = this.userGeoData.longitude;
 		this.map.setZoom(15);
 		this.map.setCenter({ lat, lng });
 	}
-	addMarker(lat, lng) {
-		const marker = new google.maps.Marker({
+
+	addUserMarker() {
+		const lat = this.userGeoData.latitude;
+		const lng = this.userGeoData.longitude;
+		this.userMarker = new google.maps.Marker({
 			position: { lat, lng },
 			map: this.map,
-			title: 'Hello World!'
+			title: 'You are there.'
 		});
 	}
+
 	setUserGeoData(position) {
 		this.userGeoData = position;
 	}
@@ -71,11 +108,11 @@ class Game {
 		});
 	}
 
-	renderLocationsFromDB() {
-		const getLocationPromise = new Promise((res, rej) => {
+	renderOccupiedLocations() {
+		new Promise((res, rej) => {
 			const xhr = new XMLHttpRequest();
 
-			xhr.open('GET', '/api/locations');
+			xhr.open('GET', '/api/locations/geo-json');
 			xhr.send();
 			xhr.addEventListener('load', (e) => {
 				const srcXHR = e.target;
@@ -85,52 +122,21 @@ class Game {
 					rej(srcXHR.response);
 				}
 			});
-		});
-
-		getLocationPromise.then((locArray) => {
-			const geoObj = {
-				type: 'FeatureCollection',
-				features: []
-			};
-
-			// creating geoJSON Object from recieved data
-
-			locArray.forEach((item) => {
-				geoObj.features.push({
-					type: 'Feature',
-					id: item.locationId,
-					properties: {
-						color: 'green',
-						background: 'green',
-						info: {
-							master: item.masterId
-						}
-					},
-					geometry: {
-						type: 'Polygon',
-						coordinates: [
-							item.mapFeatureGeometry
-						]
-					}
-				});
-			});
-			console.log(geoObj);
-
-			this.map.data.addGeoJson(geoObj);
-
-			navigator.geolocation.watchPosition((position) => {
-				const userCoords = position.coords;
-				console.log(userCoords);
-				this.setUserGeoData(userCoords);
-				this.createCurrentLocation(userCoords);
-				this.setMapCenter(userCoords.latitude, userCoords.longitude);
-				this.addMarker(userCoords.latitude, userCoords.longitude);
-				this.currentCoords = {
-					lat: userCoords.latitude,
-					lng: userCoords.longitude
-				};
-			});
 		})
+			.then((geoJSON) => {
+				geoJSON = this.modifyGeoJSON(geoJSON);
+
+				this.map.data.addGeoJson(geoJSON);
+				navigator.geolocation.watchPosition((position) => {
+					const userCoords = position.coords;
+					console.log(userCoords);
+					this.setUserGeoData(userCoords);
+					this.setCurrentLocationByUserCoords();
+					this.centerMapByUserGeoData();
+					console.log(this.userGeoData);
+					this.addUserMarker();
+				});
+			})
 			.catch((err) => {
 				console.log(err);
 			});
@@ -138,14 +144,32 @@ class Game {
 		this.map.data.setStyle(this.setStyleLocation);
 	}
 
-	createCurrentLocation(currentCoords) {
-		this.usersGeocordsInfo.textContent = `${currentCoords.latitude} 
-											${currentCoords.longitude}
-											${currentCoords.accuracy}`;
+	// function for conditional GeoJSON modification
+
+	modifyGeoJSON(geoJSON) {
+		geoJSON.features.forEach((item) => {
+			if (item.properties.info.isMaster) {
+				item.properties.color = 'green';
+				item.properties.background = 'green';
+			}
+			if (item.properties.info.dailyBank) {
+				item.properties.background = 'orange';
+			}
+		});
+
+		return geoJSON;
+	}
+
+	setCurrentLocationByUserCoords() {
+		// /// remove to another method
+		this.usersGeocordsInfo.textContent = `${this.userGeoData.latitude} 
+											${this.userGeoData.longitude}
+											${this.userGeoData.accuracy}`;
 
 		this.usersLocContainer.classList.add('open');
+		// /////
 
-		const getLocationInfoPromise = new Promise((res, rej) => {
+		new Promise((res, rej) => {
 			const xhr = new XMLHttpRequest();
 
 			xhr.open('GET', `/api/locations/check-location?lat=${this.userGeoData.latitude}&lng=${this.userGeoData.longitude}`);
@@ -158,18 +182,25 @@ class Game {
 				}
 				res(JSON.parse(getLocationInfoXHR.response));
 			});
-		});
-		getLocationInfoPromise
+		})
 			.then((locationData) => {
 				console.dir(locationData);
 				this.currentLocation = locationData;
 				if (!locationData.masterId) {
 					console.log(locationData);
-					if (this.map.data.getFeatureById('currentLocation')) {
-						this.map.data.remove(this.map.data.getFeatureById('currentLocation'));
+					if (this.currentLocationMapFeature) {
+						this.map.data.remove(this.currentLocationMapFeature);
+						this.currentLocationMapFeature = null;
 					}
-					this.map.data.add(this.createLocation(locationData.mapFeatureCoords));
+					this.currentLocationMapFeature = this.createLocByFeatureCoords(
+						locationData.mapFeatureCoords,
+						'currentLocation',
+						this.featuresPropertiesStyles.currentEmptyLocation
+					);
+					console.log(this.currentLocationMapFeature);
+					// remove to separate method
 					this.occupyBtn.style.display = 'block';
+					// ///
 				} else {
 					const currentLocation = this.map.data.getFeatureById(locationData.locationId);
 					currentLocation.setProperty('color', 'crimson');
@@ -180,63 +211,49 @@ class Game {
 			});
 	}
 
-	createLocation(mapFeatureCoords) {
+	createLocByFeatureCoords(mapFeatureCoords, id, properties) {
 		const locationGeoObj = {
 			type: 'Feature',
-			id: 'currentLocation',
-			properties: {
-				color: 'crimson',
-				info: {
-					name: 'Current location'
-				}
-			},
+			id,
+			properties,
 			geometry: new google.maps.Data.Polygon([mapFeatureCoords])
 		};
-		return locationGeoObj;
+		return this.map.data.add(locationGeoObj);
 	}
+
 	hilightEmptyLocation(event) {
-		if (this.map.data.getFeatureById('highlight')) {
-			this.map.data.remove(this.map.data.getFeatureById('highlight'));
+		if (this.currentHighlightedMapFeature) {
+			this.map.data.remove(this.currentHighlightedMapFeature);
 		}
 
-		const gridPromise = new Promise((res, rej) => {
+		new Promise((res, rej) => {
 			const gridXHR = new XMLHttpRequest();
 			gridXHR.open('GET', `/api/locations/grid?lat=${event.latLng.lat()}&lng=${event.latLng.lng()}`);
 			gridXHR.send();
-
 			gridXHR.onload = (e) => {
 				const xhr = e.srcElement;
-
 				if (xhr.status !== 200) {
 					rej(xhr.response);
 				}
-
 				res(JSON.parse(xhr.response));
 			};
-		});
-
-		gridPromise
+		})
 			.then((clickedLocation) => {
+				// /// remove to another method
 				this.clickedInfo.style.display = 'block';
 				this.clickedInfo.classList.add('open');
 				this.usersLocContainer.classList.remove('open');
 				this.clickedLocationInfo.textContent = `${clickedLocation.northWest.lat} ${clickedLocation.northWest.lng}`;
 				this.clickedLocationHeading.textContent = 'Empty location';
 				console.log(clickedLocation);
+				// ///
 
-				const locationNew = {
-					type: 'Feature',
-					id: 'highlight',
-					properties: {
-						color: 'blue'
-						// info: {
-						//   name: 'Empty location',
-						// },
-					},
-					geometry: new google.maps.Data.Polygon([clickedLocation.mapFeatureCoords])
-				};
-
-				this.map.data.add(locationNew);
+				this.currentHighlightedMapFeature = this.createLocByFeatureCoords(
+					clickedLocation.mapFeatureCoords,
+					'clickedLocation',
+					this.featuresPropertiesStyles.highlightedEmptyLocation
+				);
+				console.log(this.currentHighlightedMapFeature);
 			})
 			.catch((err) => {
 				console.log(err);
@@ -265,21 +282,33 @@ class Game {
 		})
 			.then((newLocation) => {
 				console.log(newLocation);
-				const thisLocation = this.map.data.getFeatureById('currentLocation');
+				// const thisLocation = this.map.data.getFeatureById('currentLocation');
 
-				const locationNew = {
-					type: 'Feature',
-					id: newLocation.locationId,
-					properties: {
-						color: 'green',
+				const properties = Object.assign(
+					{
 						info: {
+							name: newLocation.locationName,
+							masterId: newLocation.masterId,
+							population: newLocation.population,
+							isMaster: true
 						}
 					},
-					geometry: new google.maps.Data.Polygon([newLocation.mapFeatureCoords])
-				};
-				this.map.data.add(locationNew);
-				this.map.data.remove(thisLocation);
+					this.featuresPropertiesStyles.newlyOccupiedLocation
+				);
+
+				const newlyOwnedLoc = this.createLocByFeatureCoords(
+					newLocation.mapFeatureCoords,
+					newLocation.locationId,
+					properties
+				);
+
+				console.log(newlyOwnedLoc);
+
+				this.map.data.remove(this.currentLocationMapFeature);
+				this.currentLocationMapFeature = null;
+				// remove to separate method
 				this.occupyBtn.style.display = 'none';
+				//
 			})
 			.catch((err) => {
 				console.log(err);
@@ -301,7 +330,7 @@ function initMap() {
 		const lng1 = game.map.getBounds().getSouthWest().lng();
 		console.log(lat0, lng0, lat1, lng1);
 
-		game.renderLocationsFromDB();
+		game.renderOccupiedLocations();
 
 		game.map.addListener('click', (event) => {
 			game.hilightEmptyLocation(event);

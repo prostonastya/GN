@@ -1,34 +1,9 @@
 class EmptyLocation {
 	constructor(geoData) {
-		// this.coords = this.getLocationPointsByNorthWest(
-		// 	this.getNorthWestLocationCoordsByPoint(geoData)
-		// );
 		this.northWest = this.getNorthWestLocationCoordsByPoint(geoData);
 		this.mapFeatureCoords = this.getMapFeatureCoords();
-		this.mapFeatureGeometry = this.getMapFeatureGeometry();
+		// this.mapFeatureGeometry = this.getMapFeatureGeometry();
 	}
-
-	// getLocationPointsByNorthWest(northWestCoords) {
-	// 	const getRelLngSize = this.getRelLngSize(northWestCoords.lat);
-	// 	return {
-	// 		northWest: {
-	// 			lat: +northWestCoords.lat,
-	// 			lng: +northWestCoords.lng
-	// 		},
-	// 		southWest: {
-	// 			lat: ((northWestCoords.lat * 10000000) - this.relativeLatSize) / 10000000,
-	// 			lng: +northWestCoords.lng
-	// 		},
-	// 		southEast: {
-	// 			lat: ((northWestCoords.lat * 10000000) - this.relativeLatSize) / 10000000,
-	// 			lng: ((northWestCoords.lng * 10000000) + getRelLngSize) / 10000000
-	// 		},
-	// 		northEast: {
-	// 			lat: +northWestCoords.lat,
-	// 			lng: ((northWestCoords.lng * 10000000) + getRelLngSize) / 10000000
-	// 		}
-	// 	};
-	// }
 
 	get lngSizeCoefficients() {
 		return this.getLatutideBreakpointsObject();
@@ -120,29 +95,29 @@ class EmptyLocation {
 		}];
 	}
 
-	getMapFeatureGeometry() {
-		return [[
-		// north west
-			this.northWest.lng,
-			this.northWest.lat
-		], [
-		// south west
-			this.northWest.lng,
-			((this.northWest.lat * 10000000) - this.relativeLatSize) / 10000000
-		], [
-		// south east
-			((this.northWest.lng * 10000000) + this.getRelLngSize()) / 10000000,
-			((this.northWest.lat * 10000000) - this.relativeLatSize) / 10000000
-			// north east
-		], [
-			((this.northWest.lng * 10000000) + this.getRelLngSize()) / 10000000,
-			this.northWest.lat
-		], [
-		// north west
-			this.northWest.lng,
-			this.northWest.lat
-		]];
-	}
+	// getMapFeatureGeometry() {
+	// 	return [[
+	// 	// north west
+	// 		this.northWest.lng,
+	// 		this.northWest.lat
+	// 	], [
+	// 	// south west
+	// 		this.northWest.lng,
+	// 		((this.northWest.lat * 10000000) - this.relativeLatSize) / 10000000
+	// 	], [
+	// 	// south east
+	// 		((this.northWest.lng * 10000000) + this.getRelLngSize()) / 10000000,
+	// 		((this.northWest.lat * 10000000) - this.relativeLatSize) / 10000000
+	// 		// north east
+	// 	], [
+	// 		((this.northWest.lng * 10000000) + this.getRelLngSize()) / 10000000,
+	// 		this.northWest.lat
+	// 	], [
+	// 	// north west
+	// 		this.northWest.lng,
+	// 		this.northWest.lat
+	// 	]];
+	// }
 
 	getLatutideBreakpointsObject() {
 		const lngSizeCoefficients = {};
