@@ -17,6 +17,9 @@ class Game {
 		// this.usersLocationInfo = document.getElementById('users-location');
 		// // ---^
 
+		this.occLocRenderedEvent = new CustomEvent('occloc-ready', {
+			bubbles: true
+		});
 		this.occupyBtn = document.getElementById('occupy-btn');
 		this.userMarker = null;
 		this.map = options.map || null;
@@ -24,25 +27,33 @@ class Game {
 		this.userGeoData = null;
 		this.currentLocation = null;
 		this.currentLocationMapFeature = null;
+		this.highlightedLocation = null;
 		this.currentHighlightedMapFeature = null;
+		this.occupiedLocationsArray = null;
 		this.mapFeaturesArray = [];
 
-		this.occupyBtn.addEventListener('click', () => {
-			this.occupyLocation();
-		});
+		// this.occupyBtn.addEventListener('click', () => {
+		// 	this.occupyLocation();
+		// });
 	}
 
 	get mapFeaturesStyles() {
 		return {
+			defaultStyles: {
+				strokeColor: 'gray',
+				fillColor: 'transparent',
+				fillOpacity: 0.2,
+				strokeWeight: 1,
+				strokeOpacity: 1
+			},
 			ownedLocation: {
-				strokeColor: 'green',
 				fillColor: 'green'
 			},
 			occupiedLocation: {
-				strokeColor: 'gray',
 				fillColor: 'gray'
 			},
 			profitLocation: {
+				strokeColor: 'orange',
 				strokeWeight: 3
 			},
 			highlightedEmptyLocation: {
@@ -67,12 +78,164 @@ class Game {
 		});
 	}
 
+	getLocationInfoById(id) {
+		return new Promise((res, rej) => {
+			const xhr = new XMLHttpRequest();
+
+			xhr.open('GET', `/api/locations/${id}`);
+			xhr.send();
+			xhr.addEventListener('load', (e) => {
+				const getLocationInfoXHR = e.srcElement;
+
+				if (getLocationInfoXHR.status !== 200) {
+					rej(getLocationInfoXHR.response);
+				}
+				res(JSON.parse(getLocationInfoXHR.response));
+			});
+		});
+	}
+
+	renderCurrentLocationInfo() {
+		this.getCurrentLocation()
+			.then((currentLocation) => {
+				this.currentLocation = currentLocation;
+				console.log(currentLocation);
+				if (!currentLocation.masterId) {
+					this.renderCurrentEmptyLocationInfo(currentLocation);
+				} else {
+					this.renderCurrentOccupiedLocationInfo(currentLocation);
+				}
+			});
+	}
+
+	getCurrentLocation() {
+		const geoCoords = {
+			lat: this.userGeoData.latitude,
+			lng: this.userGeoData.longitude
+		};
+		return new Promise((res, rej) => {
+			const gridXHR = new XMLHttpRequest();
+			gridXHR.open('GET', `/api/locations/check-location?lat=${geoCoords.lat}&lng=${geoCoords.lng}`);
+			gridXHR.send();
+			gridXHR.onload = (e) => {
+				const xhr = e.srcElement;
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				res(JSON.parse(xhr.response));
+			};
+		});
+	}
+
+	renderCurrentEmptyLocationInfo(currentLocation) {
+		currentLocation.isCurrent = true;
+		this.currentLocationMapFeature = this.getAndRenderLocByFeatureCoords(
+			currentLocation
+		);
+	}
+
+	renderOccupiedLocationInfo(targetFeatureId) {
+		this.getLocationInfoById(targetFeatureId)
+			.then((clickedLocation) => {
+				console.log(clickedLocation);
+				this.highlightOccupiedLocation(clickedLocation);
+			});
+	}
+
+	renderEmptyLocationInfo(event) {
+		this.getGridByGeoCoords({
+			lat: event.latLng.lat(),
+			lng: event.latLng.lng()
+		})
+			.then((clickedLocation) => {
+				console.log(clickedLocation);
+				this.highlightEmptyLocation(clickedLocation);
+			});
+	}
+
+	removeHighlight() {
+		if (this.currentHighlightedMapFeature) {
+			const highlightedLocId = this.currentHighlightedMapFeature.getId();
+			if (highlightedLocId || this.currentHighlightedMapFeature.getProperty('info').isCurrent) {
+				this.highlightedLocation.isHighlighted = undefined;
+				this.map.data.overrideStyle(
+					this.currentHighlightedMapFeature,
+					this.getMapFeatureProperties(this.highlightedLocation)
+				);
+			} else {
+				this.map.data.remove(this.currentHighlightedMapFeature);
+			}
+		}
+	}
+
+	highlightOccupiedLocation(clickedLocation) {
+		this.removeHighlight();
+
+		const locId = clickedLocation.locationId;
+
+		this.currentHighlightedMapFeature = this.map.data.getFeatureById(locId);
+		this.highlightedLocation = this.getLoadedLocationById(locId);
+		this.highlightedLocation.isHighlighted = true;
+		this.map.data.overrideStyle(
+			this.currentHighlightedMapFeature,
+			this.getMapFeatureProperties(this.highlightedLocation)
+		);
+	}
+
+	getLoadedLocationById(id) {
+		let location;
+		this.occupiedLocationsArray.forEach((item) => {
+			if (item.locationId === id) {
+				location = item;
+			}
+		});
+		return location;
+	}
+
+	highlightEmptyLocation(clickedLocation) {
+		this.removeHighlight();
+		clickedLocation.isHighlighted = true;
+		this.currentHighlightedMapFeature = this.getAndRenderLocByFeatureCoords(
+			clickedLocation
+		);
+	}
+
+	hightlightCurrentEmptyLocation() {
+		this.removeHighlight();
+		this.currentLocation.isHighlighted = true;
+		this.highlightedLocation = this.currentLocation;
+		this.currentHighlightedMapFeature = this.currentLocationMapFeature;
+		this.map.data.overrideStyle(
+			this.currentLocationMapFeature,
+			this.getMapFeatureProperties(this.currentLocation)
+		);
+	}
+
+	getGridByGeoCoords(geoCoords) {
+		return new Promise((res, rej) => {
+			const gridXHR = new XMLHttpRequest();
+			gridXHR.open('GET', `/api/locations/grid?lat=${geoCoords.lat}&lng=${geoCoords.lng}`);
+			gridXHR.send();
+			gridXHR.onload = (e) => {
+				const xhr = e.srcElement;
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				res(JSON.parse(xhr.response));
+			};
+		});
+	}
+
+	setUserGeoData(userCoord) {
+		this.userGeoData = userCoord;
+	}
+
 	setMapBounds(mapBounds) {
 		this.mapBounds = mapBounds;
 	}
 
-	renderOccupiedLocations() {
-		new Promise((res, rej) => {
+	getOccupiedLocations() {
+		return new Promise((res, rej) => {
 			const xhr = new XMLHttpRequest();
 
 			xhr.open('GET', '/api/locations/');
@@ -86,24 +249,21 @@ class Game {
 				}
 			});
 		})
-			.then((locArray) => {
-				// geoJSON = this.modifyGeoJSON(geoJSON);
-				locArray.forEach((location) => {
+			.then(locArray => new Promise((res) => {
+				this.occupiedLocationsArray = locArray;
+				res();
+			}));
+	}
+
+	renderOccupiedLocations() {
+		this.getOccupiedLocations()
+			.then(() => {
+				this.occupiedLocationsArray.forEach((location) => {
 					const mapFeature = this.getAndRenderLocByFeatureCoords(location);
-					console.log(mapFeature);
 					this.mapFeaturesArray.push(mapFeature);
 				});
 
-				// this.map.data.addGeoJson(geoJSON);
-				navigator.geolocation.watchPosition((position) => {
-					const userCoords = position.coords;
-					console.log(userCoords);
-					// this.setUserGeoData(userCoords);
-					// this.setCurrentLocationByUserCoords();
-					// this.centerMapByUserGeoData();
-					// console.log(this.userGeoData);
-					// this.addUserMarker();
-				});
+				document.dispatchEvent(this.occLocRenderedEvent);
 			})
 			.catch((err) => {
 				console.log(err);
@@ -123,8 +283,11 @@ class Game {
 	}
 
 	getMapFeatureProperties(location) {
-		let featureProperties = {};
+		let featureProperties = this.mapFeaturesStyles.defaultStyles;
 		featureProperties.info = {};
+		featureProperties.info.isHighlighted = location.isHighlighted;
+		featureProperties.info.isCurrent = location.isCurrent;
+
 		if (location.masterId) {
 			if (location.isMaster) {
 				featureProperties = Object.assign(
@@ -146,6 +309,21 @@ class Game {
 			featureProperties.info.name = location.locationName;
 			featureProperties.info.population = location.population;
 			featureProperties.info.masterId = location.masterId;
+		} else {
+			featureProperties.info.name = 'Empty location';
+		}
+
+		if (location.isCurrent) {
+			featureProperties = Object.assign(
+				featureProperties,
+				this.mapFeaturesStyles.currentLocation
+			);
+		}
+		if (location.isHighlighted) {
+			featureProperties = Object.assign(
+				featureProperties,
+				this.mapFeaturesStyles.highlightedEmptyLocation
+			);
 		}
 
 		return featureProperties;
@@ -187,6 +365,7 @@ function initMap() {
 		clickableIcons: false
 	});
 
+
 	window.onload = function () {
 		const game = new Game({
 			map,
@@ -201,12 +380,15 @@ function initMap() {
 				}
 			}
 		});
-		game.map.data.setStyle((feature) => {
-			const strokeColor = feature.getProperty('strokeColor') || 'gray';
-			const fillColor = feature.getProperty('fillColor') || 'white';
-			const fillOpacity = feature.getProperty('fillOpacity') || 0.2;
-			const strokeWeight = feature.getProperty('strokeWeight') || 1;
-			const strokeOpacity = feature.getProperty('strokeOpacity') || 0.5;
+
+
+		map.data.setStyle((feature) => {
+			const defaultStyles = game.mapFeaturesStyles.defaultStyles;
+			const strokeColor = feature.getProperty('strokeColor') || defaultStyles.strokeColor;
+			const fillColor = feature.getProperty('fillColor') || defaultStyles.fillColor;
+			const fillOpacity = feature.getProperty('fillOpacity') || defaultStyles.fillOpacity;
+			const strokeWeight = feature.getProperty('strokeWeight') || defaultStyles.strokeWeight;
+			const strokeOpacity = feature.getProperty('strokeOpacity') || defaultStyles.strokeOpacity;
 			return /** @type {google.maps.Data.StyleOptions} */({
 				fillColor,
 				fillOpacity,
@@ -216,13 +398,33 @@ function initMap() {
 			});
 		});
 
+		document.addEventListener('occloc-ready', initMapInteraction);
+
 		game.renderOccupiedLocations();
 
-		game.map.addListener('click', (event) => {
-			game.hilightEmptyLocation(event);
-		});
-	};
+		function initMapInteraction() {
+			navigator.geolocation.watchPosition((position) => {
+				game.setUserGeoData(position.coords);
+				game.renderCurrentLocationInfo();
+			});
 
+			map.addListener('click', (event) => {
+				game.renderEmptyLocationInfo(event);
+			});
+
+			map.data.addListener('click', (event) => {
+				const targetFeatureId = event.feature.getId();
+				if (targetFeatureId) {
+					game.renderOccupiedLocationInfo(targetFeatureId);
+				}
+				if (!targetFeatureId && event.feature.getProperty('info').isCurrent) {
+					game.hightlightCurrentEmptyLocation();
+				}
+			});
+
+			document.removeEventListener('occloc-ready', initMapInteraction);
+		}
+	};
 	// game.usersLocContainer.addEventListener('click', (e) => {
 	// 	if (e.target.classList[0] === 'close') {
 	// 		game.usersLocContainer.classList.toggle('open');
