@@ -3,6 +3,7 @@ const EmptyLocation = require('./emptyLocation');
 class OccupiedLocation extends EmptyLocation {
 	constructor(locationData) {
 		super(locationData.northWest);
+
 		this.masterId = locationData.userId;
 		this.locationId = locationData.locationId || null;
 		this.population = locationData.population || 10;
@@ -10,18 +11,22 @@ class OccupiedLocation extends EmptyLocation {
 		this.loyalPopulation = locationData.loyalPopulation || 10;
 		this.dailyCheckin = locationData.dailyCheckin || true;
 		this.creationDate = locationData.creationDate || new Date().toISOString();
+		this.name = locationData.locName || 'a new location';
+		this.dailyMsg = locationData.dailyMsg || 'what a nice day!';
 	}
 	saveLocation() {
 		// rewrite with TRANSACTIONS!!!
 
 		return global.db.none(`insert into locations2 (lat, lng,
-													 population, daily_bank, creation_date)
+													 population, daily_bank, creation_date, loc_name, daily_msg)
 						values(
 							${this.northWest.lat},
 							${this.northWest.lng},
 							${this.population},
 							${this.dailyBank},
-							'${this.creationDate}'
+							'${this.creationDate}',
+							'${this.name}',
+							'${this.dailyMsg}'
 						)`)
 			.then(() => global.db.one(`select loc_id from locations2																			 
 																 where locations2.lat = ${this.northWest.lat} and locations2.lng = ${this.northWest.lng}`)

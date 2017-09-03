@@ -41,7 +41,6 @@ app.use(cookieParser());
 app.use(express.static('assets'));
 app.use(favicon('./assets/favicon.png'));
 
-
 app.use('/user', userRoutes);
 app.use('/', auth);
 app.all('/', indexRoutes);
@@ -66,34 +65,6 @@ app.use((err, req, res) => {
 	// res.render('error');
 });
 
-// function createNewUser(user) {
-// 	global.db.none('insert into users(email, password, reg_date, cash, name)' +
-// `values('${user.email}', '${user.pass}', '${new Date().toISOString()}', 150, '${user.name}')`)
-// 		.then(() => console.log('New user was added to db'))
-// 		.catch(error => console.log('error:', error));
-// }
-
-// function createLetter(userEmail) {
-// 	return {
-// 		from: '"Game team" <gamekh009@gmail.com>', // sender address
-// 		to: userEmail, // receivers
-// 		subject: 'Hello! new user! ✔', // Subject line
-// 		text: 'Hello! We are glad that you joined our game', // plain text body
-// 		html: '<b>Hello! We are glad that you joined our game!</b>', // html body
-// 	};
-// }
-
-// function sendMail(letter) {
-// 	transporter.sendMail(letter, (error, info) => {
-// 		if (error) {
-// 			console.log(error.message);
-// 		} else {
-// 			console.log(`Email sent: ${info.response}`);
-// 		}
-// 	});
-// }
-
-
 // schedule.scheduleJob('*/300 * * * * *', () => {
 // 	console.log('daily event!');
 // 	Location.recalcLocationsLifecycle();
@@ -103,8 +74,6 @@ app.use((err, req, res) => {
 eventEmitter.on('daily-event', () => {
 	console.log('daily event handled!');
 });
-
-// global.db.none('delete from locations');
 
 // app.listen(port, () => {
 // 	console.log(`Listen on port: ${port}`);

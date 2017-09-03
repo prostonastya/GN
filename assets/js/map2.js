@@ -9,15 +9,34 @@ class Game {
 		this.usersLocContainer = document.getElementById('current-loc-info');
 		this.usersLocationInfo = document.getElementById('users-location');
 		this.occupyBtn = document.getElementById('occupy-btn');
-
+		this.userLocSettingsForm = document.getElementById('nameDailyMsgForm');
+		this.closeForm = document.getElementById('closeForm');
 		this.map = null;
 
 		this.userGeoData = null;
 		this.currentLocation = null;
 
 		this.occupyBtn.addEventListener('click', () => {
-			this.occupyLocation();
+			document.getElementById('popup-container').style.display = 'flex';
 		});
+
+		this.userLocSettingsForm.addEventListener('submit', (e) => {
+			e.preventDefault();
+			const formData = {
+				locName: document.getElementById('name').value,
+				dailyMsg: document.getElementById('dailyMsg').value
+			};
+			this.occupyLocation(formData);
+			document.getElementById('popup-container').style.display = 'none';
+		});
+		this.closeForm.addEventListener('click', (e) => {
+			e.preventDefault();
+			document.getElementById('popup-container').style.display = 'none';
+		});
+	}
+
+	setUserLocSettings() {
+
 	}
 
 	setMapCenter(lat, lng) {
@@ -224,12 +243,15 @@ class Game {
 			});
 	}
 
-	occupyLocation() {
+	occupyLocation(data) {
+		console.log(data);
 		new Promise((res, rej) => {
 			const createLocationXHR = new XMLHttpRequest();
 			createLocationXHR.open('POST', 'api/locations');
 			createLocationXHR.setRequestHeader('Content-Type', 'application/json');
-			createLocationXHR.send(JSON.stringify(this.currentLocation));
+			createLocationXHR.send(JSON.stringify({ currentLocation: this.currentLocation,
+				locName: data.locName,
+				dailyMsg: data.dailyMsg }));
 			createLocationXHR.addEventListener('load', (e) => {
 				const xhr = e.srcElement;
 				console.log(xhr);

@@ -33,9 +33,20 @@
     <div id="map"></div>
   
     <div class="loc-highlight" id="loc-highlight"></div>
-        <div class="curr-loc-highlight" id="curr-loc-highlight"></div>
+        <div class="curr-loc-highlight" id="curr-loc-highlight" onclick="alert('click!!')"></div>
         
-
+	<div class="popup-container" id="popup-container" style="display:none">
+		<div class="popup">
+			<form action="/api/locations" method="POST" id="nameDailyMsgForm">
+				<a href="#" id="closeForm">close</a>
+				Enter a name of location
+				<input type="text" maxLength="30" name="name" id="name" required/><br/>
+				Enter a daily message
+				<input type="text" maxlength="100" name="dailyMsg" id="dailyMsg"/><br/>
+				<input type="submit" />
+			</form>
+		</div>
+	</div>
   <div class="loc-info" style="display: none" id="output">
     <a href="#" class="close">close</a>
     <div>

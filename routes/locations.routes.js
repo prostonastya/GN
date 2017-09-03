@@ -17,7 +17,6 @@ router.get('/grid', (req, res) => {
 		lat: +req.query.lat,
 		lng: +req.query.lng
 	};
-
 	const location = new EmptyLocation(geoData);
 	res.json(location);
 });
@@ -85,10 +84,18 @@ router.get('/:id', (req, res, next) => {
 // });
 
 router.post('/', (req, res, next) => {
-	const newLocationData = Object.assign({
-		userId: req.decoded.id
-	}, req.body);
+	console.log(req.body.currentLocation.northWest);
+	// const newLocationData = Object.assign({
+	// 	userId: req.decoded.id
+	// }, req.body);
+	const newLocationData = {
+		northWest: req.body.currentLocation.northWest,
+		userId: req.decoded.id,
+		locName: req.body.locName,
+		dailyMsg: req.body.dailyMsg
+	};
 	const newLocation = new OccupiedLocation(newLocationData);
+	console.log(newLocation);
 	newLocation.saveLocation()
 		.then(() => {
 			res.json(newLocation);
