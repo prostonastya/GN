@@ -28,7 +28,7 @@ class Game {
 		this.currentLocation = null;
 		this.currentLocationMapFeature = null;
 		this.highlightedLocation = null;
-		this.currentHighlightedMapFeature = null;
+		this.highlightedMapFeature = null;
 		this.occupiedLocationsArray = null;
 		this.mapFeaturesArray = [];
 
@@ -98,8 +98,8 @@ class Game {
 	renderCurrentLocationInfo() {
 		this.getCurrentLocation()
 			.then((currentLocation) => {
-				this.currentLocation = currentLocation;
 				console.log(currentLocation);
+				this.removeCurrentHighlight();
 				if (!currentLocation.masterId) {
 					this.renderCurrentEmptyLocationInfo(currentLocation);
 				} else {
@@ -127,10 +127,19 @@ class Game {
 		});
 	}
 
-	renderCurrentEmptyLocationInfo(currentLocation) {
-		currentLocation.isCurrent = true;
+	renderCurrentOccupiedLocationInfo(currentLocation) {
+		this.currentLocation = this.getLoadedLocationById(currentLocation.locationId);
+		this.currentLocation.isCurrent = true;
 		this.currentLocationMapFeature = this.getAndRenderLocByFeatureCoords(
-			currentLocation
+			this.currentLocation
+		);
+	}
+
+	renderCurrentEmptyLocationInfo(currentLocation) {
+		this.currentLocation = currentLocation;
+		this.currentLocation.isCurrent = true;
+		this.currentLocationMapFeature = this.getAndRenderLocByFeatureCoords(
+			this.currentLocation
 		);
 	}
 
@@ -153,17 +162,32 @@ class Game {
 			});
 	}
 
+	removeCurrentHighlight() {
+		if (this.currentLocationMapFeature) {
+			const currentLocId = this.currentLocationMapFeature.getId();
+			if (currentLocId) {
+				this.currentLocation.isCurrent = undefined;
+				this.map.data.overrideStyle(
+					this.currentLocationMapFeature,
+					this.getMapFeatureProperties(this.currentLocation)
+				);
+			} else {
+				this.map.data.remove(this.currentLocationMapFeature);
+			}
+		}
+	}
+
 	removeHighlight() {
-		if (this.currentHighlightedMapFeature) {
-			const highlightedLocId = this.currentHighlightedMapFeature.getId();
-			if (highlightedLocId || this.currentHighlightedMapFeature.getProperty('info').isCurrent) {
+		if (this.highlightedMapFeature) {
+			const highlightedLocId = this.highlightedMapFeature.getId();
+			if (highlightedLocId || this.highlightedMapFeature.getProperty('info').isCurrent) {
 				this.highlightedLocation.isHighlighted = undefined;
 				this.map.data.overrideStyle(
-					this.currentHighlightedMapFeature,
+					this.highlightedMapFeature,
 					this.getMapFeatureProperties(this.highlightedLocation)
 				);
 			} else {
-				this.map.data.remove(this.currentHighlightedMapFeature);
+				this.map.data.remove(this.highlightedMapFeature);
 			}
 		}
 	}
@@ -173,11 +197,11 @@ class Game {
 
 		const locId = clickedLocation.locationId;
 
-		this.currentHighlightedMapFeature = this.map.data.getFeatureById(locId);
+		this.highlightedMapFeature = this.map.data.getFeatureById(locId);
 		this.highlightedLocation = this.getLoadedLocationById(locId);
 		this.highlightedLocation.isHighlighted = true;
 		this.map.data.overrideStyle(
-			this.currentHighlightedMapFeature,
+			this.highlightedMapFeature,
 			this.getMapFeatureProperties(this.highlightedLocation)
 		);
 	}
@@ -195,7 +219,7 @@ class Game {
 	highlightEmptyLocation(clickedLocation) {
 		this.removeHighlight();
 		clickedLocation.isHighlighted = true;
-		this.currentHighlightedMapFeature = this.getAndRenderLocByFeatureCoords(
+		this.highlightedMapFeature = this.getAndRenderLocByFeatureCoords(
 			clickedLocation
 		);
 	}
@@ -204,7 +228,7 @@ class Game {
 		this.removeHighlight();
 		this.currentLocation.isHighlighted = true;
 		this.highlightedLocation = this.currentLocation;
-		this.currentHighlightedMapFeature = this.currentLocationMapFeature;
+		this.highlightedMapFeature = this.currentLocationMapFeature;
 		this.map.data.overrideStyle(
 			this.currentLocationMapFeature,
 			this.getMapFeatureProperties(this.currentLocation)
