@@ -101,10 +101,12 @@ class Game {
 				console.log(currentLocation);
 				this.removeCurrentHighlight();
 				if (!currentLocation.masterId) {
-					this.renderCurrentEmptyLocationInfo(currentLocation);
+					currentLocation.locationName = 'Empty Location';
+					this.renderCurrentEmptyLocation(currentLocation);
 				} else {
-					this.renderCurrentOccupiedLocationInfo(currentLocation);
+					this.renderCurrentOccupiedLocation(currentLocation);
 				}
+				this.renderCurrentLocationTextInfo();
 			});
 	}
 
@@ -127,7 +129,7 @@ class Game {
 		});
 	}
 
-	renderCurrentOccupiedLocationInfo(currentLocation) {
+	renderCurrentOccupiedLocation(currentLocation) {
 		this.currentLocation = this.getLoadedLocationById(currentLocation.locationId);
 		this.currentLocation.isCurrent = true;
 		this.currentLocationMapFeature = this.getAndRenderLocByFeatureCoords(
@@ -135,7 +137,7 @@ class Game {
 		);
 	}
 
-	renderCurrentEmptyLocationInfo(currentLocation) {
+	renderCurrentEmptyLocation(currentLocation) {
 		this.currentLocation = currentLocation;
 		this.currentLocation.isCurrent = true;
 		this.currentLocationMapFeature = this.getAndRenderLocByFeatureCoords(
@@ -148,6 +150,7 @@ class Game {
 			.then((clickedLocation) => {
 				console.log(clickedLocation);
 				this.highlightOccupiedLocation(clickedLocation);
+				this.renderHighlightedLocationTextInfo();
 			});
 	}
 
@@ -158,19 +161,23 @@ class Game {
 		})
 			.then((clickedLocation) => {
 				console.log(clickedLocation);
+				clickedLocation.locationName = 'Empty Location';
 				this.highlightEmptyLocation(clickedLocation);
+				this.renderHighlightedLocationTextInfo();
 			});
 	}
 
 	removeCurrentHighlight() {
 		if (this.currentLocationMapFeature) {
 			const currentLocId = this.currentLocationMapFeature.getId();
-			if (currentLocId) {
+			if (currentLocId || this.highlightedMapFeature.getProperty('info').isHighlighted) {
 				this.currentLocation.isCurrent = undefined;
+				const featureProps = this.getMapFeatureProperties(this.currentLocation);
 				this.map.data.overrideStyle(
 					this.currentLocationMapFeature,
-					this.getMapFeatureProperties(this.currentLocation)
+					featureProps
 				);
+				this.currentLocationMapFeature.setProperty('info', featureProps.info);
 			} else {
 				this.map.data.remove(this.currentLocationMapFeature);
 			}
@@ -182,14 +189,29 @@ class Game {
 			const highlightedLocId = this.highlightedMapFeature.getId();
 			if (highlightedLocId || this.highlightedMapFeature.getProperty('info').isCurrent) {
 				this.highlightedLocation.isHighlighted = undefined;
+				const featureProps = this.getMapFeatureProperties(this.highlightedLocation);
 				this.map.data.overrideStyle(
 					this.highlightedMapFeature,
-					this.getMapFeatureProperties(this.highlightedLocation)
+					featureProps
 				);
+				this.highlightedMapFeature.setProperty('info', featureProps.info);
 			} else {
 				this.map.data.remove(this.highlightedMapFeature);
 			}
 		}
+	}
+
+	renderHighlightedLocationTextInfo() {
+		this.locInfoContainer.className = 'loc-info';
+		this.locInfoContainer.classList.add('show-clicked');
+		this.clickedLocInfo.innerHTML = this.getLocInfoHTML(this.highlightedLocation);
+	}
+
+	renderCurrentLocationTextInfo() {
+		if (this.locInfoContainer.className === 'loc-info') {
+			this.locInfoContainer.classList.add('show-current');
+		}
+		this.currentLocInfo.innerHTML = this.getLocInfoHTML(this.currentLocation);
 	}
 
 	highlightOccupiedLocation(clickedLocation) {
@@ -200,10 +222,12 @@ class Game {
 		this.highlightedMapFeature = this.map.data.getFeatureById(locId);
 		this.highlightedLocation = this.getLoadedLocationById(locId);
 		this.highlightedLocation.isHighlighted = true;
+		const featureProps = this.getMapFeatureProperties(this.highlightedLocation);
 		this.map.data.overrideStyle(
 			this.highlightedMapFeature,
-			this.getMapFeatureProperties(this.highlightedLocation)
+			featureProps
 		);
+		this.highlightedMapFeature.setProperty('info', featureProps.info);
 	}
 
 	getLoadedLocationById(id) {
@@ -218,6 +242,7 @@ class Game {
 
 	highlightEmptyLocation(clickedLocation) {
 		this.removeHighlight();
+		this.highlightedLocation = clickedLocation;
 		clickedLocation.isHighlighted = true;
 		this.highlightedMapFeature = this.getAndRenderLocByFeatureCoords(
 			clickedLocation
@@ -229,10 +254,12 @@ class Game {
 		this.currentLocation.isHighlighted = true;
 		this.highlightedLocation = this.currentLocation;
 		this.highlightedMapFeature = this.currentLocationMapFeature;
+		const featureProps = this.getMapFeatureProperties(this.currentLocation);
 		this.map.data.overrideStyle(
 			this.currentLocationMapFeature,
-			this.getMapFeatureProperties(this.currentLocation)
+			featureProps
 		);
+		this.currentLocationMapFeature.setProperty('info', featureProps.info);
 	}
 
 	getGridByGeoCoords(geoCoords) {
@@ -437,11 +464,15 @@ function initMap() {
 			});
 
 			map.data.addListener('click', (event) => {
+				if (event.feature.getProperty('info').isHighlighted) return;
+
 				const targetFeatureId = event.feature.getId();
+
 				if (targetFeatureId) {
 					game.renderOccupiedLocationInfo(targetFeatureId);
+					return;
 				}
-				if (!targetFeatureId && event.feature.getProperty('info').isCurrent) {
+				if (event.feature.getProperty('info').isCurrent) {
 					game.hightlightCurrentEmptyLocation();
 				}
 			});
@@ -449,14 +480,4 @@ function initMap() {
 			document.removeEventListener('occloc-ready', initMapInteraction);
 		}
 	};
-	// game.usersLocContainer.addEventListener('click', (e) => {
-	// 	if (e.target.classList[0] === 'close') {
-	// 		game.usersLocContainer.classList.toggle('open');
-	// 	}
-	// });
-	// game.clickedInfo.addEventListener('click', (e) => {
-	// 	if (e.target.classList[0] === 'close') {
-	// 		game.clickedInfo.classList.toggle('open');
-	// 	}
-	// });
 }

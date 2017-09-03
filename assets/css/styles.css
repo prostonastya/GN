@@ -86,14 +86,14 @@ nav{
   background-color: rgba(100, 0, 0, 0.5);
 }
 
-.current-loc-info,
 .loc-info {
    position: fixed; 
   line-height: 30px;
   padding: 10px 20px;
   box-sizing: border-box;
   /* display: none; */
-  top: 100%;
+  /* top: 100%; */
+  bottom: 0;
   left: 2px;
   right: 2px;
   margin: 0;
@@ -195,7 +195,7 @@ nav{
 
 
 .current-loc-info.open {
-  transform: translateY(-100%);
+  /* transform: translateY(-100%); */
   /* z-index: 2; */
 }
 
@@ -206,5 +206,5 @@ nav{
 .current-loc-info.open .close,
 .loc-info.open .close {
 
-  transform: rotate(-45deg); 
+  /* transform: rotate(-45deg);  */
 }
