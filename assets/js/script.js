@@ -579,6 +579,7 @@ function initMap() {
 
 
 	window.onload = function () {
+		alert(navigator.geolocation);
 		const game = new Game({
 			map,
 			mapBounds: {
