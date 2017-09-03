@@ -579,7 +579,6 @@ function initMap() {
 
 
 	window.onload = function () {
-		alert(navigator.geolocation);
 		const game = new Game({
 			map,
 			mapBounds: {
@@ -622,6 +621,8 @@ function initMap() {
 					lat: position.coords.latitude,
 					lng: position.coords.longitude
 				});
+			}, () => {
+				alert('Your geolocation is not working. Probably you forgot to turn it on. Please, turn on geolocation and give proper access to this app');
 			});
 
 			navigator.geolocation.watchPosition((position) => {
