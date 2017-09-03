@@ -31,6 +31,9 @@ module.exports = (req, res, next) => {
 						next();
 					});
 			} else {
+				foundLocation.dailyCheckin = undefined;
+				foundLocation.dailyBank = undefined;
+				foundLocation.loyalPopulation = undefined;
 				req.reqLocation = foundLocation;
 				next();
 			}

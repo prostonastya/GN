@@ -69,7 +69,12 @@ router.get('/check-location', (req, res, next) => {
 		.then((locationObj) => {
 			if (locationObj.masterId === req.decoded.id) {
 				locationObj.isMaster = true;
+			} else {
+				locationObj.dailyCheckin = undefined;
+				locationObj.dailyBank = undefined;
+				locationObj.loyalPopulation = undefined;
 			}
+			console.log(JSON.stringify(locationObj));
 			res.json(locationObj);
 		})
 		.catch((err) => {

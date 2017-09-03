@@ -4,14 +4,15 @@ class OccupiedLocation extends EmptyLocation {
 	constructor(locationData) {
 		super(locationData.northWest);
 		this.masterId = locationData.userId;
+		this.masterName = locationData.userName;
 		this.locationId = locationData.locationId || null;
 		this.population = locationData.population || 10;
 		this.dailyBank = locationData.dailyBank || 0;
 		this.loyalPopulation = locationData.loyalPopulation || 10;
 		this.dailyCheckin = locationData.dailyCheckin || true;
 		this.creationDate = locationData.creationDate || new Date().toISOString();
-		this.locationName = locationData.loc_name || null;
-		this.dailyMessage = locationData.daily_msg || null;
+		this.locationName = locationData.locationName || null;
+		this.dailyMessage = locationData.dailyMessage || null;
 	}
 	saveLocation() {
 		return global.db.tx(t => t.batch([
@@ -129,9 +130,11 @@ class OccupiedLocation extends EmptyLocation {
 							lng: item.lng
 						},
 						locationId: item.loc_id,
+						locationName: item.loc_name,
 						userId: item.user_id,
 						population: item.population,
 						dailyBank: item.daily_bank,
+						dailyMessage: item.daily_msg,
 						loyalPopulation: item.loyal_pop,
 						dailyCheckin: item.daily_checkin,
 						creationDate: item.creation_date
@@ -176,9 +179,12 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	static getLocationById(id) {
-		return global.db.one(`select * from locations2
-						full join master_location2 on locations2.loc_id = master_location2.loc_id
-						where locations2.loc_id = $1`, id)
+		return global.db.one(
+			`select * from locations2
+			full join master_location2 on locations2.loc_id = master_location2.loc_id
+			full join users on master_location2.user_id = users.id
+			where locations2.loc_id = $1`, id
+		)
 			.then(foundLocation => new Promise((res) => {
 				res(new OccupiedLocation({
 					northWest: {
@@ -187,12 +193,14 @@ class OccupiedLocation extends EmptyLocation {
 					},
 					locationId: foundLocation.loc_id,
 					userId: foundLocation.user_id,
+					userName: foundLocation.name,
 					population: foundLocation.population,
 					dailyBank: foundLocation.daily_bank,
-					loyalPopulation: foundLocation.loyal_pop,
+					loyalPopulation: foundLocation.loyal_popul,
 					dailyCheckin: foundLocation.daily_checkin,
-					creationDate: foundLocation.creation_date
-
+					creationDate: foundLocation.creation_date,
+					dailyMessage: foundLocation.daily_msg,
+					locationName: foundLocation.loc_name
 				}));
 			}));
 	}
@@ -202,6 +210,7 @@ class OccupiedLocation extends EmptyLocation {
 
 		return global.db.oneOrNone(`select * from locations2
 						full join master_location2 on locations2.loc_id = master_location2.loc_id
+						full join users on master_location2.user_id = users.id
 						where locations2.lat = ${location.northWest.lat} and locations2.lng = ${location.northWest.lng}`)
 			.then(foundLocation => new Promise((res) => {
 				if (!foundLocation) {
@@ -214,12 +223,14 @@ class OccupiedLocation extends EmptyLocation {
 						},
 						locationId: foundLocation.loc_id,
 						userId: foundLocation.user_id,
+						userName: foundLocation.name,
 						population: foundLocation.population,
 						dailyBank: foundLocation.daily_bank,
-						loyalPopulation: foundLocation.loyal_pop,
+						loyalPopulation: foundLocation.loyal_popul,
 						dailyCheckin: foundLocation.daily_checkin,
-						creationDate: foundLocation.creation_date
-
+						creationDate: foundLocation.creation_date,
+						dailyMessage: foundLocation.daily_msg,
+						locationName: foundLocation.loc_name
 					}));
 				}
 			}));
@@ -250,10 +261,5 @@ class OccupiedLocation extends EmptyLocation {
 				console.log(err.message);
 			});
 	}
-
-	// static getOwnerByLocId(id) {
-	// 	return global.db.oneOrNone(`select user_id from master_location2
-	// 												 where loc_id = '${id}';`);
-	// }
 }
 module.exports = OccupiedLocation;

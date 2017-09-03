@@ -130,7 +130,8 @@ class Game {
 	}
 
 	renderCurrentOccupiedLocation(currentLocation) {
-		this.currentLocation = this.getLoadedLocationById(currentLocation.locationId);
+		this.currentLocation = this.getAndExtendLoadedLocationById(currentLocation);
+		// this.currentLocation = currentLocation;
 		this.currentLocation.isCurrent = true;
 		this.currentLocationMapFeature = this.getAndRenderLocByFeatureCoords(
 			this.currentLocation
@@ -220,7 +221,7 @@ class Game {
 		const locId = clickedLocation.locationId;
 
 		this.highlightedMapFeature = this.map.data.getFeatureById(locId);
-		this.highlightedLocation = this.getLoadedLocationById(locId);
+		this.highlightedLocation = this.getAndExtendLoadedLocationById(clickedLocation);
 		this.highlightedLocation.isHighlighted = true;
 		const featureProps = this.getMapFeatureProperties(this.highlightedLocation);
 		this.map.data.overrideStyle(
@@ -230,11 +231,11 @@ class Game {
 		this.highlightedMapFeature.setProperty('info', featureProps.info);
 	}
 
-	getLoadedLocationById(id) {
+	getAndExtendLoadedLocationById(newLocData) {
 		let location;
 		this.occupiedLocationsArray.forEach((item) => {
-			if (item.locationId === id) {
-				location = item;
+			if (item.locationId === newLocData.locationId) {
+				location = Object.assign(item, newLocData);
 			}
 		});
 		return location;
@@ -400,7 +401,7 @@ class Game {
 	getLocInfoHTML(location) {
 		return `<a href="#" class="close">close</a>
             <div>
-              <h2 class="info-heading">${location.locationName}</h2>
+              <h2 class="info-heading">${location.locationName} (${location.masterName})</h2>
               <p>Location coords: ${location.northWest.lat} ${location.northWest.lng}</p>
             </div>
             <button class="occupy-btn" id="occupy-btn" style="display: none">Occupy</button>
