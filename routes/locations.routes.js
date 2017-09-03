@@ -103,6 +103,7 @@ router.put('/:id', (req, res, next) => {
 	} else {
 		next(new Error('No such rights!'));
 	}
+});
 
 // router.post('/', (req, res, next) => {
 // 	console.log(req.body.currentLocation.northWest);

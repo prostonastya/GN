@@ -128,20 +128,22 @@ nav{
   /* color: ; */
   border: 1px solid #999;
   border-radius: 5px;
-  transform: translateY(-30px);
+  /* transform: translateY(-30px); */
   transition: transform .6s ease;
 }
 
 .loc-info {
-  transform: translateY(-60px);
+  /* transform: translateY(-60px); */
   display: none;
 }
 
 .loc-info.show-current,
-.loc-info.show-clicked {
+.loc-info.show-clicked,
+.loc-info.show-form {
   display: block;
 }
 
+.occupy-form,
 .clicked-loc-info,
 .current-loc-info {
   display: none;
@@ -152,6 +154,10 @@ nav{
 }
 
 .loc-info.show-clicked .clicked-loc-info {
+  display: block;
+}
+
+.loc-info.show-form .occupy-form {
   display: block;
 }
 

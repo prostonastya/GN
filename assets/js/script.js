@@ -8,6 +8,7 @@ class Game {
 		this.locInfoContainer = options.locInfoContainer || document.getElementById('loc-info');
 		this.clickedLocInfo = options.locInfoContainer || document.getElementById('clicked-loc-info');
 		this.currentLocInfo = options.locInfoContainer || document.getElementById('current-loc-info');
+		this.currentLocInfo = options.locInfoContainer || document.getElementById('occup-form');
 
 		this.occLocRenderedEvent = new CustomEvent('occloc-ready', {
 			bubbles: true
@@ -39,7 +40,8 @@ class Game {
 			}
 			if (target.closest('#occupy-btn')) {
 				target = target.closest('#occupy-btn');
-				this.occupyCurrentLocation();
+				// this.occupyCurrentLocation();
+				this.showOccupationForm();
 				return;
 			}
 			if (target.closest('#edit-loc-btn')) {
@@ -56,6 +58,10 @@ class Game {
 				target = target.closest('#feed-btn');
 				this.restorePopulation();
 			}
+		});
+		this.locInfoContainer.addEventListener('submit', (event) => {
+			event.preventDefault();
+			this.occupyCurrentLocation();
 		});
 	}
 
@@ -548,6 +554,9 @@ class Game {
 			map: this.map,
 			title: 'There you are!'
 		});
+	}
+
+	getLocOccupFormHTML(location) {
 	}
 
 	getLocInfoHTML(location) {
