@@ -9,7 +9,7 @@ class OccupiedLocation extends EmptyLocation {
 		this.population = locationData.population || 10;
 		this.dailyBank = locationData.dailyBank || 0;
 		this.loyalPopulation = locationData.loyalPopulation || 10;
-		this.dailyCheckin = locationData.dailyCheckin || true;
+		this.dailyCheckin = locationData.dailyCheckin === undefined ? true : locationData.dailyCheckin;
 		this.creationDate = locationData.creationDate || new Date().toISOString();
 		this.locationName = locationData.locationName || null;
 		this.dailyMessage = locationData.dailyMessage || null;
@@ -47,7 +47,13 @@ class OccupiedLocation extends EmptyLocation {
 					);
 				})
 			)
-		]));
+		]))
+			.then(() => global.db.one(
+				`select loc_id from locations2																			 
+				where locations2.lat = ${this.northWest.lat} 
+				and locations2.lng = ${this.northWest.lng}`
+			))
+			.then(data => OccupiedLocation.getLocationById(data.loc_id));
 	}
 
 	editLocation() {
@@ -60,8 +66,8 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	doCheckin() {
-		return global.db(
-			`update master_locations
+		return global.db.none(
+			`update master_location2
 			 set daily_checkin = true
 			 where loc_id = ${this.locationId}`
 		);

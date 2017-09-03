@@ -22,15 +22,18 @@ router.get('/', (req, res, next) => {
 		.catch(err => next(err));
 });
 
-router.post('/', (req, res, next) => {
+router.post('/create', (req, res, next) => {
 	const newLocationData = Object.assign({
 		userId: req.decoded.id
 	}, req.body);
 	const newLocation = new OccupiedLocation(newLocationData);
 	newLocation.saveLocation()
-		.then(() => {
-			res.json(newLocation);
+		.then((createdLocation) => {
+			createdLocation.isMaster = true;
+			res.json(createdLocation);
 		})
+
+
 		.catch(err => next(err));
 });
 
@@ -128,7 +131,7 @@ router.put('/:id/do-checkin', (req, res, next) => {
 				next(err);
 			});
 	} else {
-		next(new Error('You must be master of be there!'));
+		next(new Error('You must be master or be there!'));
 	}
 });
 
@@ -142,7 +145,7 @@ router.put('/:id/get-bank', (req, res, next) => {
 				next(err);
 			});
 	} else {
-		next(new Error('You must be master of be there!'));
+		next(new Error('You must be master or be there!'));
 	}
 });
 

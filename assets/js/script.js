@@ -9,14 +9,6 @@ class Game {
 		this.clickedLocInfo = options.locInfoContainer || document.getElementById('clicked-loc-info');
 		this.currentLocInfo = options.locInfoContainer || document.getElementById('current-loc-info');
 
-		// this.usersGeocordsInfo = document.getElementById('users-geocords');
-		// this.clickedInfo = document.getElementById('output');
-		// this.clickedLocationHeading = document.getElementById('click-loc-heading');
-		// this.clickedLocationInfo = document.getElementById('click-location');
-		// this.usersLocContainer = document.getElementById('current-loc-info');
-		// this.usersLocationInfo = document.getElementById('users-location');
-		// // ---^
-
 		this.occLocRenderedEvent = new CustomEvent('occloc-ready', {
 			bubbles: true
 		});
@@ -32,9 +24,39 @@ class Game {
 		this.occupiedLocationsArray = null;
 		this.mapFeaturesArray = [];
 
-		// this.occupyBtn.addEventListener('click', () => {
-		// 	this.occupyLocation();
-		// });
+		this.locInfoContainer.addEventListener('click', (event) => {
+			let target = event.target;
+
+			if (target.closest('#btn-hide')) {
+				target = target.closest('#btn-hide');
+				// hide #loc-info
+				return;
+			}
+			if (target.closest('#close-btn')) {
+				target = target.closest('#close-btn');
+				// close #clicked-loc-info
+				return;
+			}
+			if (target.closest('#occupy-btn')) {
+				target = target.closest('#occupy-btn');
+				this.occupyCurrentLocation();
+				return;
+			}
+			if (target.closest('#edit-loc-btn')) {
+				target = target.closest('#edit-loc-btn');
+				// edit own location
+				return;
+			}
+			if (target.closest('#money-btn')) {
+				target = target.closest('#money-btn');
+				this.takeDailyBank();
+				return;
+			}
+			if (target.closest('#feed-btn')) {
+				target = target.closest('#feed-btn');
+				this.restorePopulation();
+			}
+		});
 	}
 
 	get mapFeaturesStyles() {
@@ -95,6 +117,84 @@ class Game {
 		});
 	}
 
+	restorePopulation() {
+		return new Promise((res, rej) => {
+			const createLocationXHR = new XMLHttpRequest();
+			createLocationXHR.open('PUT', `api/locations/${this.highlightedLocation.locationId}/restore-population`);
+			createLocationXHR.setRequestHeader('Content-Type', 'application/json');
+			createLocationXHR.send();
+			createLocationXHR.onload = (e) => {
+				const xhr = e.srcElement;
+				console.log(xhr);
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				res(xhr.response);
+			};
+		})
+			.then(() => {
+				this.highlightedLocation.loyalPopulation = this.highlightedLocation.population;
+				this.renderHighlightedLocationTextInfo();
+				this.highlightOccupiedLocation(this.highlightedLocation);
+				console.log(`Congrats! You saved your mouse in location location ${this.highlightedLocation.locationId}!`);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}
+
+	doCheckin() {
+		return new Promise((res, rej) => {
+			const createLocationXHR = new XMLHttpRequest();
+			createLocationXHR.open('PUT', `api/locations/${this.currentLocation.locationId}/do-checkin`);
+			createLocationXHR.setRequestHeader('Content-Type', 'application/json');
+			createLocationXHR.send(JSON.stringify({
+				userGeoData: {
+					lat: this.userGeoData.latitude,
+					lng: this.userGeoData.longitude
+				}
+			}));
+			createLocationXHR.onload = (e) => {
+				const xhr = e.srcElement;
+				console.log(xhr);
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				res(xhr.response);
+			};
+		});
+	}
+
+	takeDailyBank() {
+		return new Promise((res, rej) => {
+			const createLocationXHR = new XMLHttpRequest();
+			createLocationXHR.open('PUT', `api/locations/${this.currentLocation.locationId}/get-bank`);
+			createLocationXHR.setRequestHeader('Content-Type', 'application/json');
+			createLocationXHR.send(JSON.stringify({
+				userGeoData: {
+					lat: this.userGeoData.latitude,
+					lng: this.userGeoData.longitude
+				}
+			}));
+			createLocationXHR.onload = (e) => {
+				const xhr = e.srcElement;
+				console.log(xhr);
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				res(xhr.response);
+			};
+		})
+			.then(() => {
+				this.currentLocation.dailyBank = 0;
+				this.renderCurrentOccupiedLocation(this.currentLocation);
+				this.renderCurrentLocationTextInfo();
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}
+
 	renderCurrentLocationInfo() {
 		this.getCurrentLocation()
 			.then((currentLocation) => {
@@ -107,7 +207,46 @@ class Game {
 					this.renderCurrentOccupiedLocation(currentLocation);
 				}
 				this.renderCurrentLocationTextInfo();
+				if (this.currentLocation.isMaster && !this.currentLocation.dailyCheckin) {
+					this.doCheckin()
+						.then(() => {
+							this.currentLocation.dailyCheckin = true;
+							console.log(`You checked in location #${this.currentLocation.locationId}`);
+						})
+						.catch((err) => {
+							console.log(err);
+						});
+				}
 			});
+	}
+
+	occupyCurrentLocation() {
+		this.occupyLocation(this.currentLocation)
+			.then((newLocation) => {
+				this.occupiedLocationsArray.push(newLocation);
+				this.renderCurrentOccupiedLocation(newLocation);
+				this.renderCurrentLocationTextInfo();
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}
+
+	occupyLocation(location) {
+		return new Promise((res, rej) => {
+			const createLocationXHR = new XMLHttpRequest();
+			createLocationXHR.open('POST', 'api/locations/create');
+			createLocationXHR.setRequestHeader('Content-Type', 'application/json');
+			createLocationXHR.send(JSON.stringify(location));
+			createLocationXHR.addEventListener('load', (e) => {
+				const xhr = e.srcElement;
+				console.log(xhr);
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				res(JSON.parse(xhr.response));
+			});
+		});
 	}
 
 	getCurrentLocation() {
@@ -131,7 +270,6 @@ class Game {
 
 	renderCurrentOccupiedLocation(currentLocation) {
 		this.currentLocation = this.getAndExtendLoadedLocationById(currentLocation);
-		// this.currentLocation = currentLocation;
 		this.currentLocation.isCurrent = true;
 		this.currentLocationMapFeature = this.getAndRenderLocByFeatureCoords(
 			this.currentLocation
@@ -398,14 +536,36 @@ class Game {
 		});
 	}
 
+	renderCurrentUserMarker() {
+		if (this.userMarker) {
+			this.userMarker.setMap(null);
+		}
+		this.userMarker = new google.maps.Marker({
+			position: {
+				lat: this.userGeoData.latitude,
+				lng: this.userGeoData.longitude
+			},
+			map: this.map,
+			title: 'There you are!'
+		});
+	}
+
 	getLocInfoHTML(location) {
-		return `<a href="#" class="close">close</a>
-            <div>
-              <h2 class="info-heading">${location.locationName} (${location.masterName})</h2>
-              <p>Location coords: ${location.northWest.lat} ${location.northWest.lng}</p>
-            </div>
-            <button class="occupy-btn" id="occupy-btn" style="display: none">Occupy</button>
-            `;
+		return `
+			${location.isHighlighted ? '<button class="close-btn" id="close-btn">X</button>' : ''}
+      <div>
+				<h2 class="info-heading">${location.locationName}${location.masterName ? ` (${location.masterName})` : ''}</h2>							
+				${location.dailyMessage ? `<span>${location.dailyMessage}</span>` : ''}													
+				${location.isMaster ? `<span>Loyalty: ${location.loyalPopulation}/${location.population}</span>` : ''}
+				${location.dailyBank !== undefined ? `<span>Bank: ${location.dailyBank}</span>` : ''}
+				${!location.isMaster && location.population ? `<span>Population: ${location.population}</span>` : ''}
+				<span>Location coords: ${location.northWest.lat} ${location.northWest.lng}</span>
+			</div>
+			${!location.masterId && location.isCurrent ? '<button class="occupy-btn" id="occupy-btn">Occupy</button>' : ''}
+			${location.isMaster ? '<button class="edit-loc-btn" id="edit-loc-btn">Edit location</button>' : ''}
+			${location.isMaster && location.isCurrent && location.dailyBank ? '<button class="money-btn" id="money-btn">Take money</button>' : ''}
+			${location.isMaster && !location.isCurrent && location.loyalPopulation < location.population ? '<button class="feed-btn" id="feed-btn">Feed</button>' : ''}
+    `;
 	}
 }
 
@@ -455,9 +615,18 @@ function initMap() {
 		game.renderOccupiedLocations();
 
 		function initMapInteraction() {
+			navigator.geolocation.getCurrentPosition((position) => {
+				game.map.setZoom(16);
+				game.map.setCenter({
+					lat: position.coords.latitude,
+					lng: position.coords.longitude
+				});
+			});
+
 			navigator.geolocation.watchPosition((position) => {
 				game.setUserGeoData(position.coords);
 				game.renderCurrentLocationInfo();
+				game.renderCurrentUserMarker();
 			});
 
 			map.addListener('click', (event) => {

@@ -175,20 +175,13 @@ function sendMail(letter) {
 	});
 }
 
-
-// schedule.scheduleJob('*/300 * * * * *', () => {
-// 	console.log('daily event!');
-// 	Location.recalcLocationsLifecycle();
-// 	eventEmitter.emit('daily-event');
-// });
+schedule.scheduleJob('* * 3 * * *', () => {
+	console.log('daily event!');
+	Location.recalcLocationsLifecycle();
+	eventEmitter.emit('daily-event');
+});
 
 eventEmitter.on('daily-event', () => {
 	console.log('daily event handled!');
 });
-
-// global.db.none('delete from locations');
-
-// app.listen(port, () => {
-// 	console.log(`Listen on port: ${port}`);
-// });
 module.exports = app;
