@@ -69,6 +69,33 @@ nav{
   position: relative;
 }
 
+.popup-container {
+	width: 100%;
+	min-height: 100%;
+	background-color: rgba(0,0,0,0.5);
+	overflow: hidden;
+	position: fixed;
+	top: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center; 
+}
+
+.popup-container .popup{
+	width: 300px;
+	height: 100px;
+	padding: 10px;
+	background-color: #c5c5c5;
+	border-radius: 3px;
+	box-shadow: 0px 0px 10px #000;
+}
+
+#closeForm {
+	text-decoration: none;
+	float: right;
+}
+
 .curr-loc-highlight,
 .loc-highlight {
   width: 10%;
@@ -86,14 +113,14 @@ nav{
   background-color: rgba(100, 0, 0, 0.5);
 }
 
-.current-loc-info,
 .loc-info {
    position: fixed; 
   line-height: 30px;
   padding: 10px 20px;
   box-sizing: border-box;
   /* display: none; */
-  top: 100%;
+  /* top: 100%; */
+  bottom: 0;
   left: 2px;
   right: 2px;
   margin: 0;
@@ -101,12 +128,37 @@ nav{
   /* color: ; */
   border: 1px solid #999;
   border-radius: 5px;
-  transform: translateY(-30px);
+  /* transform: translateY(-30px); */
   transition: transform .6s ease;
 }
 
-.loc-info{
-  transform: translateY(-60px);
+.loc-info {
+  /* transform: translateY(-60px); */
+  display: none;
+}
+
+.loc-info.show-current,
+.loc-info.show-clicked,
+.loc-info.show-form {
+  display: block;
+}
+
+.occupy-form,
+.clicked-loc-info,
+.current-loc-info {
+  display: none;
+}
+
+.loc-info.show-current .current-loc-info {
+  display: block;
+}
+
+.loc-info.show-clicked .clicked-loc-info {
+  display: block;
+}
+
+.loc-info.show-form .occupy-form {
+  display: block;
 }
 
 .info-heading {
@@ -176,7 +228,7 @@ nav{
 
 
 .current-loc-info.open {
-  transform: translateY(-100%);
+  /* transform: translateY(-100%); */
   /* z-index: 2; */
 }
 
@@ -187,5 +239,5 @@ nav{
 .current-loc-info.open .close,
 .loc-info.open .close {
 
-  transform: rotate(-45deg); 
+  /* transform: rotate(-45deg);  */
 }
