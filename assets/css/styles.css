@@ -69,6 +69,33 @@ nav{
   position: relative;
 }
 
+.popup-container {
+	width: 100%;
+	min-height: 100%;
+	background-color: rgba(0,0,0,0.5);
+	overflow: hidden;
+	position: fixed;
+	top: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center; 
+}
+
+.popup-container .popup{
+	width: 300px;
+	height: 100px;
+	padding: 10px;
+	background-color: #c5c5c5;
+	border-radius: 3px;
+	box-shadow: 0px 0px 10px #000;
+}
+
+#closeForm {
+	text-decoration: none;
+	float: right;
+}
+
 .curr-loc-highlight,
 .loc-highlight {
   width: 10%;

@@ -3,6 +3,7 @@ const EmptyLocation = require('./emptyLocation');
 class OccupiedLocation extends EmptyLocation {
 	constructor(locationData) {
 		super(locationData.northWest);
+
 		this.masterId = locationData.userId;
 		this.masterName = locationData.userName;
 		this.locationId = locationData.locationId || null;

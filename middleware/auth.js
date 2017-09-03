@@ -26,14 +26,14 @@ router.use((req, res, next) => {
 		if (token.auth) {
 			jwt.verify(token.auth, 'secret', (err, decoded) => {
 				if (err) {
-					res.redirect('/login');
+					res.redirect('/user/login');
 				} else {
 					req.decoded = decoded;
 					next();
 				}
 			});
 		} else {
-			res.redirect('/login');
+			res.redirect('/user/login');
 		}
 	}
 });

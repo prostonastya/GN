@@ -57,7 +57,6 @@ router.get('/grid', (req, res) => {
 		lat: +req.query.lat,
 		lng: +req.query.lng
 	};
-
 	const location = new EmptyLocation(geoData);
 	res.json(location);
 });
@@ -67,7 +66,6 @@ router.get('/check-location', (req, res, next) => {
 		lat: +req.query.lat,
 		lng: +req.query.lng
 	};
-
 	OccupiedLocation.checkLocationOnCoords(geoData)
 		.then((locationObj) => {
 			if (locationObj.masterId === req.decoded.id) {
@@ -105,7 +103,26 @@ router.put('/:id', (req, res, next) => {
 	} else {
 		next(new Error('No such rights!'));
 	}
-});
+
+// router.post('/', (req, res, next) => {
+// 	console.log(req.body.currentLocation.northWest);
+// 	// const newLocationData = Object.assign({
+// 	// 	userId: req.decoded.id
+// 	// }, req.body);
+// 	const newLocationData = {
+// 		northWest: req.body.currentLocation.northWest,
+// 		userId: req.decoded.id,
+// 		locName: req.body.locName,
+// 		dailyMsg: req.body.dailyMsg
+// 	};
+// 	const newLocation = new OccupiedLocation(newLocationData);
+// 	console.log(newLocation);
+// 	newLocation.saveLocation()
+// 		.then(() => {
+// 			res.json(newLocation);
+// 		})
+// 		.catch(err => next(err));
+// });
 
 router.delete('/:id', (req, res, next) => {
 	if (req.reqLocation.isMaster || req.decoded.isAdmin) {

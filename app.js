@@ -2,18 +2,16 @@
 
 const EventEmitter = require('events').EventEmitter;
 const express = require('express');
-const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
 const pgp = require('pg-promise')();
-const jwt = require('jsonwebtoken');
 const path = require('path');
 const auth = require('./middleware/auth');
 const cookieParser = require('cookie-parser');
 const favicon = require('serve-favicon');
 const logger = require('morgan');
 const locationsRoutes = require('./routes/locations.routes');
-// const EmptyLocation = require('./models/emptyLocation');
-// const OccupiedLocation = require('./models/occupiedLocation');
+const userRoutes = require('./routes/user.routes');
+const indexRoutes = require('./routes/index.routes');
 const schedule = require('node-schedule');
 require('dotenv').config();
 
@@ -40,14 +38,6 @@ global.db = pgp({
 	sslfactory: 'org.postgresql.ssl.NonValidatingFactory'
 });
 
-const transporter = nodemailer.createTransport({
-	service: 'gmail',
-	auth: {
-		user: process.env.SERVICE_EMAIL,
-		pass: process.env.SERVICE_EMAIL_PASS
-	}
-});
-
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -60,74 +50,10 @@ app.use(cookieParser());
 app.use(express.static('assets'));
 app.use(favicon('./assets/favicon.png'));
 
-// ROUTES
-app.route('/login')
-	.get((req, res) => {
-		res.render('login');
-	})
-	.post((req, res) => {
-		const email = req.body['log-email'];
-		const password = req.body['log-pass'];
-
-		global.db.one(`SELECT * FROM users
-		WHERE email = '${email}';`)
-			.then((data) => {
-				if (!data.password) {
-					res.redirect('/login');
-				}
-				if (data.password === password) {
-				// create a token
-					const payload = {
-						id: data.id,
-						email: data.email,
-						name: data.name,
-						isAdmin: data.is_admin
-					};
-					const token = jwt.sign(payload, 'secret', {
-						expiresIn: 60 * 60 * 24
-					});
-					res.cookie('auth', token);
-					res.redirect('/');
-				} else {
-					res.redirect('/login');
-				}
-			}).catch((err) => {
-				res.redirect('/login');
-			});
-	});
-
-app.post('/register', (req, res) => {
-	const name = req.body['reg-name'];
-	const email = req.body['reg-email'];
-	const pass = req.body['reg-pass'];
-	const passCheck = req.body['reg-pass-repeat'];
-	if (pass !== passCheck) {
-		res.send('Passwords didn\'t match.');
-	}
-
-	const newUser = {
-		name,
-		email,
-		pass
-	};
-
-	createNewUser(newUser);
-	const letter = createLetter(newUser.email);
-	sendMail(letter);
-	res.redirect('/');
-});
-
+app.use('/user', userRoutes);
 app.use('/', auth);
-
-app.get('/', (req, res) => {
-	res.render('index');
-});
+app.all('/', indexRoutes);
 app.use('/api/locations', locationsRoutes);
-
-app.post('/logout', (req, res) => {
-	res.clearCookie('auth');
-	res.redirect('/login');
-});
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
@@ -148,33 +74,6 @@ app.use((err, req, res) => {
 	// res.render('error');
 });
 
-function createNewUser(user) {
-	global.db.none('insert into users(email, password, reg_date, cash, name)' +
-`values('${user.email}', '${user.pass}', '${new Date().toISOString()}', 150, '${user.name}')`)
-		.then(() => console.log('New user was added to db'))
-		.catch(error => console.log('error:', error));
-}
-
-function createLetter(userEmail) {
-	return {
-		from: '"Game team" <gamekh009@gmail.com>', // sender address
-		to: userEmail, // receivers
-		subject: 'Hello! new user! ✔', // Subject line
-		text: 'Hello! We are glad that you joined our game', // plain text body
-		html: '<b>Hello! We are glad that you joined our game!</b>' // html body
-	};
-}
-
-function sendMail(letter) {
-	transporter.sendMail(letter, (error, info) => {
-		if (error) {
-			console.log(error.message);
-		} else {
-			console.log(`Email sent: ${info.response}`);
-		}
-	});
-}
-
 schedule.scheduleJob('* * 3 * * *', () => {
 	console.log('daily event!');
 	Location.recalcLocationsLifecycle();
@@ -184,4 +83,8 @@ schedule.scheduleJob('* * 3 * * *', () => {
 eventEmitter.on('daily-event', () => {
 	console.log('daily event handled!');
 });
+
+// app.listen(port, () => {
+// 	console.log(`Listen on port: ${port}`);
+// });
 module.exports = app;
