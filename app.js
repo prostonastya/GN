@@ -66,7 +66,7 @@ app.use((err, req, res) => {
 	// res.render('error');
 });
 
-schedule.scheduleJob('* * 3 * * *', () => {
+schedule.scheduleJob('* * /24 * * *', () => {
 	console.log('daily event!');
 	OccupiedLocation.recalcLocationsLifecycle();
 	eventEmitter.emit('daily-event');
