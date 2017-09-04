@@ -3,6 +3,7 @@ const EmptyLocation = require('./emptyLocation');
 class OccupiedLocation extends EmptyLocation {
 	constructor(locationData) {
 		super(locationData.northWest);
+
 		this.masterId = locationData.userId;
 		this.masterName = locationData.userName;
 		this.locationId = locationData.locationId || null;
@@ -14,19 +15,23 @@ class OccupiedLocation extends EmptyLocation {
 		this.locationName = locationData.locationName || null;
 		this.dailyMessage = locationData.dailyMessage || null;
 	}
+
 	saveLocation() {
+		// can't use "'" in loc_name or daily_msg. has to be fixed.
 		return global.db.tx(t => t.batch([
 			t.none(
 				`insert into locations2 (
 						lat, lng, population, daily_bank, 
-						creation_date
+						creation_date, loc_name, daily_msg
 					)
 					values(
 					${this.northWest.lat},
 					${this.northWest.lng},
 					${this.population},
 					${this.dailyBank},
-					'${this.creationDate}'
+					'${this.creationDate}',
+					'${this.locationName}',
+					'${this.dailyMessage}'
 					)`
 			),
 			t.tx(t1 => t1.one(
