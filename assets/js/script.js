@@ -654,6 +654,7 @@ class Game {
 		});
 	}
 
+
 	updateMapBounds() {
 		this.setMapBounds({
 			northEast: {
