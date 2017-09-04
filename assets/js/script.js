@@ -481,6 +481,9 @@ class Game {
 				this.occupiedLocationsArray.push(newLocation);
 				this.renderCurrentOccupiedLocation(newLocation);
 				this.renderCurrentLocationTextInfo();
+				if (this.highlightedLocation) {
+					this.renderHighlightedLocationTextInfo();
+				}
 				this.hideOccupationForm();
 			})
 			.catch((err) => {
