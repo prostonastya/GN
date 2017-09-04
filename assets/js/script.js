@@ -443,7 +443,6 @@ class Game {
 		this.currentLocation.dailyMessage = dailyMsg;
 
 		this.occupyCurrentLocation();
-		this.hideOccupationForm();
 	}
 
 	// occupyResetHandler(event) {
@@ -464,6 +463,7 @@ class Game {
 				this.occupiedLocationsArray.push(newLocation);
 				this.renderCurrentOccupiedLocation(newLocation);
 				this.renderCurrentLocationTextInfo();
+				this.hideOccupationForm();
 			})
 			.catch((err) => {
 				console.log(err);
