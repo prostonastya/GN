@@ -17,6 +17,7 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	saveLocation() {
+		// can't use "'" in loc_name or daily_msg. has to be fixed.
 		return global.db.tx(t => t.batch([
 			t.none(
 				`insert into locations2 (
