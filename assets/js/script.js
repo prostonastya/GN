@@ -362,7 +362,7 @@ class Game {
 			featureProps
 		);
 		this.currentLocationMapFeature.setProperty('info', featureProps.info);
-		this.renderCurrentLocationTextInfo();
+		this.renderHighlightedLocationTextInfo();
 	}
 
 	// empty locations highlighting methods
@@ -404,6 +404,8 @@ class Game {
 				this.map.data.remove(this.highlightedMapFeature);
 			}
 		}
+		this.highlightedLocation = null;
+		this.highlightedMapFeature = null;
 	}
 
 	renderHighlightedLocationTextInfo() {
@@ -624,7 +626,7 @@ class Game {
 				${!location.isMaster && location.population ? `<span>Population: ${location.population}</span>` : ''}
 				<span>Location coords: ${location.northWest.lat} ${location.northWest.lng}</span>
 			</div>
-			${!location.masterId && location.isCurrent ? '<button class="occupy-btn" id="occupy-btn">Occupy</button>' : ''}
+			${!location.masterId && location.isCurrent ? '<button class="btn" id="occupy-btn">Occupy</button>' : ''}
 			${location.isMaster ? '<button class="edit-loc-btn" id="edit-loc-btn">Edit location</button>' : ''}
 			${location.isMaster && location.isCurrent && location.dailyBank ? '<button class="money-btn" id="money-btn">Take money</button>' : ''}
 			${location.isMaster && !location.isCurrent && location.loyalPopulation < location.population ? '<button class="feed-btn" id="feed-btn">Feed</button>' : ''}

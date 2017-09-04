@@ -147,6 +147,7 @@ nav{
   display: block;
 }
 
+.loc-info.show-form,
 .loc-info.show-current,
 .loc-info.show-clicked {
   display: block;
