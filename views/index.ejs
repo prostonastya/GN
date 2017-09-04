@@ -10,6 +10,7 @@
 <body>
   <header class="app-header">
     <nav>
+      <a href="#" class="menu-btn"><div class="toggle"></div></a>
       <ul class="app-nav">
         <li>
           <a class="app-nav-ref" href="#">Profile</a>
@@ -35,8 +36,8 @@
         <div class="curr-loc-highlight" id="curr-loc-highlight"></div> -->
         
   <div class="loc-info" id="loc-info">
-    <button class="hide-btn" id="hide-btn">Hide</button>
-    <div class="clicked-loc-info" id="clicked-loc-info">    
+    <button class="hide-btn" id="hide-btn"><div class="hide-icon"></div></button>
+    <div class="clicked-loc-info" id="clicked-loc-info">
     </div>
     <div class="current-loc-info" id="current-loc-info">
     </div>    
@@ -81,6 +82,14 @@
 
         <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDVvJYiAmFhsqumbf3mNFYaBvHJczJSrh0&callback=initMap">
+        </script>
+
+        <script>
+          let menuBtn = document.querySelector('.menu-btn');
+          let menu = document.querySelector('.app-header');
+          menuBtn.addEventListener('click', (e) => {
+            menu.classList.toggle('open');
+          });
         </script>
     
 </body>
