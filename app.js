@@ -9,6 +9,7 @@ const auth = require('./middleware/auth');
 const cookieParser = require('cookie-parser');
 const favicon = require('serve-favicon');
 const logger = require('morgan');
+const OccupiedLocation = require('./models/occupiedLocation');
 const locationsRoutes = require('./routes/locations.routes');
 const userRoutes = require('./routes/user.routes');
 const indexRoutes = require('./routes/index.routes');
@@ -19,15 +20,6 @@ const app = express();
 // const port = process.env.PORT || 8080;
 const eventEmitter = new EventEmitter();
 
-// global.db = pgp({
-// 	host: 'ec2-23-21-85-76.compute-1.amazonaws.com',
-// 	port: 5432,
-// 	database: 'detamp7dm7n5kt',
-// 	user: process.env.SERVICE_DB_USER || 'smdtzebruscqxv',
-// 	password: process.env.SERVICE_DB_PASS || 'b988acabcae53edc03642deec8eabbbd891f2c549a02100e9f5b134c624ea4cd',
-// 	ssl: true,
-// 	sslfactory: 'org.postgresql.ssl.NonValidatingFactory'
-// });
 global.db = pgp({
 	host: 'ec2-23-21-85-76.compute-1.amazonaws.com',
 	port: 5432,
@@ -76,7 +68,7 @@ app.use((err, req, res) => {
 
 schedule.scheduleJob('* * 3 * * *', () => {
 	console.log('daily event!');
-	Location.recalcLocationsLifecycle();
+	OccupiedLocation.recalcLocationsLifecycle();
 	eventEmitter.emit('daily-event');
 });
 
@@ -84,7 +76,4 @@ eventEmitter.on('daily-event', () => {
 	console.log('daily event handled!');
 });
 
-// app.listen(port, () => {
-// 	console.log(`Listen on port: ${port}`);
-// });
 module.exports = app;
