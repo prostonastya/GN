@@ -316,9 +316,7 @@ class Game {
 	}
 
 	renderCurrentLocationTextInfo() {
-		if (this.locInfoContainer.className === 'loc-info') {
-			this.locInfoContainer.classList.add('show-current');
-		}
+		this.locInfoContainer.className = 'loc-info show-current';
 		this.currentLocInfo.innerHTML = this.getLocInfoHTML(this.currentLocation);
 	}
 
@@ -364,6 +362,7 @@ class Game {
 			featureProps
 		);
 		this.currentLocationMapFeature.setProperty('info', featureProps.info);
+		this.renderCurrentLocationTextInfo();
 	}
 
 	// empty locations highlighting methods
@@ -378,7 +377,7 @@ class Game {
 				clickedLocation.locationName = 'Empty Location';
 				this.highlightEmptyLocation(clickedLocation);
 				this.renderHighlightedLocationTextInfo();
-			});
+			});	
 	}
 
 	highlightEmptyLocation(clickedLocation) {
