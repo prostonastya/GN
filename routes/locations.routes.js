@@ -2,6 +2,7 @@ const express = require('express');
 const EmptyLocation = require('../models/emptyLocation');
 const OccupiedLocation = require('../models/occupiedLocation');
 const locAuth = require('../middleware/locAuth');
+const svgTemplate = require('../views/svg-tmpl');
 
 const router = express.Router();
 
@@ -87,6 +88,11 @@ router.use('/:id', locAuth);
 
 router.get('/:id', (req, res) => {
 	res.json(req.reqLocation);
+});
+
+router.get('/:id/homer', (req, res) => {
+	res.set('Content-Type', 'image/svg+xml')
+		.send(svgTemplate());
 });
 
 router.put('/:id', (req, res, next) => {

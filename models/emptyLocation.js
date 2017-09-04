@@ -1,6 +1,9 @@
 class EmptyLocation {
 	constructor(geoData) {
-		this.northWest = this.getNorthWestLocationCoordsByPoint(geoData);
+		this.northWest = {};
+		this.northWest.lat = this.getNorthWestLocationLatitudeByPoint(geoData.lat);
+		this.northWest.lng = this.getNorthWestLocationLongitudeByPoint(geoData);
+		// this.getNorthWestLocationCoordsByPoint(geoData);
 		this.mapFeatureCoords = this.getMapFeatureCoords();
 		// this.mapFeatureGeometry = this.getMapFeatureGeometry();
 	}
@@ -69,6 +72,7 @@ class EmptyLocation {
 				(lat > breakPoints[i] && !breakPoints[i + 1])
 			) {
 				result = this.initialRelativeLngSize * lngSizeCoefficients[breakPoints[i]];
+				break;
 			}
 		}
 
@@ -210,43 +214,22 @@ class EmptyLocation {
 		return result;
 	}
 
-	getNorthWestLocationCoordsByPoint(point) {
-		const relLngSize = this.getRelLngSize(point.lat);
-		const lat = (
+	getNorthWestLocationLatitudeByPoint(pointLat) {
+		return (
 			Math.ceil(
-				Math.round(point.lat * 10000000) / this.relativeLatSize
+				Math.round(pointLat * 10000000) / this.relativeLatSize
 			) * this.relativeLatSize
 		) /	10000000;
-		const lng = (
+	}
+
+	getNorthWestLocationLongitudeByPoint(point) {
+		const relLngSize = this.getRelLngSize(point.lat);
+		return (
 			Math.floor(
 				Math.round(point.lng * 10000000) / relLngSize
 			) * relLngSize
 		) /	10000000;
-
-		return {
-			lat,
-			lng
-		};
-	}
-
-	validateLocationGrid() {
-		const locLat = this.coords.northWest.lat;
-		const locLng = this.coords.northWest.lng;
-		const checkedCoords = this.getNorthWestLocationCoordsByPoint({
-			lat: locLat,
-			lng: locLng
-		});
-
-		return (locLat === checkedCoords.lat && locLng === checkedCoords.lng);
 	}
 }
-
-// const loc = new EmptyLocation({
-// 	lat: 40,
-// 	lng: 40
-// });
-
-// console.log(loc.mapFeatureCoords);
-// console.log(JSON.stringify(loc));
 
 module.exports = EmptyLocation;
