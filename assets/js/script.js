@@ -301,7 +301,7 @@ class Game {
 	removeCurrentHighlight() {
 		if (this.currentLocationMapFeature) {
 			const currentLocId = this.currentLocationMapFeature.getId();
-			if (currentLocId || this.highlightedMapFeature.getProperty('info').isHighlighted) {
+			if (currentLocId || this.currentLocationMapFeature.getProperty('info').isHighlighted) {
 				this.currentLocation.isCurrent = undefined;
 				const featureProps = this.getMapFeatureProperties(this.currentLocation);
 				this.map.data.overrideStyle(
