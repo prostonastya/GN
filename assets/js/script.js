@@ -686,9 +686,9 @@ class Game {
 	}
 
 	renderCurrentUserMarker() {
-		// if (this.userMarker) {
-		// 	this.userMarker.setMap(null);
-		// }
+		if (this.userMarker) {
+			this.userMarker.setMap(null);
+		}
 		this.userMarker = new google.maps.Marker({
 			position: {
 				lat: this.userGeoData.latitude,
@@ -765,9 +765,9 @@ function initMap() {
 		document.addEventListener('occloc-ready', initMapInteraction);
 
 		game.renderOccupiedLocations();
-		setTimeout(() => {
-			game.renderOccupiedLocations();
-		}, 5000);
+		// setTimeout(() => {
+		// 	game.renderOccupiedLocations();
+		// }, 5000);
 
 		function initMapInteraction() {
 			navigator.geolocation.getCurrentPosition((position) => {
