@@ -224,8 +224,8 @@ class Game {
 
 	getCurrentLocation() {
 		const geoCoords = {
-			lat: this.userGeoData.latitude,
-			lng: this.userGeoData.longitude
+			lat: this.userGeoData.lat,
+			lng: this.userGeoData.lng
 		};
 		return new Promise((res, rej) => {
 			const gridXHR = new XMLHttpRequest();
@@ -445,8 +445,7 @@ class Game {
 	}
 
 	renderHighlightedLocationTextInfo() {
-		this.locInfoContainer.className = 'loc-info';
-		this.locInfoContainer.classList.add('show-clicked');
+		this.locInfoContainer.className = 'loc-info show-clicked';
 		this.clickedLocInfo.innerHTML = this.getLocInfoHTML(this.highlightedLocation);
 	}
 
@@ -592,8 +591,8 @@ class Game {
 			createLocationXHR.setRequestHeader('Content-Type', 'application/json');
 			createLocationXHR.send(JSON.stringify({
 				userGeoData: {
-					lat: this.userGeoData.latitude,
-					lng: this.userGeoData.longitude
+					lat: this.userGeoData.lat,
+					lng: this.userGeoData.lng
 				}
 			}));
 			createLocationXHR.onload = (e) => {
@@ -614,8 +613,8 @@ class Game {
 			createLocationXHR.setRequestHeader('Content-Type', 'application/json');
 			createLocationXHR.send(JSON.stringify({
 				userGeoData: {
-					lat: this.userGeoData.latitude,
-					lng: this.userGeoData.longitude
+					lat: this.userGeoData.lat,
+					lng: this.userGeoData.lng
 				}
 			}));
 			createLocationXHR.onload = (e) => {
@@ -678,9 +677,33 @@ class Game {
 
 	// GOOGLE MAP AND HTML5 GEOLOCATION INTERACTION METHODS
 
+	refreshUserGeodata(coords) {
+		const locInfoClassList = this.locInfoContainer.className;
+		this.setUserGeoData(coords);
+		this.renderCurrentLocationInfo();
+		this.renderCurrentUserMarker();
+
+		if (this.highlightedLocation) {
+			const currentIsHighlighted = (
+				this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat &&
+				this.currentLocation.northWest.lng === this.highlightedLocation.northWest.lng
+			);
+			if (currentIsHighlighted) {
+				if (!this.currentLocation.locationId) {
+					this.hightlightCurrentEmptyLocation();
+				} else {
+					this.highlightOccupiedLocation(this.currentLocation);
+				}
+				this.renderHighlightedLocationTextInfo();
+			}
+		}
+		// do not change displaying element in loc-info;
+		this.locInfoContainer.className = locInfoClassList;
+	}
+
 	centerMapByUserGeoData() {
-		const lat = this.userGeoData.latitude;
-		const lng = this.userGeoData.longitude;
+		const lat = this.userGeoData.lat;
+		const lng = this.userGeoData.lng;
 		this.map.setZoom(15);
 		this.map.setCenter({ lat, lng });
 	}
@@ -691,8 +714,8 @@ class Game {
 		}
 		this.userMarker = new google.maps.Marker({
 			position: {
-				lat: this.userGeoData.latitude,
-				lng: this.userGeoData.longitude
+				lat: this.userGeoData.lat,
+				lng: this.userGeoData.lng
 			},
 			map: this.map,
 			title: 'There you are!'
@@ -782,9 +805,10 @@ function initMap() {
 			});
 
 			navigator.geolocation.watchPosition((position) => {
-				game.setUserGeoData(position.coords);
-				game.renderCurrentLocationInfo();
-				game.renderCurrentUserMarker();
+				game.refreshUserGeodata({
+					lat: position.coords.latitude,
+					lng: position.coords.longitude
+				});
 			});
 
 			map.addListener('click', (event) => {
