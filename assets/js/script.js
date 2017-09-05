@@ -137,7 +137,7 @@ class Game {
 	get mapFeaturesStyles() {
 		return {
 			defaultStyles: {
-				strokeColor: 'gray',
+				strokeColor: 'gray ',
 				fillColor: 'transparent',
 				fillOpacity: 0.2,
 				strokeWeight: 1,

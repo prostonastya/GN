@@ -11,6 +11,6 @@ module.exports = () => `
 			<text x="0" y="35" font-family="Verdana" font-size="20">
 			   Hello, out there
 			 </text>
-	</svg>
+	</svg> 
 	`
 ;
