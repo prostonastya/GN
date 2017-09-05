@@ -294,7 +294,7 @@ class Game {
 	// CURRENT LOCATION RENDER METHODS
 
 	renderCurrentLocationInfo() {
-		this.getCurrentLocation()
+		return this.getCurrentLocation()
 			.then((currentLocation) => {
 				console.log(currentLocation);
 				this.removeCurrentHighlight();
@@ -680,25 +680,32 @@ class Game {
 	refreshUserGeodata(coords) {
 		const locInfoClassList = this.locInfoContainer.className;
 		this.setUserGeoData(coords);
-		this.renderCurrentLocationInfo();
 		this.renderCurrentUserMarker();
 
-		if (this.highlightedLocation) {
-			const currentIsHighlighted = (
-				this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat &&
-				this.currentLocation.northWest.lng === this.highlightedLocation.northWest.lng
-			);
-			if (currentIsHighlighted) {
-				if (!this.currentLocation.locationId) {
-					this.hightlightCurrentEmptyLocation();
-				} else {
-					this.highlightOccupiedLocation(this.currentLocation);
+		this.renderCurrentLocationInfo()
+			.then(() => {
+				if (this.highlightedLocation) {
+					const currentIsHighlighted = (
+						this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat &&
+						this.currentLocation.northWest.lng === this.highlightedLocation.northWest.lng
+					);
+					if (currentIsHighlighted) {
+						if (!this.currentLocation.locationId) {
+							this.hightlightCurrentEmptyLocation();
+						} else {
+							this.highlightOccupiedLocation(this.currentLocation);
+						}
+						this.renderHighlightedLocationTextInfo();
+					}
 				}
-				this.renderHighlightedLocationTextInfo();
-			}
-		}
-		// do not change displaying element in loc-info;
-		this.locInfoContainer.className = locInfoClassList;
+				// do not change displaying element in loc-info;
+				this.locInfoContainer.className = locInfoClassList === 'loc-info' ?
+					this.locInfoContainer.className :
+					locInfoClassList;
+			})
+			.catch((err) => {
+				console.log(err);
+			});
 	}
 
 	centerMapByUserGeoData() {
@@ -809,7 +816,17 @@ function initMap() {
 					lat: position.coords.latitude,
 					lng: position.coords.longitude
 				});
+			}, () => {
+				// THERE HAVE TO BE CODE FOR TURNED OFF GEOLOCATION NOTIFICATION
+				alert('Your geolocation is not working. Probably you forgot to turn it on. Please, turn on geolocation and give proper access to this app');
 			});
+
+			setTimeout(() => {
+				game.refreshUserGeodata({
+					lat: game.userGeoData.lat,
+					lng: game.userGeoData.lng
+				});
+			}, 5000);
 
 			map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);
