@@ -23,7 +23,8 @@ class Game {
 		this.highlightedLocation = null;
 		this.highlightedMapFeature = null;
 		this.occupiedLocationsArray = null;
-		this.mapFeaturesArray = [];
+		this.occupiedLocationsMapFeatures = {};
+		this.occupiedLocationsGroundOverlays = {};
 
 		this.locInfoContainer.addEventListener('click', (event) => {
 			let target = event.target;
@@ -72,7 +73,22 @@ class Game {
 
 	// FEATURE CREATING METHODS	
 
-	getAndRenderLocByFeatureCoords(location) {
+	renderFullLocation(location) {
+		const locId = location.locationId;
+
+		if (!locId) return;
+
+		this.occupiedLocationsMapFeatures[locId] = this.getAndRenderFeatureByLocObj(location);
+		this.occupiedLocationsGroundOverlays[locId] = this.getAndRenderGroundOverlayByLocObj(location);
+	}
+
+	getAndRenderFeatureByLocObj(location) {
+		// remove old one feature if it is already present
+		if (this.occupiedLocationsMapFeatures[location.locationId]) {
+			this.map.data.remove(
+				this.occupiedLocationsMapFeatures[location.locationId]
+			);
+		}
 		const properties = this.getMapFeatureProperties(location);
 
 		const locationGeoObj = {
@@ -81,7 +97,28 @@ class Game {
 			properties,
 			geometry: new google.maps.Data.Polygon([location.mapFeatureCoords])
 		};
+
 		return this.map.data.add(locationGeoObj);
+	}
+
+	getAndRenderGroundOverlayByLocObj(location) {
+		const locId = location.locationId;
+		if (!locId) return false;
+
+		if (this.occupiedLocationsGroundOverlays[locId]) {
+			this.occupiedLocationsGroundOverlays[locId].setMap(null);
+		}
+
+		const groundOverlay = new google.maps.GroundOverlay(
+			`/api/locations/${location.locationId}/homer`,	{
+				north: location.mapFeatureCoords[0].lat,
+				south: location.mapFeatureCoords[1].lat,
+				east: location.mapFeatureCoords[2].lng,
+				west: location.mapFeatureCoords[0].lng
+			});
+		groundOverlay.setMap(this.map);
+
+		return groundOverlay;
 	}
 
 	get mapFeaturesStyles() {
@@ -244,8 +281,7 @@ class Game {
 		this.getOccupiedLocations()
 			.then(() => {
 				this.occupiedLocationsArray.forEach((location) => {
-					const mapFeature = this.getAndRenderLocByFeatureCoords(location);
-					this.mapFeaturesArray.push(mapFeature);
+					this.renderFullLocation(location);
 				});
 
 				document.dispatchEvent(this.occLocRenderedEvent);
@@ -285,7 +321,7 @@ class Game {
 	renderCurrentOccupiedLocation(currentLocation) {
 		this.currentLocation = this.getAndExtendLoadedLocationById(currentLocation);
 		this.currentLocation.isCurrent = true;
-		this.currentLocationMapFeature = this.getAndRenderLocByFeatureCoords(
+		this.currentLocationMapFeature = this.getAndRenderFeatureByLocObj(
 			this.currentLocation
 		);
 	}
@@ -293,7 +329,7 @@ class Game {
 	renderCurrentEmptyLocation(currentLocation) {
 		this.currentLocation = currentLocation;
 		this.currentLocation.isCurrent = true;
-		this.currentLocationMapFeature = this.getAndRenderLocByFeatureCoords(
+		this.currentLocationMapFeature = this.getAndRenderFeatureByLocObj(
 			this.currentLocation
 		);
 	}
@@ -377,14 +413,14 @@ class Game {
 				clickedLocation.locationName = 'Empty Location';
 				this.highlightEmptyLocation(clickedLocation);
 				this.renderHighlightedLocationTextInfo();
-			});	
+			});
 	}
 
 	highlightEmptyLocation(clickedLocation) {
 		this.removeHighlight();
 		this.highlightedLocation = clickedLocation;
 		clickedLocation.isHighlighted = true;
-		this.highlightedMapFeature = this.getAndRenderLocByFeatureCoords(
+		this.highlightedMapFeature = this.getAndRenderFeatureByLocObj(
 			clickedLocation
 		);
 	}
@@ -461,9 +497,16 @@ class Game {
 	occupyCurrentLocation() {
 		this.occupyLocation(this.currentLocation)
 			.then((newLocation) => {
+				const locationIsHighlighted = this.currentLocation.isHighlighted;
+
 				this.occupiedLocationsArray.push(newLocation);
 				this.renderCurrentOccupiedLocation(newLocation);
 				this.renderCurrentLocationTextInfo();
+
+				if (locationIsHighlighted) {
+					this.highlightOccupiedLocation(newLocation);
+					this.renderHighlightedLocationTextInfo();
+				}
 				this.hideOccupationForm();
 			})
 			.catch((err) => {
@@ -722,6 +765,9 @@ function initMap() {
 		document.addEventListener('occloc-ready', initMapInteraction);
 
 		game.renderOccupiedLocations();
+		// setTimeout(() => {
+		// 	game.renderOccupiedLocations();
+		// }, 5000);
 
 		function initMapInteraction() {
 			navigator.geolocation.getCurrentPosition((position) => {
