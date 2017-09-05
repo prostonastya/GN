@@ -283,7 +283,7 @@ class Game {
 			.then((newLocation) => {
 				console.log(newLocation);
 				// const thisLocation = this.map.data.getFeatureById('currentLocation');
-
+				socket.emit('change', 'new location data');
 				const properties = Object.assign(
 					{
 						info: {
@@ -308,7 +308,7 @@ class Game {
 				this.currentLocationMapFeature = null;
 				// remove to separate method
 				this.occupyBtn.style.display = 'none';
-				//
+				//				
 			})
 			.catch((err) => {
 				console.log(err);
@@ -324,6 +324,13 @@ function initMap() {
 		clickableIcons: false
 	});
 	window.onload = function () {
+
+		socket.on('update', (data) => {			
+			setupMessage('Notification', 'The new location was occupied');
+			console.log('new locations added!');									
+			game.renderOccupiedLocations();
+		});
+
 		const lat0 = game.map.getBounds().getNorthEast().lat();
 		const lng0 = game.map.getBounds().getNorthEast().lng();
 		const lat1 = game.map.getBounds().getSouthWest().lat();
@@ -347,4 +354,35 @@ function initMap() {
 			game.clickedInfo.classList.toggle('open');
 		}
 	});
+}
+
+// The function creates a notification with the specified body and header.
+
+function createMessage(title, body) { 
+  var container = document.createElement('div');  
+  container.innerHTML = `<div class="my-message"> \
+    <div class="my-message-title"> ${title} </div> \
+    <div class="my-message-body"> ${body} </div> \
+  </div>`  
+  return container.firstChild
+}
+
+// Position
+function positionMessage(elem) {
+  elem.style.position = 'absolute'
+
+  var scroll = document.documentElement.scrollTop || document.body.scrollTop
+  elem.style.top = scroll + 200 + 'px'
+
+  elem.style.right = 20 + 'px'
+}
+
+// Running
+function setupMessage(title, body) {  
+  var messageElem = createMessage(title, body); 
+  positionMessage(messageElem);
+  document.body.appendChild(messageElem);
+  setTimeout(function(){
+  	messageElem.parentNode.removeChild(messageElem)
+  }, 5000);
 }
