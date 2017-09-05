@@ -123,7 +123,7 @@ class Game {
 		}
 
 		const groundOverlay = new google.maps.GroundOverlay(
-			`/api/locations/${location.locationId}/homer`,	{
+			`/api/locations/${location.locationId}/svg`,	{
 				north: location.mapFeatureCoords[0].lat,
 				south: location.mapFeatureCoords[1].lat,
 				east: location.mapFeatureCoords[2].lng,
