@@ -686,9 +686,9 @@ class Game {
 	}
 
 	renderCurrentUserMarker() {
-		if (this.userMarker) {
-			this.userMarker.setMap(null);
-		}
+		// if (this.userMarker) {
+		// 	this.userMarker.setMap(null);
+		// }
 		this.userMarker = new google.maps.Marker({
 			position: {
 				lat: this.userGeoData.latitude,
