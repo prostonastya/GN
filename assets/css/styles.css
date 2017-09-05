@@ -2,6 +2,32 @@
   --if-color: rgba(65, 65, 65, 1);
 }
 
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;  /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Support for IE. */
+  font-feature-settings: 'liga';
+}
+
 html {
   height: 100%;
   font-family: sans-serif;
@@ -336,6 +362,7 @@ nav{
   top: 0;
   /* transform: rotate(-135deg); */
   outline: none;
+  color: #ff5722;
   
 
 }
@@ -426,4 +453,26 @@ nav{
 }
 .form-btns .btn {
   margin: 0 10px; 
+}
+
+
+.btn-center {
+  width: 40px;
+  height: 40px;
+  border-radius: 100px;
+  position: absolute;
+  right: 35px;
+  bottom: 100%;
+  padding:0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #e53935;
+  color: #fff;
+  border-color: #e53935;
+  transform: translateY(-15px);
+}
+.btn-center:hover {
+  background-color: transparent;
+  color: #e53935;
 }
