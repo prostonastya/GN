@@ -1,5 +1,4 @@
 const express = require('express');
-const EmptyLocation = require('../models/emptyLocation');
 const OccupiedLocation = require('../models/occupiedLocation');
 const locAuth = require('../middleware/locAuth');
 const svgTemplate = require('../views/svg-tmpl');
@@ -51,15 +50,6 @@ router.get('/geo-json', (req, res, next) => {
 			res.json(geoJSON);
 		})
 		.catch(err => next(err));
-});
-// '/grid?lat=xxx&lng=xxx'
-router.get('/grid', (req, res) => {
-	const geoData = {
-		lat: +req.query.lat,
-		lng: +req.query.lng
-	};
-	const location = new EmptyLocation(geoData);
-	res.json(location);
 });
 // '/check-location?lat=xxx&lng=xxx'
 router.get('/check-location', (req, res, next) => {

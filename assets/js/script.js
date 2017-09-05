@@ -263,7 +263,7 @@ class Game {
 	getGridByGeoCoords(geoCoords) {
 		return new Promise((res, rej) => {
 			const gridXHR = new XMLHttpRequest();
-			gridXHR.open('GET', `/api/locations/grid?lat=${geoCoords.lat}&lng=${geoCoords.lng}`);
+			gridXHR.open('GET', `/api/grid?lat=${geoCoords.lat}&lng=${geoCoords.lng}`);
 			gridXHR.send();
 			gridXHR.onload = (e) => {
 				const xhr = e.srcElement;

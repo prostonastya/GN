@@ -7,6 +7,8 @@ class User {
 		this.cash = 150;
 	}
 
+	// better call "saveNewUser"
+
 	createNewUser() {
 		global.db.none('insert into users(email, password, reg_date, cash, name)' +
 		`values('${this.email}', '${this.pass}', '${this.registrationDate}', '${this.cash}', '${this.name}')`)
@@ -23,6 +25,8 @@ class User {
 			html: '<b>Hello! We are glad that you joined our game!</b>' // html body
 		};
 	}
+
+	// why static? probably would be better send mail with someUser.sendMail(letterObject)
 
 	static sendMail(letter, transporter) {
 		transporter.sendMail(letter, (error, info) => {
