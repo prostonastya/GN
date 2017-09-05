@@ -1,9 +1,9 @@
+'use strict';
+
 class Sockets {
 	constructor(server) {
-
 		this.io = require('socket.io').listen(server);
-		
-	    this.io.sockets.on('connection', (socket) => {
+		this.io.sockets.on('connection', (socket) => {
 			console.log('user connected');
 
 			socket.on('change', (data) => {
@@ -14,16 +14,13 @@ class Sockets {
 			socket.on('disconnect', () => {
 				console.log('user disconnected');
 			});
-
-	    });
+		});
 	}
 
 	sendMessage(message, data) {
 		this.io.sockets.on('connection', (socket) => {
-				socket.broadcast.emit(message, data);
+			socket.broadcast.emit(message, data);
 		});
 	}
-
 }
-
 module.exports = Sockets;

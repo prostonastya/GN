@@ -358,31 +358,29 @@ function initMap() {
 
 // The function creates a notification with the specified body and header.
 
-function createMessage(title, body) { 
-  var container = document.createElement('div');  
-  container.innerHTML = `<div class="my-message"> \
+function createMessage(title, body) {
+	let container = document.createElement('div');
+	container.innerHTML = `<div class="my-message"> \
     <div class="my-message-title"> ${title} </div> \
     <div class="my-message-body"> ${body} </div> \
-  </div>`  
-  return container.firstChild
+  </div>`;
+	return container.firstChild;
 }
 
 // Position
 function positionMessage(elem) {
-  elem.style.position = 'absolute'
-
-  var scroll = document.documentElement.scrollTop || document.body.scrollTop
-  elem.style.top = scroll + 200 + 'px'
-
-  elem.style.right = 20 + 'px'
+	elem.style.position = 'absolute';
+	const scroll = document.documentElement.scrollTop || document.body.scrollTop;
+	elem.style.top = scroll + 200 + 'px';
+	elem.style.right = 20 + 'px';
 }
 
 // Running
-function setupMessage(title, body) {  
-  var messageElem = createMessage(title, body); 
-  positionMessage(messageElem);
-  document.body.appendChild(messageElem);
-  setTimeout(function(){
-  	messageElem.parentNode.removeChild(messageElem)
-  }, 5000);
+function setupMessage(title, body) {
+	const messageElem = createMessage(title, body);
+	positionMessage(messageElem);
+	document.body.appendChild(messageElem);
+	setTimeout(function(){
+		messageElem.parentNode.removeChild(messageElem)
+  	}, 5000);
 }
