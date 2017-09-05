@@ -8,7 +8,7 @@ class Game {
 		this.locInfoContainer = options.locInfoContainer || document.getElementById('loc-info');
 		this.clickedLocInfo = options.locInfoContainer || document.getElementById('clicked-loc-info');
 		this.currentLocInfo = options.locInfoContainer || document.getElementById('current-loc-info');
-		this.occupFormContainer = options.locInfoContainer || document.getElementById('occup-form');
+		this.occupyFormContainer = options.locInfoContainer || document.getElementById('occupy-form');
 
 		this.occLocRenderedEvent = new CustomEvent('occloc-ready', {
 			bubbles: true
@@ -29,13 +29,26 @@ class Game {
 		this.locInfoContainer.addEventListener('click', (event) => {
 			let target = event.target;
 
-			if (target.closest('#btn-hide')) {
+			if (target.closest('#hide-btn')) {
 				target = target.closest('#btn-hide');
+				this.locInfoContainer.classList.add('hide');
 				// hide #loc-info
+				return;
+			}
+
+			if (target.closest('#show-btn')) {
+				target = target.closest('#show-btn');
+				this.locInfoContainer.classList.remove('hide');
+
+				// show #loc-info
 				return;
 			}
 			if (target.closest('#close-btn')) {
 				target = target.closest('#close-btn');
+				this.removeHighlight();
+				this.locInfoContainer.classList.remove('show-clicked');
+				this.locInfoContainer.classList.add('show-current');
+
 				// close #clicked-loc-info
 				return;
 			}
@@ -124,7 +137,7 @@ class Game {
 	get mapFeaturesStyles() {
 		return {
 			defaultStyles: {
-				strokeColor: 'gray',
+				strokeColor: 'gray ',
 				fillColor: 'transparent',
 				fillOpacity: 0.2,
 				strokeWeight: 1,
@@ -467,7 +480,7 @@ class Game {
 	showOccupationForm() {
 		this.locInfoContainer.className = 'loc-info';
 		this.locInfoContainer.classList.add('show-form');
-		this.occupFormContainer.innerHTML = this.getLocOccupFormHTML();
+		this.occupyFormContainer.innerHTML = this.getLocOccupFormHTML();
 	}
 
 	occupySubmitHandler(event) {
@@ -534,7 +547,7 @@ class Game {
 	// showEditingLocForm() {
 	// 	this.locInfoContainer.className = 'loc-info';
 	// 	this.locInfoContainer.classList.add('show-form');
-	// 	this.occupFormContainer.innerHTML = this.getLocOccupFormHTML(
+	// 	this.occupyFormContainer.innerHTML = this.getLocOccupFormHTML(
 	// 		this.highlightedLocation || this.currentLocation
 	// 	);
 	// }
@@ -556,7 +569,7 @@ class Game {
 		const locInfoClass = this.highlightedLocation ? 'show-clicked' : 'show-current';
 		this.locInfoContainer.className = 'loc-info';
 		this.locInfoContainer.classList.add(locInfoClass);
-		this.occupFormContainer.innerHTML = '';
+		this.occupyFormContainer.innerHTML = '';
 	}
 
 	restorePopulation() {
@@ -642,17 +655,17 @@ class Game {
 	getLocOccupFormHTML(location) {
 		return `
 			<form name="${location ? 'edit-loc-form' : 'occup-form'}"${location ? ` data-editing-loc-id="${location.locationId}"` : ''}>
-				<div>
+				<div class="form-item">
 					<label for="location-name">Location name:<label>			
 					<input type="name" name="location-name" id="loc-name-field" value="${location ? location.locationName : ''}" required>				
 				</div>
-				<div>
+				<div class="form-item">
 					<label for="daily-msg-field">Daily message:<label>		
 					<textarea name="daily-msg" id="daily-msg-field">${location ? location.dailyMessage : ''}</textarea>
 				</div>			
-				<div>
-					<input type="submit" value="Occupy">				
-					<input type="reset" value="Cancel">
+				<div class="form-btns">
+					<input type="submit" class="btn" value="Occupy">				
+					<input type="reset" class="btn"  value="Cancel">
 				</div>
 			</form>
 		`;
@@ -670,9 +683,9 @@ class Game {
 				<span>Location coords: ${location.northWest.lat} ${location.northWest.lng}</span>
 			</div>
 			${!location.masterId && location.isCurrent ? '<button class="btn" id="occupy-btn">Occupy</button>' : ''}
-			${location.isMaster ? '<button class="edit-loc-btn" id="edit-loc-btn">Edit location</button>' : ''}
-			${location.isMaster && location.isCurrent && location.dailyBank ? '<button class="money-btn" id="money-btn">Take money</button>' : ''}
-			${location.isMaster && !location.isCurrent && location.loyalPopulation < location.population ? '<button class="feed-btn" id="feed-btn">Feed</button>' : ''}
+			${location.isMaster ? '<button class="btn edit-loc-btn" id="edit-loc-btn">Edit location</button>' : ''}
+			${location.isMaster && location.isCurrent && location.dailyBank ? '<button class="btn money-btn" id="money-btn">Take money</button>' : ''}
+			${location.isMaster && !location.isCurrent && location.loyalPopulation < location.population ? '<button class="btn feed-btn" id="feed-btn">Feed</button>' : ''}
     `;
 	}
 
