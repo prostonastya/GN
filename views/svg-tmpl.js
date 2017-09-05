@@ -205,6 +205,10 @@ module.exports = () => `
 		c0,0-9.433,3.782-10.522,6.972"/>
 	<path fill="none" stroke="#010101" stroke-width="1.5" stroke-linecap="round" stroke-miterlimit="10" d="M197.846,131.557
 		c3.877,0.45,8.595-0.095,10.682,1.903"/>
+
+		<text dy="0.35em" font-weight="bold"
+		font-size="18px"  text-align="center" font-family="sans-serif"
+		fill="indigo">Homercyde</text>
 	</svg>
 	`
 ;

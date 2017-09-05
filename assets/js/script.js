@@ -478,10 +478,14 @@ class Game {
 	occupyCurrentLocation() {
 		this.occupyLocation(this.currentLocation)
 			.then((newLocation) => {
+				const locationIsHighlighted = this.currentLocation.isHighlighted;
+
 				this.occupiedLocationsArray.push(newLocation);
 				this.renderCurrentOccupiedLocation(newLocation);
 				this.renderCurrentLocationTextInfo();
-				if (this.highlightedLocation) {
+
+				if (locationIsHighlighted) {
+					this.highlightOccupiedLocation(newLocation);
 					this.renderHighlightedLocationTextInfo();
 				}
 				this.hideOccupationForm();
