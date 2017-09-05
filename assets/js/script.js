@@ -499,6 +499,7 @@ class Game {
 				const locationIsHighlighted = this.currentLocation.isHighlighted;
 
 				this.occupiedLocationsArray.push(newLocation);
+				this.renderFullLocation(newLocation);
 				this.renderCurrentOccupiedLocation(newLocation);
 				this.renderCurrentLocationTextInfo();
 
