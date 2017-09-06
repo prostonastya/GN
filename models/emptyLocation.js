@@ -19,6 +19,10 @@ class EmptyLocation {
 		return 40075696;
 	}
 
+	get planetRadius() {
+		return 6370997;
+	}
+
 	get meridianLength() {
 		return 20004274;
 	}
@@ -49,6 +53,29 @@ class EmptyLocation {
 		return this.getClosestRelSize(
 			Math.round(this.locSideMetersSizeOnEquatorLat / this.minAbsoluteLngSize),
 			'lng');
+	}
+
+	get absoluteMercatorWidthToHeight() {
+		let width = this.recalcLngToMercator(this.mapFeatureCoords[0].lng)
+			- this.recalcLngToMercator(this.mapFeatureCoords[2].lng);
+
+		let height = this.recalcLatToMercator(this.mapFeatureCoords[0].lat)
+			- this.recalcLatToMercator(this.mapFeatureCoords[1].lat);
+
+		height = height > 0 ? height : height * -1;
+		width = width > 0 ? width : width * -1;
+
+		return width / height;
+	}
+
+	recalcLngToMercator(lng) {
+		const lngRad = (lng / 180) * Math.PI;
+		return lngRad * this.planetRadius;
+	}
+
+	recalcLatToMercator(lat) {
+		const latRad = (lat / 180) * Math.PI;
+		return this.planetRadius * Math.log(Math.tan((Math.PI / 4) + (latRad / 2)));
 	}
 
 	getRelLngSize(pointLat) {
@@ -230,5 +257,6 @@ class EmptyLocation {
 		) /	10000000;
 	}
 }
+
 
 module.exports = EmptyLocation;
