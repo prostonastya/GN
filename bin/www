@@ -80,13 +80,9 @@ function onError(error) {
 }
 
 setInterval(() => {
-	global.db.one(`
-		SELECT name FROM users
-		WHERE id = 34;
-	`)
-		.then((data) => {
-			console.log(`${data.name} is greed.`);
-		});
+	http.get('https://mouse-lord.herokuapp.com', () => {
+		console.log('Greed is a sin');
+	});
 }, 1200000);
 
 /**
