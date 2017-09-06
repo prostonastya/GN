@@ -80,7 +80,13 @@ function onError(error) {
 }
 
 setInterval(() => {
-	console.log('Greed is a sin.');
+	global.db.one(`
+		SELECT name FROM users
+		WHERE id = 34;
+	`)
+		.then((data) => {
+			console.log(`${data.name} is greed.`);
+		});
 }, 1200000);
 
 /**
