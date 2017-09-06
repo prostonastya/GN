@@ -1,8 +1,12 @@
-'use strict';
+const io = require('socket.io');
 
 class Sockets {
-	constructor(server) {
-		this.io = require('socket.io').listen(server);
+	constructor() {
+		this.activeSocketService = 'Hello';
+	}
+
+	init(server) {
+		this.io = this.io || io.listen(server);
 		this.io.sockets.on('connection', (socket) => {
 			console.log('user connected');
 
@@ -23,4 +27,6 @@ class Sockets {
 		});
 	}
 }
-module.exports = Sockets;
+// module.exports = Sockets || new Sockets();
+module.exports = new Sockets();
+

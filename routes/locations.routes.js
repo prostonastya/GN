@@ -2,6 +2,11 @@ const express = require('express');
 const EmptyLocation = require('../models/emptyLocation');
 const OccupiedLocation = require('../models/occupiedLocation');
 const locAuth = require('../middleware/locAuth');
+const sockets = require('../services/sockets');
+
+// setTimeout(() => {
+// 	console.log('routes', sockets.io);
+// }, 0);
 
 const router = express.Router();
 
