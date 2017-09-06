@@ -68,14 +68,14 @@ app.use((err, req, res) => {
 	// res.render('error');
 });
 
-schedule.scheduleJob('0 0 3 * * *', () => {
-	console.log('daily event!');
-	OccupiedLocation.recalcLocationsLifecycle();
-	eventEmitter.emit('daily-event');
-});
+// schedule.scheduleJob('0 0 3 * * *', () => {
+// 	console.log('daily event!');
+// 	OccupiedLocation.recalcLocationsLifecycle();
+// 	eventEmitter.emit('daily-event');
+// });
 
-eventEmitter.on('daily-event', () => {
-	console.log('daily event handled!');
-});
+// eventEmitter.on('daily-event', () => {
+// 	console.log('daily event handled!');
+// });
 
 module.exports = app;
