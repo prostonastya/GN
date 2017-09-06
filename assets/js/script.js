@@ -317,7 +317,9 @@ class Game {
 				} else {
 					this.renderCurrentOccupiedLocation(currentLocation);
 				}
-				this.renderCurrentLocationTextInfo();
+				return this.renderCurrentLocationTextInfo();
+			})
+			.then(() => {
 				if (this.currentLocation.isMaster && !this.currentLocation.dailyCheckin) {
 					this.doCheckin()
 						.then(() => {
@@ -365,8 +367,11 @@ class Game {
 	}
 
 	renderCurrentLocationTextInfo() {
-		this.locInfoContainer.className = 'loc-info show-current';
-		this.currentLocInfo.innerHTML = this.getLocInfoHTML(this.currentLocation);
+		return this.getLocInfoHTML(this.currentLocation)
+			.then((response) => {
+				this.currentLocInfo.innerHTML = response;
+				this.locInfoContainer.className = 'loc-info show-current';
+			});
 	}
 
 	// HIGHLIGHTED LOCATION METHODS
@@ -378,7 +383,7 @@ class Game {
 			.then((clickedLocation) => {
 				console.log(clickedLocation);
 				this.highlightOccupiedLocation(clickedLocation);
-				this.renderHighlightedLocationTextInfo();
+				return this.renderHighlightedLocationTextInfo();
 			});
 	}
 
@@ -411,7 +416,7 @@ class Game {
 			featureProps
 		);
 		this.currentLocationMapFeature.setProperty('info', featureProps.info);
-		this.renderHighlightedLocationTextInfo();
+		return this.renderHighlightedLocationTextInfo();
 	}
 
 	// empty locations highlighting methods
@@ -425,7 +430,7 @@ class Game {
 				console.log(clickedLocation);
 				clickedLocation.locationName = 'Empty Location';
 				this.highlightEmptyLocation(clickedLocation);
-				this.renderHighlightedLocationTextInfo();
+				return this.renderHighlightedLocationTextInfo();
 			});
 	}
 
@@ -458,8 +463,11 @@ class Game {
 	}
 
 	renderHighlightedLocationTextInfo() {
-		this.locInfoContainer.className = 'loc-info show-clicked';
-		this.clickedLocInfo.innerHTML = this.getLocInfoHTML(this.highlightedLocation);
+		return this.getLocInfoHTML(this.highlightedLocation)
+			.then((response) => {
+				this.clickedLocInfo.innerHTML = response;
+				this.locInfoContainer.className = 'loc-info show-clicked';
+			});
 	}
 
 	// SEARCH LOCATION IN LOADED LOCATIONS ARRAY AND UPDATE
@@ -514,12 +522,16 @@ class Game {
 				this.occupiedLocationsArray.push(newLocation);
 				this.renderFullLocation(newLocation);
 				this.renderCurrentOccupiedLocation(newLocation);
-				this.renderCurrentLocationTextInfo();
-
+				return this.renderCurrentLocationTextInfo();
+			})
+			.then(() => {
 				if (locationIsHighlighted) {
 					this.highlightOccupiedLocation(newLocation);
-					this.renderHighlightedLocationTextInfo();
+					return this.renderHighlightedLocationTextInfo();
 				}
+				this.hideOccupationForm();
+			})
+			.then(() => {
 				this.hideOccupationForm();
 			})
 			.catch((err) => {
@@ -589,7 +601,9 @@ class Game {
 		})
 			.then(() => {
 				this.highlightedLocation.loyalPopulation = this.highlightedLocation.population;
-				this.renderHighlightedLocationTextInfo();
+				return this.renderHighlightedLocationTextInfo();
+			})
+			.then(() => {
 				this.highlightOccupiedLocation(this.highlightedLocation);
 				console.log(`Congrats! You saved your mouse in location location ${this.highlightedLocation.locationId}!`);
 			})
@@ -643,7 +657,7 @@ class Game {
 			.then(() => {
 				this.currentLocation.dailyBank = 0;
 				this.renderCurrentOccupiedLocation(this.currentLocation);
-				this.renderCurrentLocationTextInfo();
+				return this.renderCurrentLocationTextInfo();
 			})
 			.catch((err) => {
 				console.log(err);
@@ -672,25 +686,45 @@ class Game {
 	}
 
 	getLocInfoHTML(location) {
-		return `
-			${location.isHighlighted ? '<button class="close-btn" id="close-btn">X</button>' : ''}
-      <div>
-				<h2 class="info-heading">${location.locationName}${location.masterName ? ` (${location.masterName})` : ''}</h2>							
-				${location.dailyMessage ? `<span>${location.dailyMessage}</span>` : ''}													
-				${location.isMaster ? `<span>Loyalty: ${location.loyalPopulation}/${location.population}</span>` : ''}
-				${location.dailyBank !== undefined ? `<span>Bank: ${location.dailyBank}</span>` : ''}
-				${!location.isMaster && location.population ? `<span>Population: ${location.population}</span>` : ''}
-				<span>Location coords: ${location.northWest.lat} ${location.northWest.lng}</span>
-			</div>
-			${!location.masterId && location.isCurrent ? '<button class="btn" id="occupy-btn">Occupy</button>' : ''}
-			${location.isMaster ? '<button class="btn edit-loc-btn" id="edit-loc-btn">Edit location</button>' : ''}
-			${location.isMaster && location.isCurrent && location.dailyBank ? '<button class="btn money-btn" id="money-btn">Take money</button>' : ''}
-			${location.isMaster && !location.isCurrent && location.loyalPopulation < location.population ? '<button class="btn feed-btn" id="feed-btn">Feed</button>' : ''}
-    `;
+		return new Promise((res, rej) => {
+			let url = '/api';
+			if (location.locationId) {
+				url += `/locations/${location.locationId}/loc-info?${
+					location.isCurrent ? 'current=true' : ''
+				}${
+					location.isCurrent && location.isHighlighted ? '&' : ''
+				}${
+					location.isHighlighted ? 'highlighted=true' : ''
+				}`;
+			} else {
+				url += `/grid/loc-info?lat=${
+					location.northWest.lat
+				}&lng=${
+					location.northWest.lng
+				}&${
+					location.isCurrent ? 'current=true' : ''
+				}${
+					location.isCurrent && location.isHighlighted ? '&' : ''
+				}${
+					location.isHighlighted ? 'highlighted=true' : ''
+				}`;
+			}
+			const xhr = new XMLHttpRequest();
+			xhr.open('GET', url);
+			xhr.send();
+			xhr.onload = (e) => {
+				const htmlXHR = e.srcElement;
+
+				if (htmlXHR.status !== 200) {
+					rej(htmlXHR.response);
+				}
+
+				res(htmlXHR.response);
+			};
+		});
 	}
 
 	// GOOGLE MAP AND HTML5 GEOLOCATION INTERACTION METHODS
-
 	refreshUserGeodata(coords) {
 		const locInfoClassList = this.locInfoContainer.className;
 		this.setUserGeoData(coords);
@@ -705,13 +739,15 @@ class Game {
 					);
 					if (currentIsHighlighted) {
 						if (!this.currentLocation.locationId) {
-							this.hightlightCurrentEmptyLocation();
-						} else {
-							this.highlightOccupiedLocation(this.currentLocation);
+							return this.hightlightCurrentEmptyLocation();
 						}
-						this.renderHighlightedLocationTextInfo();
+						this.highlightOccupiedLocation(this.currentLocation);
+						return this.renderHighlightedLocationTextInfo();
 					}
 				}
+			})
+			// .then(() => this.renderHighlightedLocationTextInfo())
+			.then(() => {
 				// do not change displaying element in loc-info;
 				this.locInfoContainer.className = locInfoClassList === 'loc-info' ?
 					this.locInfoContainer.className :
@@ -835,12 +871,12 @@ function initMap() {
 				alert('Your geolocation is not working. Probably you forgot to turn it on. Please, turn on geolocation and give proper access to this app');
 			});
 
-			setTimeout(() => {
-				game.refreshUserGeodata({
-					lat: game.userGeoData.lat,
-					lng: game.userGeoData.lng
-				});
-			}, 5000);
+			// setTimeout(() => {
+			// 	game.refreshUserGeodata({
+			// 		lat: game.userGeoData.lat,
+			// 		lng: game.userGeoData.lng
+			// 	});
+			// }, 5000);
 
 			map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);
@@ -853,7 +889,9 @@ function initMap() {
 
 				if (targetFeatureId) {
 					game.renderOccupiedLocationInfo(targetFeatureId);
-					return;
+					// .catch((err) => {
+					// 	console.log(err);
+					// });
 				}
 				if (event.feature.getProperty('info').isCurrent) {
 					game.hightlightCurrentEmptyLocation();

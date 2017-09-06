@@ -20,6 +20,9 @@ router.route('/login')
 	.post((req, res) => {
 		const email = req.body['log-email'];
 		const password = req.body['log-pass'];
+
+		// business-login in controller!
+
 		global.db.one(`SELECT * FROM users
 		WHERE email = '${email}';`)
 			.then((data) => {
@@ -31,7 +34,8 @@ router.route('/login')
 					const payload = {
 						id: data.id,
 						email: data.email,
-						name: data.name
+						name: data.name,
+						isAdmin: data.is_admin
 					};
 					const token = jwt.sign(payload, 'secret', {
 						expiresIn: 60 * 60 * 24
