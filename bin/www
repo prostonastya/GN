@@ -80,7 +80,7 @@ function onError(error) {
 }
 
 setInterval(() => {
-	http.get('https://mouse-lord.herokuapp.com', () => {
+	http.get('http://mouse-lord.herokuapp.com', () => {
 		console.log('Greed is a sin');
 	});
 }, 1200000);
