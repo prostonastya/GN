@@ -79,9 +79,9 @@ function onError(error) {
 	}
 }
 
-setInterval(() => {
-	console.log('Greed is a sin.');
-}, 1200000);
+// setInterval(() => {
+// 	console.log('Greed is a sin.');
+// }, 1200000);
 
 /**
  * Event listener for HTTP server "listening" event.
