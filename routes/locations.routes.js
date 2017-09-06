@@ -1,7 +1,7 @@
 const express = require('express');
-const EmptyLocation = require('../models/emptyLocation');
 const OccupiedLocation = require('../models/occupiedLocation');
 const locAuth = require('../middleware/locAuth');
+const svgTemplate = require('../views/svg-tmpl');
 
 const router = express.Router();
 
@@ -11,11 +11,12 @@ router.get('/', (req, res, next) => {
 			locations.forEach((item) => {
 				if (item.masterId === req.decoded.id) {
 					item.isMaster = true;
-				} else {
-					item.dailyBank = undefined;
-					item.loyalPopulation = undefined;
-					item.dailyCheckin = undefined;
 				}
+				// else {
+				// 	item.dailyBank = undefined;
+				// 	item.loyalPopulation = undefined;
+				// 	item.dailyCheckin = undefined;
+				// }
 			});
 			res.json(locations);
 		})
@@ -51,15 +52,6 @@ router.get('/geo-json', (req, res, next) => {
 		})
 		.catch(err => next(err));
 });
-// '/grid?lat=xxx&lng=xxx'
-router.get('/grid', (req, res) => {
-	const geoData = {
-		lat: +req.query.lat,
-		lng: +req.query.lng
-	};
-	const location = new EmptyLocation(geoData);
-	res.json(location);
-});
 // '/check-location?lat=xxx&lng=xxx'
 router.get('/check-location', (req, res, next) => {
 	const geoData = {
@@ -70,11 +62,12 @@ router.get('/check-location', (req, res, next) => {
 		.then((locationObj) => {
 			if (locationObj.masterId === req.decoded.id) {
 				locationObj.isMaster = true;
-			} else {
-				locationObj.dailyCheckin = undefined;
-				locationObj.dailyBank = undefined;
-				locationObj.loyalPopulation = undefined;
 			}
+			// else {
+			// 	locationObj.dailyCheckin = undefined;
+			// 	locationObj.dailyBank = undefined;
+			// 	locationObj.loyalPopulation = undefined;
+			// }
 			console.log(JSON.stringify(locationObj));
 			res.json(locationObj);
 		})
@@ -87,6 +80,11 @@ router.use('/:id', locAuth);
 
 router.get('/:id', (req, res) => {
 	res.json(req.reqLocation);
+});
+
+router.get('/:id/svg', (req, res) => {
+	res.set('Content-Type', 'image/svg+xml')
+		.send(svgTemplate(req.reqLocation));
 });
 
 router.put('/:id', (req, res, next) => {

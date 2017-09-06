@@ -10,6 +10,7 @@ const cookieParser = require('cookie-parser');
 const favicon = require('serve-favicon');
 const logger = require('morgan');
 const OccupiedLocation = require('./models/occupiedLocation');
+const gridRoutes = require('./routes/grid.routes');
 const locationsRoutes = require('./routes/locations.routes');
 const userRoutes = require('./routes/user.routes');
 const indexRoutes = require('./routes/index.routes');
@@ -45,6 +46,7 @@ app.use(favicon('./assets/favicon.png'));
 app.use('/user', userRoutes);
 app.use('/', auth);
 app.all('/', indexRoutes);
+app.use('/api/grid', gridRoutes);
 app.use('/api/locations', locationsRoutes);
 
 // catch 404 and forward to error handler

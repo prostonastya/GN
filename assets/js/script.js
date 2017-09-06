@@ -8,7 +8,7 @@ class Game {
 		this.locInfoContainer = options.locInfoContainer || document.getElementById('loc-info');
 		this.clickedLocInfo = options.locInfoContainer || document.getElementById('clicked-loc-info');
 		this.currentLocInfo = options.locInfoContainer || document.getElementById('current-loc-info');
-		this.occupFormContainer = options.locInfoContainer || document.getElementById('occup-form');
+		this.occupyFormContainer = options.locInfoContainer || document.getElementById('occupy-form');
 
 		this.occLocRenderedEvent = new CustomEvent('occloc-ready', {
 			bubbles: true
@@ -23,18 +23,32 @@ class Game {
 		this.highlightedLocation = null;
 		this.highlightedMapFeature = null;
 		this.occupiedLocationsArray = null;
-		this.mapFeaturesArray = [];
+		this.occupiedLocationsMapFeatures = {};
+		this.occupiedLocationsGroundOverlays = {};
 
 		this.locInfoContainer.addEventListener('click', (event) => {
 			let target = event.target;
 
-			if (target.closest('#btn-hide')) {
+			if (target.closest('#hide-btn')) {
 				target = target.closest('#btn-hide');
+				this.locInfoContainer.classList.add('hide');
 				// hide #loc-info
+				return;
+			}
+
+			if (target.closest('#show-btn')) {
+				target = target.closest('#show-btn');
+				this.locInfoContainer.classList.remove('hide');
+
+				// show #loc-info
 				return;
 			}
 			if (target.closest('#close-btn')) {
 				target = target.closest('#close-btn');
+				this.removeHighlight();
+				this.locInfoContainer.classList.remove('show-clicked');
+				this.locInfoContainer.classList.add('show-current');
+
 				// close #clicked-loc-info
 				return;
 			}
@@ -72,7 +86,22 @@ class Game {
 
 	// FEATURE CREATING METHODS	
 
-	getAndRenderLocByFeatureCoords(location) {
+	renderFullLocation(location) {
+		const locId = location.locationId;
+
+		if (!locId) return;
+
+		this.occupiedLocationsMapFeatures[locId] = this.getAndRenderFeatureByLocObj(location);
+		this.occupiedLocationsGroundOverlays[locId] = this.getAndRenderGroundOverlayByLocObj(location);
+	}
+
+	getAndRenderFeatureByLocObj(location) {
+		// remove old one feature if it is already present
+		if (this.occupiedLocationsMapFeatures[location.locationId]) {
+			this.map.data.remove(
+				this.occupiedLocationsMapFeatures[location.locationId]
+			);
+		}
 		const properties = this.getMapFeatureProperties(location);
 
 		const locationGeoObj = {
@@ -81,13 +110,34 @@ class Game {
 			properties,
 			geometry: new google.maps.Data.Polygon([location.mapFeatureCoords])
 		};
+
 		return this.map.data.add(locationGeoObj);
+	}
+
+	getAndRenderGroundOverlayByLocObj(location) {
+		const locId = location.locationId;
+		if (!locId) return false;
+
+		if (this.occupiedLocationsGroundOverlays[locId]) {
+			this.occupiedLocationsGroundOverlays[locId].setMap(null);
+		}
+
+		const groundOverlay = new google.maps.GroundOverlay(
+			`/api/locations/${location.locationId}/svg`,	{
+				north: location.mapFeatureCoords[0].lat,
+				south: location.mapFeatureCoords[1].lat,
+				east: location.mapFeatureCoords[2].lng,
+				west: location.mapFeatureCoords[0].lng
+			});
+		groundOverlay.setMap(this.map);
+
+		return groundOverlay;
 	}
 
 	get mapFeaturesStyles() {
 		return {
 			defaultStyles: {
-				strokeColor: 'gray',
+				strokeColor: 'gray ',
 				fillColor: 'transparent',
 				fillOpacity: 0.2,
 				strokeWeight: 1,
@@ -187,8 +237,8 @@ class Game {
 
 	getCurrentLocation() {
 		const geoCoords = {
-			lat: this.userGeoData.latitude,
-			lng: this.userGeoData.longitude
+			lat: this.userGeoData.lat,
+			lng: this.userGeoData.lng
 		};
 		return new Promise((res, rej) => {
 			const gridXHR = new XMLHttpRequest();
@@ -226,7 +276,7 @@ class Game {
 	getGridByGeoCoords(geoCoords) {
 		return new Promise((res, rej) => {
 			const gridXHR = new XMLHttpRequest();
-			gridXHR.open('GET', `/api/locations/grid?lat=${geoCoords.lat}&lng=${geoCoords.lng}`);
+			gridXHR.open('GET', `/api/grid?lat=${geoCoords.lat}&lng=${geoCoords.lng}`);
 			gridXHR.send();
 			gridXHR.onload = (e) => {
 				const xhr = e.srcElement;
@@ -244,8 +294,7 @@ class Game {
 		this.getOccupiedLocations()
 			.then(() => {
 				this.occupiedLocationsArray.forEach((location) => {
-					const mapFeature = this.getAndRenderLocByFeatureCoords(location);
-					this.mapFeaturesArray.push(mapFeature);
+					this.renderFullLocation(location);
 				});
 
 				document.dispatchEvent(this.occLocRenderedEvent);
@@ -258,7 +307,7 @@ class Game {
 	// CURRENT LOCATION RENDER METHODS
 
 	renderCurrentLocationInfo() {
-		this.getCurrentLocation()
+		return this.getCurrentLocation()
 			.then((currentLocation) => {
 				console.log(currentLocation);
 				this.removeCurrentHighlight();
@@ -285,7 +334,7 @@ class Game {
 	renderCurrentOccupiedLocation(currentLocation) {
 		this.currentLocation = this.getAndExtendLoadedLocationById(currentLocation);
 		this.currentLocation.isCurrent = true;
-		this.currentLocationMapFeature = this.getAndRenderLocByFeatureCoords(
+		this.currentLocationMapFeature = this.getAndRenderFeatureByLocObj(
 			this.currentLocation
 		);
 	}
@@ -293,7 +342,7 @@ class Game {
 	renderCurrentEmptyLocation(currentLocation) {
 		this.currentLocation = currentLocation;
 		this.currentLocation.isCurrent = true;
-		this.currentLocationMapFeature = this.getAndRenderLocByFeatureCoords(
+		this.currentLocationMapFeature = this.getAndRenderFeatureByLocObj(
 			this.currentLocation
 		);
 	}
@@ -316,9 +365,7 @@ class Game {
 	}
 
 	renderCurrentLocationTextInfo() {
-		if (this.locInfoContainer.className === 'loc-info') {
-			this.locInfoContainer.classList.add('show-current');
-		}
+		this.locInfoContainer.className = 'loc-info show-current';
 		this.currentLocInfo.innerHTML = this.getLocInfoHTML(this.currentLocation);
 	}
 
@@ -364,6 +411,7 @@ class Game {
 			featureProps
 		);
 		this.currentLocationMapFeature.setProperty('info', featureProps.info);
+		this.renderHighlightedLocationTextInfo();
 	}
 
 	// empty locations highlighting methods
@@ -385,7 +433,7 @@ class Game {
 		this.removeHighlight();
 		this.highlightedLocation = clickedLocation;
 		clickedLocation.isHighlighted = true;
-		this.highlightedMapFeature = this.getAndRenderLocByFeatureCoords(
+		this.highlightedMapFeature = this.getAndRenderFeatureByLocObj(
 			clickedLocation
 		);
 	}
@@ -405,11 +453,12 @@ class Game {
 				this.map.data.remove(this.highlightedMapFeature);
 			}
 		}
+		this.highlightedLocation = null;
+		this.highlightedMapFeature = null;
 	}
 
 	renderHighlightedLocationTextInfo() {
-		this.locInfoContainer.className = 'loc-info';
-		this.locInfoContainer.classList.add('show-clicked');
+		this.locInfoContainer.className = 'loc-info show-clicked';
 		this.clickedLocInfo.innerHTML = this.getLocInfoHTML(this.highlightedLocation);
 	}
 
@@ -430,7 +479,7 @@ class Game {
 	showOccupationForm() {
 		this.locInfoContainer.className = 'loc-info';
 		this.locInfoContainer.classList.add('show-form');
-		this.occupFormContainer.innerHTML = this.getLocOccupFormHTML();
+		this.occupyFormContainer.innerHTML = this.getLocOccupFormHTML();
 	}
 
 	occupySubmitHandler(event) {
@@ -460,9 +509,17 @@ class Game {
 	occupyCurrentLocation() {
 		this.occupyLocation(this.currentLocation)
 			.then((newLocation) => {
+				const locationIsHighlighted = this.currentLocation.isHighlighted;
+
 				this.occupiedLocationsArray.push(newLocation);
+				this.renderFullLocation(newLocation);
 				this.renderCurrentOccupiedLocation(newLocation);
 				this.renderCurrentLocationTextInfo();
+
+				if (locationIsHighlighted) {
+					this.highlightOccupiedLocation(newLocation);
+					this.renderHighlightedLocationTextInfo();
+				}
 				this.hideOccupationForm();
 			})
 			.catch((err) => {
@@ -490,7 +547,7 @@ class Game {
 	// showEditingLocForm() {
 	// 	this.locInfoContainer.className = 'loc-info';
 	// 	this.locInfoContainer.classList.add('show-form');
-	// 	this.occupFormContainer.innerHTML = this.getLocOccupFormHTML(
+	// 	this.occupyFormContainer.innerHTML = this.getLocOccupFormHTML(
 	// 		this.highlightedLocation || this.currentLocation
 	// 	);
 	// }
@@ -512,7 +569,7 @@ class Game {
 		const locInfoClass = this.highlightedLocation ? 'show-clicked' : 'show-current';
 		this.locInfoContainer.className = 'loc-info';
 		this.locInfoContainer.classList.add(locInfoClass);
-		this.occupFormContainer.innerHTML = '';
+		this.occupyFormContainer.innerHTML = '';
 	}
 
 	restorePopulation() {
@@ -548,8 +605,8 @@ class Game {
 			createLocationXHR.setRequestHeader('Content-Type', 'application/json');
 			createLocationXHR.send(JSON.stringify({
 				userGeoData: {
-					lat: this.userGeoData.latitude,
-					lng: this.userGeoData.longitude
+					lat: this.userGeoData.lat,
+					lng: this.userGeoData.lng
 				}
 			}));
 			createLocationXHR.onload = (e) => {
@@ -570,8 +627,8 @@ class Game {
 			createLocationXHR.setRequestHeader('Content-Type', 'application/json');
 			createLocationXHR.send(JSON.stringify({
 				userGeoData: {
-					lat: this.userGeoData.latitude,
-					lng: this.userGeoData.longitude
+					lat: this.userGeoData.lat,
+					lng: this.userGeoData.lng
 				}
 			}));
 			createLocationXHR.onload = (e) => {
@@ -598,17 +655,17 @@ class Game {
 	getLocOccupFormHTML(location) {
 		return `
 			<form name="${location ? 'edit-loc-form' : 'occup-form'}"${location ? ` data-editing-loc-id="${location.locationId}"` : ''}>
-				<div>
+				<div class="form-item">
 					<label for="location-name">Location name:<label>			
 					<input type="name" name="location-name" id="loc-name-field" value="${location ? location.locationName : ''}" required>				
 				</div>
-				<div>
+				<div class="form-item">
 					<label for="daily-msg-field">Daily message:<label>		
 					<textarea name="daily-msg" id="daily-msg-field">${location ? location.dailyMessage : ''}</textarea>
 				</div>			
-				<div>
-					<input type="submit" value="Occupy">				
-					<input type="reset" value="Cancel">
+				<div class="form-btns">
+					<input type="submit" class="btn" value="Occupy">				
+					<input type="reset" class="btn"  value="Cancel">
 				</div>
 			</form>
 		`;
@@ -625,18 +682,49 @@ class Game {
 				${!location.isMaster && location.population ? `<span>Population: ${location.population}</span>` : ''}
 				<span>Location coords: ${location.northWest.lat} ${location.northWest.lng}</span>
 			</div>
-			${!location.masterId && location.isCurrent ? '<button class="occupy-btn" id="occupy-btn">Occupy</button>' : ''}
-			${location.isMaster ? '<button class="edit-loc-btn" id="edit-loc-btn">Edit location</button>' : ''}
-			${location.isMaster && location.isCurrent && location.dailyBank ? '<button class="money-btn" id="money-btn">Take money</button>' : ''}
-			${location.isMaster && !location.isCurrent && location.loyalPopulation < location.population ? '<button class="feed-btn" id="feed-btn">Feed</button>' : ''}
+			${!location.masterId && location.isCurrent ? '<button class="btn" id="occupy-btn">Occupy</button>' : ''}
+			${location.isMaster ? '<button class="btn edit-loc-btn" id="edit-loc-btn">Edit location</button>' : ''}
+			${location.isMaster && location.isCurrent && location.dailyBank ? '<button class="btn money-btn" id="money-btn">Take money</button>' : ''}
+			${location.isMaster && !location.isCurrent && location.loyalPopulation < location.population ? '<button class="btn feed-btn" id="feed-btn">Feed</button>' : ''}
     `;
 	}
 
 	// GOOGLE MAP AND HTML5 GEOLOCATION INTERACTION METHODS
 
+	refreshUserGeodata(coords) {
+		const locInfoClassList = this.locInfoContainer.className;
+		this.setUserGeoData(coords);
+		this.renderCurrentUserMarker();
+
+		this.renderCurrentLocationInfo()
+			.then(() => {
+				if (this.highlightedLocation) {
+					const currentIsHighlighted = (
+						this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat &&
+						this.currentLocation.northWest.lng === this.highlightedLocation.northWest.lng
+					);
+					if (currentIsHighlighted) {
+						if (!this.currentLocation.locationId) {
+							this.hightlightCurrentEmptyLocation();
+						} else {
+							this.highlightOccupiedLocation(this.currentLocation);
+						}
+						this.renderHighlightedLocationTextInfo();
+					}
+				}
+				// do not change displaying element in loc-info;
+				this.locInfoContainer.className = locInfoClassList === 'loc-info' ?
+					this.locInfoContainer.className :
+					locInfoClassList;
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}
+
 	centerMapByUserGeoData() {
-		const lat = this.userGeoData.latitude;
-		const lng = this.userGeoData.longitude;
+		const lat = this.userGeoData.lat;
+		const lng = this.userGeoData.lng;
 		this.map.setZoom(15);
 		this.map.setCenter({ lat, lng });
 	}
@@ -647,13 +735,14 @@ class Game {
 		}
 		this.userMarker = new google.maps.Marker({
 			position: {
-				lat: this.userGeoData.latitude,
-				lng: this.userGeoData.longitude
+				lat: this.userGeoData.lat,
+				lng: this.userGeoData.lng
 			},
 			map: this.map,
 			title: 'There you are!'
 		});
 	}
+
 
 	updateMapBounds() {
 		this.setMapBounds({
@@ -720,6 +809,9 @@ function initMap() {
 		document.addEventListener('occloc-ready', initMapInteraction);
 
 		game.renderOccupiedLocations();
+		// setTimeout(() => {
+		// 	game.renderOccupiedLocations();
+		// }, 5000);
 
 		function initMapInteraction() {
 			navigator.geolocation.getCurrentPosition((position) => {
@@ -734,10 +826,21 @@ function initMap() {
 			});
 
 			navigator.geolocation.watchPosition((position) => {
-				game.setUserGeoData(position.coords);
-				game.renderCurrentLocationInfo();
-				game.renderCurrentUserMarker();
+				game.refreshUserGeodata({
+					lat: position.coords.latitude,
+					lng: position.coords.longitude
+				});
+			}, () => {
+				// THERE HAVE TO BE CODE FOR TURNED OFF GEOLOCATION NOTIFICATION
+				alert('Your geolocation is not working. Probably you forgot to turn it on. Please, turn on geolocation and give proper access to this app');
 			});
+
+			setTimeout(() => {
+				game.refreshUserGeodata({
+					lat: game.userGeoData.lat,
+					lng: game.userGeoData.lng
+				});
+			}, 5000);
 
 			map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);
