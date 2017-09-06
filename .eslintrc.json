@@ -25,7 +25,11 @@
     "linebreak-style": 0,
     "no-constant-condition": ["error", { "checkLoops": false }],
     "comma-dangle": ["error", "never"],
-    "class-methods-use-this": 0
+    "class-methods-use-this": 0,
+    "no-restricted-properties": [ 0, {  
+      "object": "Math",
+      "property": "pow"
+    }]
   }
 }
 
