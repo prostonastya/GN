@@ -10,10 +10,10 @@ class Sockets {
 		this.io.sockets.on('connection', (socket) => {
 			console.log('user connected');
 
-			socket.on('change', (data) => {
-				console.log(data);
-				socket.broadcast.emit('update', { data: 'newdata' });
-			});
+			// socket.on('change', (data) => {
+			// 	console.log(data);
+			// 	socket.broadcast.emit('update', { data: 'newdata' });
+			// });
 
 			socket.on('disconnect', () => {
 				console.log('user disconnected');
@@ -22,9 +22,7 @@ class Sockets {
 	}
 
 	sendMessage(message, data) {
-		this.io.sockets.on('connection', (socket) => {
-			socket.broadcast.emit(message, data);
-		});
+		this.io.sockets.broadcast.emit(message, data);
 	}
 }
 // module.exports = Sockets || new Sockets();

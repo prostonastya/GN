@@ -36,6 +36,7 @@ router.post('/create', (req, res, next) => {
 		.then((createdLocation) => {
 			createdLocation.isMaster = true;
 			res.json(createdLocation);
+			sockets.sendMessage('update', createdLocation);
 		})
 
 

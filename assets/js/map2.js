@@ -283,7 +283,7 @@ class Game {
 			.then((newLocation) => {
 				console.log(newLocation);
 				// const thisLocation = this.map.data.getFeatureById('currentLocation');
-				socket.emit('change', 'new location data');
+				// socket.emit('change', 'new location data');
 				const properties = Object.assign(
 					{
 						info: {
