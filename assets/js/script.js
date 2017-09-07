@@ -57,6 +57,11 @@ class Game {
 				this.showOccupationForm();
 				return;
 			}
+			if (target.closest('#occupy-click-btn')) {
+				target = target.closest('#occupy-click-btn');
+				this.showHighlightedOccupationForm();
+				return;
+			}
 			if (target.closest('#edit-loc-btn')) {
 				target = target.closest('#edit-loc-btn');
 				// this.showEditingLocForm();
@@ -76,6 +81,10 @@ class Game {
 			const form = event.target;
 			if (form.getAttribute('name') === 'occup-form') {
 				this.occupySubmitHandler(event);
+			}
+
+			if (form.getAttribute('name') === 'occup-clicked-form') {
+				this.occupyHighlightedSubmitHandler(event);
 			}
 
 			if (form.getAttribute('name') === 'edit-loc-form') {
@@ -317,19 +326,24 @@ class Game {
 				} else {
 					this.renderCurrentOccupiedLocation(currentLocation);
 				}
-				return this.renderCurrentLocationTextInfo();
-			})
-			.then(() => {
+
+				const promises = [
+					this.renderCurrentLocationTextInfo()
+				];
+
 				if (this.currentLocation.isMaster && !this.currentLocation.dailyCheckin) {
-					this.doCheckin()
+					promises.push(this.doCheckin()
 						.then(() => {
 							this.currentLocation.dailyCheckin = true;
 							console.log(`You checked in location #${this.currentLocation.locationId}`);
 						})
-						.catch((err) => {
-							console.log(err);
-						});
+					);
 				}
+
+				return Promise.all(promises);
+			})
+			.catch((err) => {
+				console.log(err);
 			});
 	}
 
@@ -485,9 +499,25 @@ class Game {
 	// LOCATION INTERACTION METHODS	
 
 	showOccupationForm() {
-		this.locInfoContainer.className = 'loc-info';
-		this.locInfoContainer.classList.add('show-form');
-		this.occupyFormContainer.innerHTML = this.getLocOccupFormHTML();
+		this.getLocOccupFormHTML()
+			.then((response) => {
+				this.occupyFormContainer.innerHTML = response;
+				this.locInfoContainer.className = 'loc-info show-form';
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}
+
+	showHighlightedOccupationForm() {
+		this.getClickedLocOccupFormHTML()
+			.then((response) => {
+				this.occupyFormContainer.innerHTML = response;
+				this.locInfoContainer.className = 'loc-info show-form';
+			})
+			.catch((err) => {
+				console.log(err);
+			});
 	}
 
 	occupySubmitHandler(event) {
@@ -500,6 +530,18 @@ class Game {
 		this.currentLocation.dailyMessage = dailyMsg;
 
 		this.occupyCurrentLocation();
+	}
+
+	occupyHighlightedSubmitHandler(event) {
+		event.preventDefault();
+		const form = event.target;
+		const locName = form['location-name'].value;
+		const dailyMsg = form['daily-msg'].value;
+
+		this.highlightedLocation.locationName = locName;
+		this.highlightedLocation.dailyMessage = dailyMsg;
+
+		this.occupyHighlightedLocation();
 	}
 
 	// occupyResetHandler(event) {
@@ -517,19 +559,38 @@ class Game {
 	occupyCurrentLocation() {
 		this.occupyLocation(this.currentLocation)
 			.then((newLocation) => {
-				const locationIsHighlighted = this.currentLocation.isHighlighted;
+				const currentIsHighlighted = this.currentLocation.isHighlighted;
 
 				this.occupiedLocationsArray.push(newLocation);
 				this.renderFullLocation(newLocation);
 				this.renderCurrentOccupiedLocation(newLocation);
-				return this.renderCurrentLocationTextInfo();
+
+				const promises = [
+					this.renderCurrentLocationTextInfo()
+				];
+
+				if (currentIsHighlighted) {
+					this.highlightOccupiedLocation(newLocation);
+					promises.push(this.renderHighlightedLocationTextInfo());
+				}
+
+				return Promise.all(promises);
 			})
 			.then(() => {
-				if (locationIsHighlighted) {
-					this.highlightOccupiedLocation(newLocation);
-					return this.renderHighlightedLocationTextInfo();
-				}
 				this.hideOccupationForm();
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}
+
+	occupyHighlightedLocation() {
+		this.occupyLocation(this.highlightedLocation)
+			.then((newLocation) => {
+				this.occupiedLocationsArray.push(newLocation);
+				this.renderFullLocation(newLocation);
+				this.highlightOccupiedLocation(newLocation);
+				return this.renderHighlightedLocationTextInfo();
 			})
 			.then(() => {
 				this.hideOccupationForm();
@@ -601,11 +662,8 @@ class Game {
 		})
 			.then(() => {
 				this.highlightedLocation.loyalPopulation = this.highlightedLocation.population;
-				return this.renderHighlightedLocationTextInfo();
-			})
-			.then(() => {
 				this.highlightOccupiedLocation(this.highlightedLocation);
-				console.log(`Congrats! You saved your mouse in location location ${this.highlightedLocation.locationId}!`);
+				return this.renderHighlightedLocationTextInfo();
 			})
 			.catch((err) => {
 				console.log(err);
@@ -667,22 +725,40 @@ class Game {
 	// TEMPLATES
 
 	getLocOccupFormHTML(location) {
-		return `
-			<form name="${location ? 'edit-loc-form' : 'occup-form'}"${location ? ` data-editing-loc-id="${location.locationId}"` : ''}>
-				<div class="form-item">
-					<label for="location-name">Location name:<label>			
-					<input type="name" name="location-name" id="loc-name-field" value="${location ? location.locationName : ''}" required>				
-				</div>
-				<div class="form-item">
-					<label for="daily-msg-field">Daily message:<label>		
-					<textarea name="daily-msg" id="daily-msg-field">${location ? location.dailyMessage : ''}</textarea>
-				</div>			
-				<div class="form-btns">
-					<input type="submit" class="btn" value="Occupy">				
-					<input type="reset" class="btn"  value="Cancel">
-				</div>
-			</form>
-		`;
+		return new Promise((res, rej) => {
+			const url = location ?
+				`/api/locations/${location.locationId}/edit` :
+				'/api/locations/create';
+			const xhr = new XMLHttpRequest();
+			xhr.open('GET', url);
+			xhr.send();
+			xhr.onload = (e) => {
+				const htmlXHR = e.srcElement;
+
+				if (htmlXHR.status !== 200) {
+					rej(htmlXHR.response);
+				}
+
+				res(htmlXHR.response);
+			};
+		});
+	}
+
+	getClickedLocOccupFormHTML() {
+		return new Promise((res, rej) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open('GET', '/api/locations/create?clicked=true');
+			xhr.send();
+			xhr.onload = (e) => {
+				const htmlXHR = e.srcElement;
+
+				if (htmlXHR.status !== 200) {
+					rej(htmlXHR.response);
+				}
+
+				res(htmlXHR.response);
+			};
+		});
 	}
 
 	getLocInfoHTML(location) {
