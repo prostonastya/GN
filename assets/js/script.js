@@ -25,7 +25,12 @@ class Game {
 		this.occupiedLocationsArray = null;
 		this.occupiedLocationsMapFeatures = {};
 		this.occupiedLocationsGroundOverlays = {};
+		this.showUserLocationsBtn = document.getElementById('showUserLocationsButton');
 
+		this.showUserLocationsBtn.addEventListener('click', (event) => {
+			// let target = event.target;
+			this.showAllUserLocations();
+		});
 		this.locInfoContainer.addEventListener('click', (event) => {
 			let target = event.target;
 
@@ -311,21 +316,30 @@ class Game {
 	showAllUserLocations() {
 		const userLocations = [];
 		const bounds = new google.maps.LatLngBounds();
+		console.dir(bounds);
 		this.getOccupiedLocations()
 			.then(() => {
-				this.occupiedLocationsArray.forEach((location, i, arr) => {
+				this.occupiedLocationsArray.forEach((location) => {
 					if (location.isMaster) {
-						userLocations.push(arr[i]);
+						userLocations.push(location);
 					}
 				});
+				if (userLocations.length < 2) {
+					console.log('only one loc');
+				} else {
+					userLocations.forEach((location) => {
+						const northWest = location.northWest;
+						const northWestPoint = new google.maps.LatLng(northWest.lat, northWest.lng);
+						// console.dir()
+						console.dir(northWestPoint);
+						bounds.extend(northWestPoint);
+					});
+					this.map.fitBounds(bounds);
+				}
 			})
 			.catch((err) => {
 				console.log(`script.js 323 ${err}`);
 			});
-		userLocations.forEach((item, i) => {
-			bounds.extend(userLocations[i].getPosition());
-		});
-		map.fitBounds(bounds);
 	}
 
 	// CURRENT LOCATION RENDER METHODS
