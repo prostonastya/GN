@@ -32,7 +32,7 @@
 <% if (location.isMaster || isAdmin) { %>
   <button class="btn edit-loc-btn" id="edit-loc-btn">Edit location</button>
 <% } %>
-<% if (location.isMaster || isAdmin) { %>
+<% if ((location.isMaster || isAdmin) && location.isHighlighted) { %>
   <button class="btn delete-loc-btn" id="delete-loc-btn">Delete location</button>
 <% } %>
 <% if (location.isMaster && ( location.isCurrent || isAdmin ) && location.dailyBank) { %> 

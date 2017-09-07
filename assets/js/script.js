@@ -62,6 +62,11 @@ class Game {
 				this.showHighlightedOccupationForm();
 				return;
 			}
+			if (target.closest('#delete-loc-btn')) {
+				target = target.closest('#delete-loc-btn');
+				this.deleteLocHandler();
+				return;
+			}
 			if (target.closest('#edit-loc-btn')) {
 				target = target.closest('#edit-loc-btn');
 				// this.showEditingLocForm();
@@ -638,11 +643,45 @@ class Game {
 	// 	this.occupyCurrentLocation();
 	// }
 
+	deleteLocation(location) {
+		return new Promise((res, rej) => {
+			const createLocationXHR = new XMLHttpRequest();
+			createLocationXHR.open('DELETE', `api/locations/${location.locationId}`);
+			createLocationXHR.send();
+			createLocationXHR.addEventListener('load', (e) => {
+				const xhr = e.srcElement;
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				res();
+			});
+		});
+	}
+
 	hideOccupationForm() {
 		const locInfoClass = this.highlightedLocation ? 'show-clicked' : 'show-current';
 		this.locInfoContainer.className = 'loc-info';
 		this.locInfoContainer.classList.add(locInfoClass);
 		this.occupyFormContainer.innerHTML = '';
+	}
+
+	deleteLocHandler() {
+		const confirmation = confirm(`Are you sure you want to delete ${this.highlightedLocation.locationName}?`);
+
+		if (!confirmation) return;
+
+		this.deleteHighlightedLocation()
+			.then(() => {
+				// need refresh locations method
+				console.log('refresh the page');
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}
+
+	deleteHighlightedLocation() {
+		return this.deleteLocation(this.highlightedLocation);
 	}
 
 	restorePopulation() {
