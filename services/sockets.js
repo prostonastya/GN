@@ -22,7 +22,7 @@ class Sockets {
 	}
 
 	sendMessage(message, data) {
-		this.io.sockets.broadcast.emit(message, data);
+		this.io.sockets.emit(message, data);
 	}
 }
 // module.exports = Sockets || new Sockets();

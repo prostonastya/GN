@@ -4,9 +4,9 @@ const OccupiedLocation = require('../models/occupiedLocation');
 const locAuth = require('../middleware/locAuth');
 const sockets = require('../services/sockets');
 
-// setTimeout(() => {
-// 	console.log('routes', sockets.io);
-// }, 0);
+// setInterval(() => {
+// 	sockets.sendMessage('update', {});
+// }, 5000);
 
 const router = express.Router();
 
@@ -38,8 +38,6 @@ router.post('/create', (req, res, next) => {
 			res.json(createdLocation);
 			sockets.sendMessage('update', createdLocation);
 		})
-
-
 		.catch(err => next(err));
 });
 
