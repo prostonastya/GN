@@ -10,11 +10,12 @@ const auth = require('./middleware/auth');
 const cookieParser = require('cookie-parser');
 const favicon = require('serve-favicon');
 const logger = require('morgan');
-// const OccupiedLocation = require('./models/occupiedLocation');
+const Config = require('./config');
 const gridRoutes = require('./routes/grid.routes');
 const locationsRoutes = require('./routes/locations.routes');
 const userRoutes = require('./routes/user.routes');
 const indexRoutes = require('./routes/index.routes');
+
 // const schedule = require('node-schedule');
 require('dotenv').config();
 
@@ -26,8 +27,8 @@ global.db = pgp({
 	host: 'ec2-23-21-85-76.compute-1.amazonaws.com',
 	port: 5432,
 	database: 'detamp7dm7n5kt',
-	user: process.env.SERVICE_DB_USER,
-	password: process.env.SERVICE_DB_PASS,
+	user: process.env.SERVICE_DB_USER || Config.dbUsername,
+	password: process.env.SERVICE_DB_PASS || Config.dbPassword,
 	ssl: true,
 	sslfactory: 'org.postgresql.ssl.NonValidatingFactory'
 });

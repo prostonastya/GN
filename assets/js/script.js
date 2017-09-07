@@ -54,6 +54,8 @@ class Game {
 			}
 			if (target.closest('#occupy-btn')) {
 				target = target.closest('#occupy-btn');
+				// here must be a restriction
+
 				this.showOccupationForm();
 				return;
 			}
@@ -302,6 +304,28 @@ class Game {
 			.catch((err) => {
 				console.log(err);
 			});
+	}
+
+	// all user locations rendering method
+
+	showAllUserLocations() {
+		const userLocations = [];
+		const bounds = new google.maps.LatLngBounds();
+		this.getOccupiedLocations()
+			.then(() => {
+				this.occupiedLocationsArray.forEach((location, i, arr) => {
+					if (location.isMaster) {
+						userLocations.push(arr[i]);
+					}
+				});
+			})
+			.catch((err) => {
+				console.log(`script.js 323 ${err}`);
+			});
+		userLocations.forEach((item, i) => {
+			bounds.extend(userLocations[i].getPosition());
+		});
+		map.fitBounds(bounds);
 	}
 
 	// CURRENT LOCATION RENDER METHODS
