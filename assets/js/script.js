@@ -706,8 +706,8 @@ function initMap() {
 		});
 
 		socket.on('update', (data) => {			
-			setupMessage('Notification', 'The new location was occupied');
-			console.log('new locations added!');							
+			setupMessage('Notification', `The new location was occupied <br> Master is ${data.masterName} <br> Location name is ${data.locationName} <br> Daily message is ${data.dailyMessage}`);
+			console.log('socketData', data);							
 			game.renderOccupiedLocations();
 		});
 

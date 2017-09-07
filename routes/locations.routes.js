@@ -36,7 +36,7 @@ router.post('/create', (req, res, next) => {
 		.then((createdLocation) => {
 			createdLocation.isMaster = true;
 			res.json(createdLocation);
-			sockets.sendMessage('update', createdLocation);
+			sockets.sendMessage('update', {'masterName': createdLocation.masterName, 'locationName': createdLocation.locationName, 'dailyMessage': createdLocation.dailyMessage});
 		})
 		.catch(err => next(err));
 });
