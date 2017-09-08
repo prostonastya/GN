@@ -59,9 +59,14 @@ class Game {
 			}
 			if (target.closest('#occupy-btn')) {
 				target = target.closest('#occupy-btn');
-				// here must be a restriction
-
-				this.showOccupationForm();
+				// a restriction
+				if (this.checkAbilityToOccupyLocation(this.currentLocation)) {
+					console.log('can be occupied');
+					this.showOccupationForm();
+				} else {
+					// set pop-up or smth if cannot occupy
+					console.log('cannot be occupied, out of bounds');
+				}
 				return;
 			}
 			if (target.closest('#edit-loc-btn')) {
@@ -466,6 +471,23 @@ class Game {
 				this.renderHighlightedLocationTextInfo();
 			});
 	}
+	// renderEmptyLocationInfo(event) {
+	// 	this.getGridByGeoCoords({
+	// 		lat: event.latLng.lat(),
+	// 		lng: event.latLng.lng()
+	// 	})
+	// 		.then((clickedLocation) => {
+	// 			if (this.checkAbilityToOccupyLocation(clickedLocation)) {
+	// 				console.log('can be occupied');
+	// 				clickedLocation.locationName = 'Empty Location';
+	// 				this.highlightEmptyLocation(clickedLocation);
+	// 				this.renderHighlightedLocationTextInfo();
+	// 			} else {
+	// 				// set styles if cannot occupy
+	// 				console.dir(`cannot be occupied, out of bounds${clickedLocation.northWest}`);
+	// 			}
+	// 		});
+	// }
 
 	highlightEmptyLocation(clickedLocation) {
 		this.removeHighlight();
@@ -514,6 +536,56 @@ class Game {
 
 	// LOCATION INTERACTION METHODS	
 
+	defineBoundsOfATerritoryToBeOccupied() {
+		const northWest = {
+			lat: 50.067,
+			lng: 36.12672
+		};
+		const distance = {
+			lat: 0.1692,
+			lng: 0.3000
+		};
+		return this.coordsWhichRestrictTerritory(northWest, distance);
+	}
+
+	checkAbilityToOccupyLocation(location) {
+		const polygonObjWhithinCanSaveLoc = this.defineBoundsOfATerritoryToBeOccupied();
+		const northWestLocCoords = location.northWest;
+		const conditions = [
+			northWestLocCoords.lat >= polygonObjWhithinCanSaveLoc.northWest.lat,
+			northWestLocCoords.lat <= polygonObjWhithinCanSaveLoc.southWest.lat,
+			northWestLocCoords.lng >= polygonObjWhithinCanSaveLoc.northEast.lng,
+			northWestLocCoords.lng <= polygonObjWhithinCanSaveLoc.northWest.lng
+		];
+		let check = true;
+		conditions.forEach((cond) => {
+			if (cond) {
+				check = false;
+			}
+		});
+		return check;
+	}
+
+	coordsWhichRestrictTerritory(northWest, distance) {
+		class RestrictCoordsObj {
+			constructor() {
+				this.northWest = northWest;
+				this.northEast = {
+					lat: northWest.lat,
+					lng: northWest.lng + distance.lng
+				};
+				this.southWest = {
+					lat: northWest.lat - distance.lat,
+					lng: northWest.lng
+				};
+				this.southEast = {
+					lat: this.southWest.lat,
+					lng: this.northEast.lng
+				};
+			}
+		}
+		return new RestrictCoordsObj();
+	}
 	showOccupationForm() {
 		this.locInfoContainer.className = 'loc-info';
 		this.locInfoContainer.classList.add('show-form');
