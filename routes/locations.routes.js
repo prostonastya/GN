@@ -103,26 +103,6 @@ router.put('/:id', (req, res, next) => {
 	}
 });
 
-// router.post('/', (req, res, next) => {
-// 	console.log(req.body.currentLocation.northWest);
-// 	// const newLocationData = Object.assign({
-// 	// 	userId: req.decoded.id
-// 	// }, req.body);
-// 	const newLocationData = {
-// 		northWest: req.body.currentLocation.northWest,
-// 		userId: req.decoded.id,
-// 		locName: req.body.locName,
-// 		dailyMsg: req.body.dailyMsg
-// 	};
-// 	const newLocation = new OccupiedLocation(newLocationData);
-// 	console.log(newLocation);
-// 	newLocation.saveLocation()
-// 		.then(() => {
-// 			res.json(newLocation);
-// 		})
-// 		.catch(err => next(err));
-// });
-
 router.delete('/:id', (req, res, next) => {
 	if (req.reqLocation.isMaster || req.decoded.isAdmin) {
 		req.reqLocation.deleteLocation()
@@ -138,7 +118,8 @@ router.delete('/:id', (req, res, next) => {
 });
 
 router.put('/:id/do-checkin', (req, res, next) => {
-	if (req.reqLocation.userIsThere && req.reqLocation.isMaster) {
+	if ((req.reqLocation.userIsThere && req.reqLocation.isMaster) ||
+		(req.decoded.isAdmin && req.reqLocation.isMaster)) {
 		req.reqLocation.doCheckin()
 			.then(() => {
 				res.sendStatus(200);

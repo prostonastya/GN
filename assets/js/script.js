@@ -25,7 +25,12 @@ class Game {
 		this.occupiedLocationsArray = null;
 		this.occupiedLocationsMapFeatures = {};
 		this.occupiedLocationsGroundOverlays = {};
+		this.showUserLocationsBtn = document.getElementById('showUserLocationsButton');
 
+		this.showUserLocationsBtn.addEventListener('click', (event) => {
+			// let target = event.target;
+			this.showAllUserLocations();
+		});
 		this.locInfoContainer.addEventListener('click', (event) => {
 			let target = event.target;
 
@@ -54,6 +59,8 @@ class Game {
 			}
 			if (target.closest('#occupy-btn')) {
 				target = target.closest('#occupy-btn');
+				// here must be a restriction
+
 				this.showOccupationForm();
 				return;
 			}
@@ -301,6 +308,37 @@ class Game {
 			})
 			.catch((err) => {
 				console.log(err);
+			});
+	}
+
+	// all user locations rendering method
+
+	showAllUserLocations() {
+		const userLocations = [];
+		const bounds = new google.maps.LatLngBounds();
+		console.dir(bounds);
+		this.getOccupiedLocations()
+			.then(() => {
+				this.occupiedLocationsArray.forEach((location) => {
+					if (location.isMaster) {
+						userLocations.push(location);
+					}
+				});
+				if (userLocations.length < 2) {
+					console.log('only one loc');
+				} else {
+					userLocations.forEach((location) => {
+						const northWest = location.northWest;
+						const northWestPoint = new google.maps.LatLng(northWest.lat, northWest.lng);
+						// console.dir()
+						console.dir(northWestPoint);
+						bounds.extend(northWestPoint);
+					});
+					this.map.fitBounds(bounds);
+				}
+			})
+			.catch((err) => {
+				console.log(`script.js 323 ${err}`);
 			});
 	}
 
@@ -835,12 +873,12 @@ function initMap() {
 				alert('Your geolocation is not working. Probably you forgot to turn it on. Please, turn on geolocation and give proper access to this app');
 			});
 
-			setTimeout(() => {
-				game.refreshUserGeodata({
-					lat: game.userGeoData.lat,
-					lng: game.userGeoData.lng
-				});
-			}, 5000);
+			// setTimeout(() => {
+			// 	game.refreshUserGeodata({
+			// 		lat: game.userGeoData.lat,
+			// 		lng: game.userGeoData.lng
+			// 	});
+			// }, 5000);
 
 			map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);
