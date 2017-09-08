@@ -144,7 +144,7 @@ class Game {
 	get mapFeaturesStyles() {
 		return {
 			defaultStyles: {
-				strokeColor: 'gray ',
+				strokeColor: 'transparent ',
 				fillColor: 'transparent',
 				fillOpacity: 0.2,
 				strokeWeight: 1,
@@ -154,11 +154,9 @@ class Game {
 				fillColor: 'green'
 			},
 			occupiedLocation: {
-				fillColor: 'gray'
+				fillColor: 'grey'
 			},
 			profitLocation: {
-				strokeColor: 'orange',
-				strokeWeight: 3
 			},
 			highlightedEmptyLocation: {
 				strokeColor: 'blue'
