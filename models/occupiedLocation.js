@@ -30,8 +30,8 @@ class OccupiedLocation extends EmptyLocation {
 					${this.population},
 					${this.dailyBank},
 					'${this.creationDate}',
-					'${this.locationName}',
-					'${this.dailyMessage}'
+					'${this.locationName.split('\'').join('\'\'')}',
+					'${this.dailyMessage.split('\'').join('\'\'')}'
 					)`
 			),
 			t.tx(t1 => t1.one(

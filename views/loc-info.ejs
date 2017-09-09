@@ -1,0 +1,43 @@
+<% if (location.isHighlighted) { %> 
+  <button class="close-btn" id="close-btn">X</button>
+<% } %>
+<div>
+  <h2 class="info-heading">
+    <% if (location.locationName) { %>
+      <%= location.locationName %>
+    <% } else { %>
+    Empty location 
+    <% } %>
+    <% if (location.masterName) { %>
+       (<%= location.masterName %>)
+    <% } %>
+  </h2>							
+  <% if (location.dailyMessage) { %> 
+    <span><%= location.dailyMessage %></span>
+  <% } %>  									
+  <% if (location.population) { %>
+    <span>Loyalty: <%= location.loyalPopulation %>/<%= location.population %></span>
+  <% } %>
+  <% if (location.dailyBank !== undefined) { %>
+    <span>Bank: <%= location.dailyBank %></span>
+  <% } %>  
+  <span>Location coords: <%= location.northWest.lat %> <%= location.northWest.lng %></span>
+</div>
+<% if (!location.masterId && location.isCurrent) { %>
+  <button class="btn" id="occupy-btn">Occupy</button>
+<% } %>
+<% if (!location.masterId && !location.isCurrent && isAdmin) { %>
+  <button class="btn" id="occupy-click-btn">Occupy</button>
+<% } %>
+<% if (location.isMaster || isAdmin) { %>
+  <button class="btn edit-loc-btn" id="edit-loc-btn">Edit location</button>
+<% } %>
+<% if ((location.isMaster || isAdmin) && location.isHighlighted) { %>
+  <button class="btn delete-loc-btn" id="delete-loc-btn">Delete location</button>
+<% } %>
+<% if (location.isMaster && ( location.isCurrent || isAdmin ) && location.dailyBank) { %> 
+  <button class="btn money-btn" id="money-btn">Take money</button>
+<% } %>
+<% if (( location.isMaster || isAdmin ) && !location.isCurrent && ( location.loyalPopulation < location.population )) { %>
+  <button class="btn feed-btn" id="feed-btn">Feed</button>
+<% } %>

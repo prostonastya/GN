@@ -1,6 +1,8 @@
 class EmptyLocation {
 	constructor(geoData) {
-		this.northWest = this.getNorthWestLocationCoordsByPoint(geoData);
+		this.northWest = {};
+		this.northWest.lat = this.getNorthWestLocationLatitudeByPoint(geoData.lat);
+		this.northWest.lng = this.getNorthWestLocationLongitudeByPoint(geoData);
 		this.mapFeatureCoords = this.getMapFeatureCoords();
 		// this.mapFeatureGeometry = this.getMapFeatureGeometry();
 	}
@@ -15,6 +17,10 @@ class EmptyLocation {
 
 	get equatorLength() {
 		return 40075696;
+	}
+
+	get planetRadius() {
+		return 6370997;
 	}
 
 	get meridianLength() {
@@ -49,11 +55,34 @@ class EmptyLocation {
 			'lng');
 	}
 
+	get absoluteMercatorWidthToHeight() {
+		let width = this.recalcLngToMercator(this.mapFeatureCoords[0].lng)
+			- this.recalcLngToMercator(this.mapFeatureCoords[2].lng);
+
+		let height = this.recalcLatToMercator(this.mapFeatureCoords[0].lat)
+			- this.recalcLatToMercator(this.mapFeatureCoords[1].lat);
+
+		height = height > 0 ? height : height * -1;
+		width = width > 0 ? width : width * -1;
+
+		return width / height;
+	}
+
+	recalcLngToMercator(lng) {
+		const lngRad = (lng / 180) * Math.PI;
+		return lngRad * this.planetRadius;
+	}
+
+	recalcLatToMercator(lat) {
+		const latRad = (lat / 180) * Math.PI;
+		return this.planetRadius * Math.log(Math.tan((Math.PI / 4) + (latRad / 2)));
+	}
+
 	getRelLngSize(pointLat) {
 		let lat = pointLat || this.northWest.lat;
 		let result;
-		const lngSizeCoefficients = this.getLatutideBreakpointsObject();
-		const breakPoints = Object.keys(lngSizeCoefficients);
+		const lngSizeCoefficients = this.lngSizeCoefficients;
+		const breakPoints = this.latBreakPoints;
 
 		if (lat < 0) {
 			lat = (lat - (this.relativeLatSize / 10000000)) * (-1);
@@ -69,6 +98,7 @@ class EmptyLocation {
 				(lat > breakPoints[i] && !breakPoints[i + 1])
 			) {
 				result = this.initialRelativeLngSize * lngSizeCoefficients[breakPoints[i]];
+				break;
 			}
 		}
 
@@ -95,29 +125,29 @@ class EmptyLocation {
 		}];
 	}
 
-	// getMapFeatureGeometry() {
-	// 	return [[
-	// 	// north west
-	// 		this.northWest.lng,
-	// 		this.northWest.lat
-	// 	], [
-	// 	// south west
-	// 		this.northWest.lng,
-	// 		((this.northWest.lat * 10000000) - this.relativeLatSize) / 10000000
-	// 	], [
-	// 	// south east
-	// 		((this.northWest.lng * 10000000) + this.getRelLngSize()) / 10000000,
-	// 		((this.northWest.lat * 10000000) - this.relativeLatSize) / 10000000
-	// 		// north east
-	// 	], [
-	// 		((this.northWest.lng * 10000000) + this.getRelLngSize()) / 10000000,
-	// 		this.northWest.lat
-	// 	], [
-	// 	// north west
-	// 		this.northWest.lng,
-	// 		this.northWest.lat
-	// 	]];
-	// }
+	getMapFeatureGeometry() {
+		return [[
+		// north west
+			this.northWest.lng,
+			this.northWest.lat
+		], [
+		// south west
+			this.northWest.lng,
+			((this.northWest.lat * 10000000) - this.relativeLatSize) / 10000000
+		], [
+		// south east
+			((this.northWest.lng * 10000000) + this.getRelLngSize()) / 10000000,
+			((this.northWest.lat * 10000000) - this.relativeLatSize) / 10000000
+			// north east
+		], [
+			((this.northWest.lng * 10000000) + this.getRelLngSize()) / 10000000,
+			this.northWest.lat
+		], [
+		// north west
+			this.northWest.lng,
+			this.northWest.lat
+		]];
+	}
 
 	getLatutideBreakpointsObject() {
 		const lngSizeCoefficients = {};
@@ -210,43 +240,23 @@ class EmptyLocation {
 		return result;
 	}
 
-	getNorthWestLocationCoordsByPoint(point) {
-		const relLngSize = this.getRelLngSize(point.lat);
-		const lat = (
+	getNorthWestLocationLatitudeByPoint(pointLat) {
+		return (
 			Math.ceil(
-				Math.round(point.lat * 10000000) / this.relativeLatSize
+				Math.round(pointLat * 10000000) / this.relativeLatSize
 			) * this.relativeLatSize
 		) /	10000000;
-		const lng = (
+	}
+
+	getNorthWestLocationLongitudeByPoint(point) {
+		const relLngSize = this.getRelLngSize(point.lat);
+		return (
 			Math.floor(
 				Math.round(point.lng * 10000000) / relLngSize
 			) * relLngSize
 		) /	10000000;
-
-		return {
-			lat,
-			lng
-		};
-	}
-
-	validateLocationGrid() {
-		const locLat = this.coords.northWest.lat;
-		const locLng = this.coords.northWest.lng;
-		const checkedCoords = this.getNorthWestLocationCoordsByPoint({
-			lat: locLat,
-			lng: locLng
-		});
-
-		return (locLat === checkedCoords.lat && locLng === checkedCoords.lng);
 	}
 }
 
-// const loc = new EmptyLocation({
-// 	lat: 40,
-// 	lng: 40
-// });
-
-// console.log(loc.mapFeatureCoords);
-// console.log(JSON.stringify(loc));
 
 module.exports = EmptyLocation;

@@ -5,11 +5,12 @@ class User {
 		this.pass = userData.pass;
 		this.registrationDate = new Date().toISOString();
 		this.cash = 150;
+		this.isAdmin = userData.isAdmin || false;
 	}
 
-	createNewUser() {
-		global.db.none('insert into users(email, password, reg_date, cash, name)' +
-		`values('${this.email}', '${this.pass}', '${this.registrationDate}', '${this.cash}', '${this.name}')`)
+	saveNewUser() {
+		global.db.none('insert into users(email, password, reg_date, cash, name, is_admin)' +
+		`values('${this.email}', '${this.pass}', '${this.registrationDate}', '${this.cash}', '${this.name}'), '${this.isAdmin}'`)
 			.then(() => console.log('New user was added to db'))
 			.catch(error => console.log('error:', error));
 	}
@@ -24,7 +25,7 @@ class User {
 		};
 	}
 
-	static sendMail(letter, transporter) {
+	sendMail(letter, transporter) {
 		transporter.sendMail(letter, (error, info) => {
 			if (error) {
 				console.log(`error !!! ${error.message}`);

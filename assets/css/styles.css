@@ -2,6 +2,32 @@
   --if-color: rgba(65, 65, 65, 1);
 }
 
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;  /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Support for IE. */
+  font-feature-settings: 'liga';
+}
+
 html {
   height: 100%;
   font-family: sans-serif;
@@ -128,7 +154,7 @@ nav{
 .loc-info {
    position: fixed; 
   line-height: 30px;
-  padding: 10px 20px;
+  padding: 12px 30px;
   box-sizing: border-box;
   bottom: 2px;
   left: 2px;
@@ -154,13 +180,14 @@ nav{
 }
 
 
+.loc-info.hide {
+  transform: translateY(100%);
+}
+
 .info-heading {
   margin: 5px 0;
   text-align: center;
 }
-
-
-
 
 #map {
   height: 100%;
@@ -265,16 +292,16 @@ nav{
 
 
 .menu-btn {
-  width: 40px;
-  height: 30px;
-  margin: 20px;
+  width: 30px;
+  height: 20px;
+  margin: 14px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 .menu-btn .toggle {
   width: 100%;
-  height: 6px;
+  height: 4px;
   background-color: #004d40;
   position: relative;
   border-radius: 10px;
@@ -287,16 +314,16 @@ nav{
   left: 0;
   right: 0;
   width: 100%;
-  height: 6px;
+  height: 4px;
   background-color: #004d40;
   border-radius: 10px;
   transition:all .4s ease-in-out;
 }
 .menu-btn .toggle:before {
-  top: -12px;
+  top: -8px;
 }
 .menu-btn .toggle:after {
-  bottom: -12px;
+  bottom: -8px;
 }
 
 .open .menu-btn .toggle {
@@ -328,10 +355,11 @@ nav{
   justify-content: center;
   align-items: center;
   position: absolute;
-  left: 10px;
-  top: 10px;
+  left: 0;
+  top: 0;
   /* transform: rotate(-135deg); */
   outline: none;
+  color: #ff5722;
   
 
 }
@@ -346,10 +374,14 @@ nav{
   transform: rotate(45deg);
 }
 
-
+.occup-form,
 .clicked-loc-info,
 .current-loc-info {
   display: none;
+}
+
+.show-form .occup-form {
+  display: block;
 }
 .show-clicked .clicked-loc-info {
   display: block;
@@ -373,4 +405,91 @@ nav{
 .my-message-body {
   padding: 5px;
   min-height: 50px;
+
+.show-btn {
+  width: 45px;
+  height: 45px;
+  margin: 0;
+  background-color: #80cbc4;
+  border-radius: 2px;
+  padding: 8px 4px 0;
+  /* border: 2px solid #ff5722; */
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  left: 10px;
+  bottom: 100%;
+  outline: none;
+  display: none;
+}
+.show-btn .show-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+  margin: 0 auto;
+  border: 2px solid transparent;
+  border-bottom-color: #000;
+  border-right-color: #000;
+  transform: rotate(-135deg);
+}
+
+
+.hide .show-btn {
+  display: flex;
+}
+
+
+.occupy-form {
+  padding: 20px 0 0;
+  display: none;
+}
+
+.show-form .occupy-form  {
+  display: block;
+}
+.occupy-form input,
+.occupy-form textarea {
+  background-color: #e0f2f1;
+  border: 1px solid #00897b;
+  border-radius: 3px;
+  -webkit-box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.2);
+  padding: 7px 10px;
+  outline: none;
+  resize: none;
+}
+
+.form-item {
+  margin: 5px 0;
+}
+
+.form-btns {
+  display: flex;
+}
+.form-btns .btn {
+  margin: 0 10px; 
+}
+
+
+.btn-center {
+  width: 40px;
+  height: 40px;
+  border-radius: 100px;
+  position: absolute;
+  right: 35px;
+  bottom: 100%;
+  padding:0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #e53935;
+  color: #fff;
+  border-color: #e53935;
+  transform: translateY(-15px);
+}
+.btn-center:hover {
+  background-color: transparent;
+  color: #e53935;
 }

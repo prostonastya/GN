@@ -84,6 +84,12 @@ function onError(error) {
 	}
 }
 
+// setInterval(() => {
+// 	http.get('http://mouse-lord-dev.herokuapp.com', () => {
+// 		console.log('Greed is a sin.');
+// 	});
+// }, 1200000);
+
 /**
  * Event listener for HTTP server "listening" event.
  */

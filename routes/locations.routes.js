@@ -1,12 +1,8 @@
 const express = require('express');
-const EmptyLocation = require('../models/emptyLocation');
 const OccupiedLocation = require('../models/occupiedLocation');
 const locAuth = require('../middleware/locAuth');
 const sockets = require('../services/sockets');
-
-// setInterval(() => {
-// 	sockets.sendMessage('update', {});
-// }, 5000);
+const svgTemplate = require('../views/svg-tmpl');
 
 const router = express.Router();
 
@@ -16,15 +12,33 @@ router.get('/', (req, res, next) => {
 			locations.forEach((item) => {
 				if (item.masterId === req.decoded.id) {
 					item.isMaster = true;
-				} else {
-					item.dailyBank = undefined;
-					item.loyalPopulation = undefined;
-					item.dailyCheckin = undefined;
 				}
+				// else {
+				// 	item.dailyBank = undefined;
+				// 	item.loyalPopulation = undefined;
+				// 	item.dailyCheckin = undefined;
+				// }
 			});
 			res.json(locations);
 		})
 		.catch(err => next(err));
+});
+
+
+// '/create?clicked=true'
+router.get('/create', (req, res, next) => {
+	const clicked = req.query.clicked;
+	const isAdmin = req.decoded.isAdmin;
+
+	if (clicked && !isAdmin) {
+		next(new Error('Forbieden!'));
+	}
+
+	res.render('loc-form', {
+		location: null,
+		clicked: req.query.clicked,
+		isAdmin: req.decoded.isAdmin
+	});
 });
 
 router.post('/create', (req, res, next) => {
@@ -55,15 +69,6 @@ router.get('/geo-json', (req, res, next) => {
 		})
 		.catch(err => next(err));
 });
-// '/grid?lat=xxx&lng=xxx'
-router.get('/grid', (req, res) => {
-	const geoData = {
-		lat: +req.query.lat,
-		lng: +req.query.lng
-	};
-	const location = new EmptyLocation(geoData);
-	res.json(location);
-});
 // '/check-location?lat=xxx&lng=xxx'
 router.get('/check-location', (req, res, next) => {
 	const geoData = {
@@ -74,11 +79,12 @@ router.get('/check-location', (req, res, next) => {
 		.then((locationObj) => {
 			if (locationObj.masterId === req.decoded.id) {
 				locationObj.isMaster = true;
-			} else {
-				locationObj.dailyCheckin = undefined;
-				locationObj.dailyBank = undefined;
-				locationObj.loyalPopulation = undefined;
 			}
+			// else {
+			// 	locationObj.dailyCheckin = undefined;
+			// 	locationObj.dailyBank = undefined;
+			// 	locationObj.loyalPopulation = undefined;
+			// }
 			console.log(JSON.stringify(locationObj));
 			res.json(locationObj);
 		})
@@ -91,6 +97,11 @@ router.use('/:id', locAuth);
 
 router.get('/:id', (req, res) => {
 	res.json(req.reqLocation);
+});
+
+router.get('/:id/svg', (req, res) => {
+	res.set('Content-Type', 'image/svg+xml')
+		.send(svgTemplate(req.reqLocation));
 });
 
 router.put('/:id', (req, res, next) => {
@@ -109,25 +120,15 @@ router.put('/:id', (req, res, next) => {
 	}
 });
 
-// router.post('/', (req, res, next) => {
-// 	console.log(req.body.currentLocation.northWest);
-// 	// const newLocationData = Object.assign({
-// 	// 	userId: req.decoded.id
-// 	// }, req.body);
-// 	const newLocationData = {
-// 		northWest: req.body.currentLocation.northWest,
-// 		userId: req.decoded.id,
-// 		locName: req.body.locName,
-// 		dailyMsg: req.body.dailyMsg
-// 	};
-// 	const newLocation = new OccupiedLocation(newLocationData);
-// 	console.log(newLocation);
-// 	newLocation.saveLocation()
-// 		.then(() => {
-// 			res.json(newLocation);
-// 		})
-// 		.catch(err => next(err));
-// });
+// '/:id/loc-info?current=xxx&highlighted=xxx'
+router.get('/:id/loc-info', (req, res) => {
+	req.reqLocation.isHighlighted = req.query.highlighted;
+	req.reqLocation.isCurrent = req.query.current;
+	res.render('loc-info', {
+		location: req.reqLocation,
+		isAdmin: req.decoded.isAdmin
+	});
+});
 
 router.delete('/:id', (req, res, next) => {
 	if (req.reqLocation.isMaster || req.decoded.isAdmin) {
@@ -144,7 +145,8 @@ router.delete('/:id', (req, res, next) => {
 });
 
 router.put('/:id/do-checkin', (req, res, next) => {
-	if (req.reqLocation.userIsThere && req.reqLocation.isMaster) {
+	if ((req.reqLocation.userIsThere && req.reqLocation.isMaster) ||
+		(req.decoded.isAdmin && req.reqLocation.isMaster)) {
 		req.reqLocation.doCheckin()
 			.then(() => {
 				res.sendStatus(200);
