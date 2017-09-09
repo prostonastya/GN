@@ -1,0 +1,20 @@
+<% if (location) { %>
+  <form name="edit-loc-form" data-editing-loc-id="<%= location.locationId %>">
+<% } else if (isAdmin && clicked) { %>
+  <form name="occup-clicked-form">      
+<% } else { %>
+  <form name="occup-form">
+<% } %>
+  <div class="form-item">
+    <label for="location-name">Location name:<label>			
+    <input type="name" name="location-name" id="loc-name-field" value="<%= location ? location.locationName : '' %>" required>				
+  </div>
+  <div class="form-item">
+    <label for="daily-msg-field">Daily message:<label>		
+    <textarea name="daily-msg" id="daily-msg-field"><%= location ? location.dailyMessage : '' %></textarea>
+  </div>			
+  <div class="form-btns">
+    <input type="submit" class="btn" value="Occupy">				
+    <input type="reset" class="btn"  value="Cancel">
+  </div>
+</form>

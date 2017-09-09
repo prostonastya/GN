@@ -23,6 +23,23 @@ router.get('/', (req, res, next) => {
 		.catch(err => next(err));
 });
 
+
+// '/create?clicked=true'
+router.get('/create', (req, res, next) => {
+	const clicked = req.query.clicked;
+	const isAdmin = req.decoded.isAdmin;
+
+	if (clicked && !isAdmin) {
+		next(new Error('Forbieden!'));
+	}
+
+	res.render('loc-form', {
+		location: null,
+		clicked: req.query.clicked,
+		isAdmin: req.decoded.isAdmin
+	});
+});
+
 router.post('/create', (req, res, next) => {
 	const newLocationData = Object.assign({
 		userId: req.decoded.id
@@ -33,8 +50,6 @@ router.post('/create', (req, res, next) => {
 			createdLocation.isMaster = true;
 			res.json(createdLocation);
 		})
-
-
 		.catch(err => next(err));
 });
 
@@ -103,25 +118,15 @@ router.put('/:id', (req, res, next) => {
 	}
 });
 
-// router.post('/', (req, res, next) => {
-// 	console.log(req.body.currentLocation.northWest);
-// 	// const newLocationData = Object.assign({
-// 	// 	userId: req.decoded.id
-// 	// }, req.body);
-// 	const newLocationData = {
-// 		northWest: req.body.currentLocation.northWest,
-// 		userId: req.decoded.id,
-// 		locName: req.body.locName,
-// 		dailyMsg: req.body.dailyMsg
-// 	};
-// 	const newLocation = new OccupiedLocation(newLocationData);
-// 	console.log(newLocation);
-// 	newLocation.saveLocation()
-// 		.then(() => {
-// 			res.json(newLocation);
-// 		})
-// 		.catch(err => next(err));
-// });
+// '/:id/loc-info?current=xxx&highlighted=xxx'
+router.get('/:id/loc-info', (req, res) => {
+	req.reqLocation.isHighlighted = req.query.highlighted;
+	req.reqLocation.isCurrent = req.query.current;
+	res.render('loc-info', {
+		location: req.reqLocation,
+		isAdmin: req.decoded.isAdmin
+	});
+});
 
 router.delete('/:id', (req, res, next) => {
 	if (req.reqLocation.isMaster || req.decoded.isAdmin) {
@@ -138,7 +143,8 @@ router.delete('/:id', (req, res, next) => {
 });
 
 router.put('/:id/do-checkin', (req, res, next) => {
-	if (req.reqLocation.userIsThere && req.reqLocation.isMaster) {
+	if ((req.reqLocation.userIsThere && req.reqLocation.isMaster) ||
+		(req.decoded.isAdmin && req.reqLocation.isMaster)) {
 		req.reqLocation.doCheckin()
 			.then(() => {
 				res.sendStatus(200);
