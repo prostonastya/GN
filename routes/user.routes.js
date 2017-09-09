@@ -65,9 +65,9 @@ router.post('/register', (req, res) => {
 		pass
 	};
 	const newUser = new User(userData);
-	newUser.createNewUser();
+	newUser.saveNewUser();
 	const letter = newUser.createLetter(newUser.email);
-	User.sendMail(letter, transporter);
+	newUser.sendMail(letter, transporter);
 	res.redirect('../');
 });
 

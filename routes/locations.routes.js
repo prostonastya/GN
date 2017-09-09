@@ -118,7 +118,6 @@ router.put('/:id', (req, res, next) => {
 	}
 });
 
-
 // '/:id/loc-info?current=xxx&highlighted=xxx'
 router.get('/:id/loc-info', (req, res) => {
 	req.reqLocation.isHighlighted = req.query.highlighted;

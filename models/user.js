@@ -8,9 +8,7 @@ class User {
 		this.isAdmin = userData.isAdmin || false;
 	}
 
-	// better call "saveNewUser"
-
-	createNewUser() {
+	saveNewUser() {
 		global.db.none('insert into users(email, password, reg_date, cash, name, is_admin)' +
 		`values('${this.email}', '${this.pass}', '${this.registrationDate}', '${this.cash}', '${this.name}'), '${this.isAdmin}'`)
 			.then(() => console.log('New user was added to db'))
@@ -27,9 +25,7 @@ class User {
 		};
 	}
 
-	// why static? probably would be better send mail with someUser.sendMail(letterObject)
-
-	static sendMail(letter, transporter) {
+	sendMail(letter, transporter) {
 		transporter.sendMail(letter, (error, info) => {
 			if (error) {
 				console.log(`error !!! ${error.message}`);
