@@ -389,22 +389,6 @@ nav{
 .show-current .current-loc-info {
   display: block;
 }
-.my-message {
-   width:300px;
-   min-height:80px;   
-   background-color:var(--if-color);   
-   text-align: center;
-   border: 2px groove black;
-   color: white;
-}
-.my-message-title {
-  height:20px;
-  font-size:120%;
-  background-color:chocolate;
-}
-.my-message-body {
-  padding: 5px;
-  min-height: 50px;
 
 .show-btn {
   width: 45px;
@@ -493,3 +477,19 @@ nav{
   background-color: transparent;
   color: #e53935;
 }
+.my-message {
+   width:300px;
+   min-height:80px;   
+   background-color:var(--if-color);   
+   text-align: center;
+   border: 2px groove black;
+   color: white;
+}
+.my-message-title {
+  height:20px;
+  font-size:120%;
+  background-color:chocolate;
+}
+.my-message-body {
+  padding: 5px;
+  min-height: 50px;
