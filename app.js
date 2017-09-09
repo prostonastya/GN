@@ -15,7 +15,6 @@ const gridRoutes = require('./routes/grid.routes');
 const locationsRoutes = require('./routes/locations.routes');
 const userRoutes = require('./routes/user.routes');
 const indexRoutes = require('./routes/index.routes');
-
 // const schedule = require('node-schedule');
 require('dotenv').config();
 

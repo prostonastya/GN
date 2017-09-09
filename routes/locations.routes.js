@@ -23,6 +23,23 @@ router.get('/', (req, res, next) => {
 		.catch(err => next(err));
 });
 
+
+// '/create?clicked=true'
+router.get('/create', (req, res, next) => {
+	const clicked = req.query.clicked;
+	const isAdmin = req.decoded.isAdmin;
+
+	if (clicked && !isAdmin) {
+		next(new Error('Forbieden!'));
+	}
+
+	res.render('loc-form', {
+		location: null,
+		clicked: req.query.clicked,
+		isAdmin: req.decoded.isAdmin
+	});
+});
+
 router.post('/create', (req, res, next) => {
 	const newLocationData = Object.assign({
 		userId: req.decoded.id
@@ -33,8 +50,6 @@ router.post('/create', (req, res, next) => {
 			createdLocation.isMaster = true;
 			res.json(createdLocation);
 		})
-
-
 		.catch(err => next(err));
 });
 
@@ -101,6 +116,16 @@ router.put('/:id', (req, res, next) => {
 	} else {
 		next(new Error('No such rights!'));
 	}
+});
+
+// '/:id/loc-info?current=xxx&highlighted=xxx'
+router.get('/:id/loc-info', (req, res) => {
+	req.reqLocation.isHighlighted = req.query.highlighted;
+	req.reqLocation.isCurrent = req.query.current;
+	res.render('loc-info', {
+		location: req.reqLocation,
+		isAdmin: req.decoded.isAdmin
+	});
 });
 
 router.delete('/:id', (req, res, next) => {
